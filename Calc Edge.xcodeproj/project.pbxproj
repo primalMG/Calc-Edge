@@ -1,0 +1,578 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXContainerItemProxy section */
+		FBD935042F13F9A600FFFE73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FBD934EC2F13F9A400FFFE73 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FBD934F32F13F9A400FFFE73;
+			remoteInfo = "Calc Edge";
+		};
+		FBD9350E2F13F9A600FFFE73 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FBD934EC2F13F9A400FFFE73 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FBD934F32F13F9A400FFFE73;
+			remoteInfo = "Calc Edge";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		FBD934F42F13F9A400FFFE73 /* Calc Edge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Calc Edge.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBD935032F13F9A600FFFE73 /* Calc EdgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calc EdgeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBD9350D2F13F9A600FFFE73 /* Calc EdgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calc EdgeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FBD934F62F13F9A400FFFE73 /* Calc Edge */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Calc Edge";
+			sourceTree = "<group>";
+		};
+		FBD935062F13F9A600FFFE73 /* Calc EdgeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Calc EdgeTests";
+			sourceTree = "<group>";
+		};
+		FBD935102F13F9A600FFFE73 /* Calc EdgeUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Calc EdgeUITests";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FBD934F12F13F9A400FFFE73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD935002F13F9A600FFFE73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD9350A2F13F9A600FFFE73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FBD934EB2F13F9A400FFFE73 = {
+			isa = PBXGroup;
+			children = (
+				FBD934F62F13F9A400FFFE73 /* Calc Edge */,
+				FBD935062F13F9A600FFFE73 /* Calc EdgeTests */,
+				FBD935102F13F9A600FFFE73 /* Calc EdgeUITests */,
+				FBD934F52F13F9A400FFFE73 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FBD934F52F13F9A400FFFE73 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FBD934F42F13F9A400FFFE73 /* Calc Edge.app */,
+				FBD935032F13F9A600FFFE73 /* Calc EdgeTests.xctest */,
+				FBD9350D2F13F9A600FFFE73 /* Calc EdgeUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FBD934F32F13F9A400FFFE73 /* Calc Edge */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBD935172F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc Edge" */;
+			buildPhases = (
+				FBD934F02F13F9A400FFFE73 /* Sources */,
+				FBD934F12F13F9A400FFFE73 /* Frameworks */,
+				FBD934F22F13F9A400FFFE73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FBD934F62F13F9A400FFFE73 /* Calc Edge */,
+			);
+			name = "Calc Edge";
+			packageProductDependencies = (
+			);
+			productName = "Calc Edge";
+			productReference = FBD934F42F13F9A400FFFE73 /* Calc Edge.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FBD935022F13F9A600FFFE73 /* Calc EdgeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBD9351A2F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc EdgeTests" */;
+			buildPhases = (
+				FBD934FF2F13F9A600FFFE73 /* Sources */,
+				FBD935002F13F9A600FFFE73 /* Frameworks */,
+				FBD935012F13F9A600FFFE73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FBD935052F13F9A600FFFE73 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FBD935062F13F9A600FFFE73 /* Calc EdgeTests */,
+			);
+			name = "Calc EdgeTests";
+			packageProductDependencies = (
+			);
+			productName = "Calc EdgeTests";
+			productReference = FBD935032F13F9A600FFFE73 /* Calc EdgeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		FBD9350C2F13F9A600FFFE73 /* Calc EdgeUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBD9351D2F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc EdgeUITests" */;
+			buildPhases = (
+				FBD935092F13F9A600FFFE73 /* Sources */,
+				FBD9350A2F13F9A600FFFE73 /* Frameworks */,
+				FBD9350B2F13F9A600FFFE73 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FBD9350F2F13F9A600FFFE73 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FBD935102F13F9A600FFFE73 /* Calc EdgeUITests */,
+			);
+			name = "Calc EdgeUITests";
+			packageProductDependencies = (
+			);
+			productName = "Calc EdgeUITests";
+			productReference = FBD9350D2F13F9A600FFFE73 /* Calc EdgeUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FBD934EC2F13F9A400FFFE73 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					FBD934F32F13F9A400FFFE73 = {
+						CreatedOnToolsVersion = 26.2;
+					};
+					FBD935022F13F9A600FFFE73 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = FBD934F32F13F9A400FFFE73;
+					};
+					FBD9350C2F13F9A600FFFE73 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = FBD934F32F13F9A400FFFE73;
+					};
+				};
+			};
+			buildConfigurationList = FBD934EF2F13F9A400FFFE73 /* Build configuration list for PBXProject "Calc Edge" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FBD934EB2F13F9A400FFFE73;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FBD934F52F13F9A400FFFE73 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FBD934F32F13F9A400FFFE73 /* Calc Edge */,
+				FBD935022F13F9A600FFFE73 /* Calc EdgeTests */,
+				FBD9350C2F13F9A600FFFE73 /* Calc EdgeUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FBD934F22F13F9A400FFFE73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD935012F13F9A600FFFE73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD9350B2F13F9A600FFFE73 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FBD934F02F13F9A400FFFE73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD934FF2F13F9A600FFFE73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FBD935092F13F9A600FFFE73 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FBD935052F13F9A600FFFE73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FBD934F32F13F9A400FFFE73 /* Calc Edge */;
+			targetProxy = FBD935042F13F9A600FFFE73 /* PBXContainerItemProxy */;
+		};
+		FBD9350F2F13F9A600FFFE73 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FBD934F32F13F9A400FFFE73 /* Calc Edge */;
+			targetProxy = FBD9350E2F13F9A600FFFE73 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		FBD935152F13F9A600FFFE73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		FBD935162F13F9A600FFFE73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		FBD935182F13F9A600FFFE73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-Edge";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		FBD935192F13F9A600FFFE73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-Edge";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		FBD9351B2F13F9A600FFFE73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-EdgeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Calc Edge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Calc Edge";
+			};
+			name = Debug;
+		};
+		FBD9351C2F13F9A600FFFE73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-EdgeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Calc Edge.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Calc Edge";
+			};
+			name = Release;
+		};
+		FBD9351E2F13F9A600FFFE73 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-EdgeUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Calc Edge";
+			};
+			name = Debug;
+		};
+		FBD9351F2F13F9A600FFFE73 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = BKJ97444K2;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.marcusgardner.Calc-EdgeUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = "Calc Edge";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FBD934EF2F13F9A400FFFE73 /* Build configuration list for PBXProject "Calc Edge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBD935152F13F9A600FFFE73 /* Debug */,
+				FBD935162F13F9A600FFFE73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBD935172F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc Edge" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBD935182F13F9A600FFFE73 /* Debug */,
+				FBD935192F13F9A600FFFE73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBD9351A2F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc EdgeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBD9351B2F13F9A600FFFE73 /* Debug */,
+				FBD9351C2F13F9A600FFFE73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBD9351D2F13F9A600FFFE73 /* Build configuration list for PBXNativeTarget "Calc EdgeUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FBD9351E2F13F9A600FFFE73 /* Debug */,
+				FBD9351F2F13F9A600FFFE73 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = FBD934EC2F13F9A400FFFE73 /* Project object */;
+}
