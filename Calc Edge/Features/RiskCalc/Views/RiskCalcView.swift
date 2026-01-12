@@ -22,28 +22,9 @@ struct RiskCalcView: View {
         ?? Account(id: UUID(), accountName: "", accountSize: 0, currency: "")
     }
     
-    private var amountAtRisk: Double {
-        stock.riskPercentage / 100 * selectedAccount.accountSize
-    }
-    
-    private var calcLoss: Double {
-        stock.stopLoss * stock.shareCount
-    }
-    
+
     private var calcShares: Double {
-        amountAtRisk / stock.entryPrice
-    }
-    
-    private var calcLossDiffernce: Double {
-        stock.entryPrice - stock.stopLoss
-    }
-    
-    private var calcProfitDiffernce: Double {
-        stock.targetPrice - stock.entryPrice
-    }
-    
-    private var calcProfit: Double {
-        calcShares * calcProfitDiffernce
+        stock.riskPercentage / 100 * selectedAccount.accountSize / stock.entryPrice
     }
     
     var body: some View {
@@ -71,7 +52,7 @@ struct RiskCalcView: View {
                         }
                     
                     LabeledContent("Ammount at Risk:") {
-                        Text("\(amountAtRisk.formatted())")
+                        Text("\(stock.amountRisked.formatted())")
                     }
                 } header: {
                     Text("Account")
@@ -82,7 +63,7 @@ struct RiskCalcView: View {
                     TextField("Ticker/Stock:", text: $stock.ticker)
                     
                     LabeledContent("# Shares Bought:") {
-                        Text("\(calcShares.formatted())")
+                        Text("\(stock.shareCount.formatted())")
                     }
                     
                     TextField("Entry Price:", value: $stock.entryPrice, formatter: doubleFormatter)
@@ -97,11 +78,11 @@ struct RiskCalcView: View {
                     TextField("Stop Loss:", value: $stock.stopLoss, formatter: doubleFormatter)
                     
                     LabeledContent("Loss difference:") {
-                        Text("\(calcLossDiffernce.formatted())")
+                        Text("\(stock.lossDiffernce.formatted())")
                     }
                     
                     LabeledContent("Loss Total:") {
-                        Text("\(calcLoss.formatted())")
+                        Text("\(stock.lossTotal.formatted())")
                     }
                     
                     
@@ -114,11 +95,11 @@ struct RiskCalcView: View {
                     TextField("Technical Target:", value: $stock.targetPrice, formatter: doubleFormatter)
                     
                     LabeledContent("Gain Per Share:") {
-                        Text("\(calcProfitDiffernce.formatted())")
+                        Text("\(stock.profitDifference.formatted())")
                     }
                     
                     LabeledContent("Profit:") {
-                        Text("\(calcProfit.formatted())")
+                        Text("\(stock.profitTotal.formatted())")
                     }
                     
                 } header: {
@@ -146,6 +127,7 @@ struct RiskCalcView: View {
                 }
             }
             .padding()
+            .frame(idealWidth: 400, maxWidth: 500)
         }
         .padding()
         .frame(minHeight: 600)
@@ -157,5 +139,5 @@ struct RiskCalcView: View {
 }
 
 #Preview {
-    RiskCalcView(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 2, stopLoss: 45.0, shareCount: 5, targetPrice: 55.5), accounts: .constant([Account(id: UUID(), accountName: "WeBull", accountSize: 5000, currency: "USD"), Account(id: UUID(), accountName: "Robinhood", accountSize: 10000, currency: "USD")]))
+    RiskCalcView(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100), accounts: .constant([Account(id: UUID(), accountName: "WeBull", accountSize: 5000, currency: "USD"), Account(id: UUID(), accountName: "Robinhood", accountSize: 10000, currency: "USD")]))
 }

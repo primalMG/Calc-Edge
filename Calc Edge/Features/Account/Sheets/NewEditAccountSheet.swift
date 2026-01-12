@@ -75,5 +75,5 @@ struct NewEditAccountSheet: View {
 }
 
 #Preview {
-    NewEditAccountSheet(account: Account(id: UUID(), accountName: "Webull", accountSize: 100000, currency: "USD", stocks: [Stock(ticker: "AAPL", entryPrice: 30.0, riskPercentage: 2, stopLoss: 28, shareCount: 10, targetPrice: 40)]))
+    NewEditAccountSheet(account: Account(id: UUID(), accountName: "Webull", accountSize: 100000, currency: "USD", stocks: [Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2.8, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100)]))
 }

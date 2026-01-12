@@ -16,5 +16,5 @@ struct StockCalcView: View {
 }
 
 #Preview {
-    StockCalcView(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 2, stopLoss: 45.0, shareCount: 5, targetPrice: 55.5))
+    StockCalcView(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2.8, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100))
 }
