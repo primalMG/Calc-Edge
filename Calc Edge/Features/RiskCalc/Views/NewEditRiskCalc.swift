@@ -8,12 +8,12 @@
 import SwiftUI
 import SwiftData
 
-struct RiskCalcView: View {
+struct NewEditRiskCalc: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
     @Bindable var stock: Stock
-    @Binding var accounts: [Account]
+    @Query private var accounts: [Account]
     
     @State private var selectedAccountID: Account.ID?
 
@@ -26,6 +26,10 @@ struct RiskCalcView: View {
 
     private var calcShares: Double {
         stock.riskPercentage / 100 * selectedAccount.accountSize / stock.entryPrice
+    }
+    
+    private var calcRiskAmount: Double {
+        selectedAccount.accountSize * (stock.riskPercentage / 100)
     }
     
     var body: some View {
@@ -61,13 +65,10 @@ struct RiskCalcView: View {
                     LabeledContent("Risk Percentage (%):") {
                         TextField("", value: $stock.riskPercentage, formatter: doubleFormatter)
                             .textFieldStyle(CustomTextFieldStyle())
-                            .onChange(of: stock.riskPercentage) { _, _ in
-                                stock.shareCount = calcShares
-                            }
                     }
                    
                     LabeledContent("Ammount at Risk:") {
-                        Text(String(format: "%.2f", stock.amountRisked))
+                        Text(String(format: "%.2f", calcRiskAmount))
                     }
                     
                 } header: {
@@ -82,7 +83,7 @@ struct RiskCalcView: View {
                     }
                     
                     LabeledContent("# Shares Bought:") {
-                        Text(String(format: "%.2f", stock.shareCount))
+                        Text(String(format: "%.2f", calcShares))
                     }
                     
                     LabeledContent("Entry Price:") {
@@ -100,6 +101,9 @@ struct RiskCalcView: View {
                     LabeledContent("Stop Loss:") {
                         TextField("", value: $stock.stopLoss, formatter: doubleFormatter)
                             .textFieldStyle(CustomTextFieldStyle())
+                            .onChange(of: stock.stopLoss) { _, _ in
+                                stock.shareCount = calcShares
+                            }
                     }
                     
                     LabeledContent("Loss difference:") {
@@ -121,8 +125,11 @@ struct RiskCalcView: View {
                     LabeledContent("Technical Target:") {
                         TextField("", value: $stock.targetPrice, formatter: doubleFormatter)
                             .textFieldStyle(CustomTextFieldStyle())
+                            .onChange(of: stock.targetPrice) { _, _ in
+                                stock.shareCount = calcShares
+                            }
                     }
-                    
+//                    TODO: Add conditional that hides the values until something is entered
                     LabeledContent("Gain Per Share:") {
                         Text(String(format: "%.2f", stock.profitDifference))
                     }
@@ -135,6 +142,8 @@ struct RiskCalcView: View {
                     Text("Profit Details")
                         .padding(.top, 15)
                 }
+                
+//                TODO: Add Risk/Reward ratio calc
 
                 HStack() {
                     Button {
@@ -165,11 +174,16 @@ struct RiskCalcView: View {
         .frame(minHeight: 600)
     }
     
+//    TODO: Add clearing of the filled after the save button is pressed
     private func save() {
+        stock.shareCount = calcShares
+        stock.amountRisked = calcRiskAmount
+        
         modelContext.insert(stock)
     }
 }
 
 #Preview {
-    RiskCalcView(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100), accounts: .constant([Account(id: UUID(), accountName: "WeBull", accountSize: 5000, currency: "USD"), Account(id: UUID(), accountName: "Robinhood", accountSize: 10000, currency: "USD")]))
+    NewEditRiskCalc(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100))
+        .modelContainer(for: Account.self, inMemory: true)
 }

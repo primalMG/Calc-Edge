@@ -30,6 +30,7 @@ struct NewEditAccountSheet: View {
                     }
                 }
                 
+//              TODO: Fix behaviour of textfield
                 TextField("Account Size:", value: $account.accountSize, formatter: doubleFormatter)
                     .onAppear {
                         text = String(account.accountSize)
@@ -47,6 +48,7 @@ struct NewEditAccountSheet: View {
                     }
                     .tint(.green)
                     
+//                 TODO: Fix Cancel to return original values
                     Button {
                         dismiss()
                     } label: {

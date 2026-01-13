@@ -10,8 +10,11 @@ import SwiftUI
 struct StockCalcView: View {
     @Bindable var stock: Stock
     
+//    TODO: Build Calcuation View, Should have similar values but a bit more to the point.
     var body: some View {
-        Text("Hello, World!")
+        VStack {
+            
+        }
     }
 }
 

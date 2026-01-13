@@ -14,15 +14,25 @@ struct RootView: View {
     
     @State private var presentSheet: Bool = false
     @State private var presentCalcSheet: Bool = false
+    
+    @State private var selectedStock = Stock(ticker: "",
+                                             entryPrice: 0.0,
+                                             riskPercentage: 0.0,
+                                             stopLoss: 0.0,
+                                             shareCount: 0.0,
+                                             targetPrice: 0.0,
+                                             accountUsed: "",
+                                             balanceAtTrade: 0.0,
+                                             amountRisked: 0.0)
 
     var body: some View {
         NavigationSplitView {
             List {
                 ForEach(stockCalcs) { stock in
                     NavigationLink {
-//                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
                         StockCalcView(stock: stock)
+                    } label: {
+                        Text(stock.ticker)
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -36,9 +46,9 @@ struct RootView: View {
                         Image(systemName: "person.circle.fill")
                     }
                     .help("Accounts")
-
-                    Button {
-                        presentCalcSheet.toggle()
+                    
+                    NavigationLink {
+                        NewEditRiskCalc(stock: selectedStock)
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
@@ -49,9 +59,7 @@ struct RootView: View {
             .sheet(isPresented: $presentSheet) {
                 AccountsView()
             }
-            .sheet(isPresented: $presentCalcSheet) {
-//                RiskCalcView(stock: <#T##Stock#>, accounts: <#T##[Account]#>)
-            }
+            
         } detail: {
             Text("No Stock Calcution Selected")
         }
