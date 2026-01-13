@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct RiskCalcView: View {
     @Environment(\.modelContext) private var modelContext
@@ -31,11 +32,22 @@ struct RiskCalcView: View {
         HStack {
             Form {
                 Section {
-                    Picker("Accounts:", selection: $selectedAccountID) {
-                        ForEach(accounts) { account in
-                            Text(account.accountName)
-                                .tag(account.id as Account.ID?)
+                    HStack {
+                        Picker("Accounts:", selection: $selectedAccountID) {
+                            ForEach(accounts) { account in
+                                Text(account.accountName)
+                                    .tag(account.id as Account.ID?)
+                            }
                         }
+                        
+                        Button {
+                            print("Open Accounts Sheet")
+                        } label: {
+                            Image(systemName: "person.2.fill")
+                        }
+                        .help("Open accounts view")
+                        .frame(width: 20)
+
                     }
                     
                     HStack {
@@ -46,27 +58,37 @@ struct RiskCalcView: View {
                         }
                     }
                     
-                    TextField("Risk Percentage (%):", value: $stock.riskPercentage, formatter: doubleFormatter)
-                        .onChange(of: stock.riskPercentage) { _, _ in
-                            stock.shareCount = calcShares
-                        }
-                    
+                    LabeledContent("Risk Percentage (%):") {
+                        TextField("", value: $stock.riskPercentage, formatter: doubleFormatter)
+                            .textFieldStyle(CustomTextFieldStyle())
+                            .onChange(of: stock.riskPercentage) { _, _ in
+                                stock.shareCount = calcShares
+                            }
+                    }
+                   
                     LabeledContent("Ammount at Risk:") {
                         Text(String(format: "%.2f", stock.amountRisked))
                     }
+                    
                 } header: {
                     Text("Account")
                 }
                 
                 Section {
                     
-                    TextField("Ticker/Stock:", text: $stock.ticker)
+                    LabeledContent("Ticker/Stock:") {
+                        TextField("", text: $stock.ticker)
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
                     
                     LabeledContent("# Shares Bought:") {
                         Text(String(format: "%.2f", stock.shareCount))
                     }
                     
-                    TextField("Entry Price:", value: $stock.entryPrice, formatter: doubleFormatter)
+                    LabeledContent("Entry Price:") {
+                        TextField("", value: $stock.entryPrice, formatter: doubleFormatter)
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
                     
                 } header: {
                     Text("Stock Details")
@@ -75,7 +97,10 @@ struct RiskCalcView: View {
                 
                 Section {
 
-                    TextField("Stop Loss:", value: $stock.stopLoss, formatter: doubleFormatter)
+                    LabeledContent("Stop Loss:") {
+                        TextField("", value: $stock.stopLoss, formatter: doubleFormatter)
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
                     
                     LabeledContent("Loss difference:") {
                         Text(String(format: "%.2f", stock.lossDiffernce))
@@ -92,7 +117,11 @@ struct RiskCalcView: View {
                 }
                 
                 Section {
-                    TextField("Technical Target:", value: $stock.targetPrice, formatter: doubleFormatter)
+                    
+                    LabeledContent("Technical Target:") {
+                        TextField("", value: $stock.targetPrice, formatter: doubleFormatter)
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
                     
                     LabeledContent("Gain Per Share:") {
                         Text(String(format: "%.2f", stock.profitDifference))
@@ -107,19 +136,22 @@ struct RiskCalcView: View {
                         .padding(.top, 15)
                 }
 
-                HStack {
+                HStack() {
                     Button {
                         save()
                     } label: {
                         Text("Save")
                     }
+                    .tint(.green)
                     
                     Button {
                         dismiss()
                     } label: {
                         Text("Cancel")
                     }
+                    .tint(.red)
                 }
+                .padding(.top, 10)
             }
             .onAppear {
                 if selectedAccountID == nil {
@@ -127,14 +159,14 @@ struct RiskCalcView: View {
                 }
             }
             .padding()
-            .frame(idealWidth: 400, maxWidth: 500)
+            .frame(minWidth: 200, idealWidth: 200, maxWidth: 500)
         }
         .padding()
         .frame(minHeight: 600)
     }
     
     private func save() {
-        
+        modelContext.insert(stock)
     }
 }
 
