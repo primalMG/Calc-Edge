@@ -42,7 +42,7 @@ struct RiskCalcView: View {
                         LabeledContent("Balance:") {
                             Text(selectedAccount.currency + ", ")
                             
-                            Text(selectedAccount.accountSize.formatted())
+                            Text(String(format: "%.2f", selectedAccount.accountSize))
                         }
                     }
                     
@@ -52,7 +52,7 @@ struct RiskCalcView: View {
                         }
                     
                     LabeledContent("Ammount at Risk:") {
-                        Text("\(stock.amountRisked.formatted())")
+                        Text(String(format: "%.2f", stock.amountRisked))
                     }
                 } header: {
                     Text("Account")
@@ -63,7 +63,7 @@ struct RiskCalcView: View {
                     TextField("Ticker/Stock:", text: $stock.ticker)
                     
                     LabeledContent("# Shares Bought:") {
-                        Text("\(stock.shareCount.formatted())")
+                        Text(String(format: "%.2f", stock.shareCount))
                     }
                     
                     TextField("Entry Price:", value: $stock.entryPrice, formatter: doubleFormatter)
@@ -78,11 +78,11 @@ struct RiskCalcView: View {
                     TextField("Stop Loss:", value: $stock.stopLoss, formatter: doubleFormatter)
                     
                     LabeledContent("Loss difference:") {
-                        Text("\(stock.lossDiffernce.formatted())")
+                        Text(String(format: "%.2f", stock.lossDiffernce))
                     }
                     
                     LabeledContent("Loss Total:") {
-                        Text("\(stock.lossTotal.formatted())")
+                        Text(String(format: "%.2f", stock.lossTotal))
                     }
                     
                     
@@ -95,11 +95,11 @@ struct RiskCalcView: View {
                     TextField("Technical Target:", value: $stock.targetPrice, formatter: doubleFormatter)
                     
                     LabeledContent("Gain Per Share:") {
-                        Text("\(stock.profitDifference.formatted())")
+                        Text(String(format: "%.2f", stock.profitDifference))
                     }
                     
                     LabeledContent("Profit:") {
-                        Text("\(stock.profitTotal.formatted())")
+                        Text(String(format: "%.2f", stock.profitTotal))
                     }
                     
                 } header: {

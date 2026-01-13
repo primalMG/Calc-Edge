@@ -35,7 +35,7 @@ final class Stock {
     }
     
     var profitTotal: Double {
-        targetPrice * shareCount
+        profitDifference * shareCount
     }
     
 //    MARK: Account Data
