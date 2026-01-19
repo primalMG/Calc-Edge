@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import SwiftData
+
 struct RootView: View {
     @State private var presentSheet: Bool = false
     @State private var selectedStock = Stock(ticker: "",
@@ -25,7 +27,7 @@ struct RootView: View {
                 selectedStock: $selectedStock
             )
         } detail: {
-            RootDetailView()
+            DashboardView(selectedStock: $selectedStock)
         }
     }
 }

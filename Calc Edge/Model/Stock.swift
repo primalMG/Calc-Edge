@@ -1,5 +1,5 @@
 //
-//  nameTbc.swift
+//  Stock.swift
 //  Calc Edge
 //
 //  Created by Marcus Gardner on 11/01/2026.
