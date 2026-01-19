@@ -115,6 +115,21 @@ struct StockCalcView: View {
             }
         }
         .padding()
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    
+                } label: {
+                    Text("Button A")
+                }
+
+                Button {
+                    
+                } label: {
+                    Text("Button B")
+                }
+            }
+        }
     }
 }
 

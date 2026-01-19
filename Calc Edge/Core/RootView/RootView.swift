@@ -6,15 +6,8 @@
 //
 
 import SwiftUI
-import SwiftData
-
 struct RootView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var stockCalcs: [Stock]
-    
     @State private var presentSheet: Bool = false
-    @State private var presentCalcSheet: Bool = false
-    
     @State private var selectedStock = Stock(ticker: "",
                                              entryPrice: 0.0,
                                              riskPercentage: 0.0,
@@ -27,56 +20,12 @@ struct RootView: View {
 
     var body: some View {
         NavigationSplitView {
-            List {
-                ForEach(stockCalcs) { stock in
-                    NavigationLink {
-                        StockCalcView(stock: stock)
-                    } label: {
-                        Text(stock.ticker)
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .navigationSplitViewColumnWidth(min: 250, ideal: 300)
-            .toolbar {
-                ToolbarItemGroup {
-                    Button {
-                        presentSheet.toggle()
-                    } label: {
-                        Image(systemName: "person.circle.fill")
-                    }
-                    .help("Accounts")
-                    
-                    NavigationLink {
-                        NewEditRiskCalc(stock: selectedStock)
-                    } label: {
-                        Image(systemName: "square.and.pencil")
-                    }
-                    .help("New Calculation")
-
-                }
-            }
-            .sheet(isPresented: $presentSheet) {
-                AccountsView()
-            }
-            
+            RootSidebarView(
+                presentSheet: $presentSheet,
+                selectedStock: $selectedStock
+            )
         } detail: {
-            Text("No Stock Calcution Selected")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(stockCalcs[index])
-            }
+            RootDetailView()
         }
     }
 }
