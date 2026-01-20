@@ -4,7 +4,7 @@ import SwiftData
 @Model
 final class Trade {
     // Identification
-    @Attribute(.unique) var tradeId: String
+    @Attribute(.unique) var tradeId: UUID
     var openedAt: Date
     var closedAt: Date?
 
@@ -55,7 +55,7 @@ final class Trade {
     @Relationship(deleteRule: .cascade) var attachments: [TradeAttachment] = []
 
     init(
-        tradeId: String = UUID().uuidString,
+        tradeId: UUID = UUID(),
         openedAt: Date = .now,
         closedAt: Date? = nil,
         ticker: String,
