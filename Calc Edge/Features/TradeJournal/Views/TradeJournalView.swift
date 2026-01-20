@@ -14,6 +14,7 @@ struct TradeJournalView: View {
     @State private var selectedTrade = Set<Trade.ID>()
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var newJournalIsPresent: Bool = false
+    @State private var draftTrade = Trade(ticker: "")
 
     private var sortedTrades: [Trade] {
         trades.sorted(using: sortOrder)
@@ -27,7 +28,9 @@ struct TradeJournalView: View {
                 }
 
                 TableColumn("Ticker") { trade in
-                    Text(trade.ticker)
+                    NavigationLink(trade.ticker) {
+                        TradeJournalDetailView(trade: trade)
+                    }
                 }
 
                 TableColumn("Direction") { trade in
@@ -78,14 +81,17 @@ struct TradeJournalView: View {
             .toolbar {
                 ToolbarItem {
                     Button {
+                        draftTrade = Trade(ticker: "")
                         newJournalIsPresent.toggle()
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $newJournalIsPresent) {
-                Text("New trade form goes here.")
+            .sheet(isPresented: $newJournalIsPresent, onDismiss: {
+                draftTrade = Trade(ticker: "")
+            }) {
+                NewEditJournalSheet(trade: draftTrade)
             }
         }
     }
@@ -99,4 +105,3 @@ struct TradeJournalView: View {
         return NSDecimalNumber(decimal: value).stringValue
     }
 }
-
