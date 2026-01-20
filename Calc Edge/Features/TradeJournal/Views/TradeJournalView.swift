@@ -91,7 +91,7 @@ struct TradeJournalView: View {
             .sheet(isPresented: $newJournalIsPresent, onDismiss: {
                 draftTrade = Trade(ticker: "")
             }) {
-                NewEditJournalSheet(trade: draftTrade)
+                NewEditJournalView(trade: draftTrade)
             }
         }
     }

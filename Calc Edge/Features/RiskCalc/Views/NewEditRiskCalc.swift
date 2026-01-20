@@ -178,7 +178,7 @@ struct NewEditRiskCalc: View {
     private func save() {
         stock.shareCount = calcShares
         stock.amountRisked = calcRiskAmount
-        
+        stock.accountUsed = selectedAccount.accountName
         modelContext.insert(stock)
     }
 }
