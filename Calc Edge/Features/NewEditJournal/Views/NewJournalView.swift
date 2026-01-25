@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import SwiftData
 
-struct NewEditJournalView: View {
+struct NewJournalView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
@@ -18,20 +18,14 @@ struct NewEditJournalView: View {
     @State private var isNew: Bool = false
 
     var body: some View {
-        HStack {
-            Form {
-                IdentificationSection(trade: trade)
-                StrategySection(trade: trade)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                IdentificationSection(trade: trade, isNewJournalEntry: .constant(false))
                 PricesSection(trade: trade)
-                RiskSection(trade: trade)
-                ExitSection(trade: trade)
-                MarketContextSection(trade: trade)
-                ReviewSection(trade: trade)
-                LegsSection(trade: trade)
-                AttachmentsSection(trade: trade)
+                RiskSection(trade: trade, isNewJournalEntry: .constant(false))
 
                 HStack {
-                    Button(isNew ? "Save" : "Update") {
+                    Button("Save") {
                         save()
                     }
                     .tint(.green)
@@ -42,6 +36,7 @@ struct NewEditJournalView: View {
                     .tint(.red)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
         }
         .onAppear {
@@ -53,14 +48,11 @@ struct NewEditJournalView: View {
 
     private func save() {
         trade.ticker = trade.ticker.uppercased()
-        if isNew {
-            modelContext.insert(trade)
-        }
-        dismiss()
+        modelContext.insert(trade)
     }
 }
 
 #Preview {
-    NewEditJournalView(trade: Trade(ticker: "AAPL"))
+    NewJournalView(trade: Trade(ticker: "AAPL"))
         .modelContainer(for: [Trade.self, TradeLeg.self, TradeContext.self, TradeReview.self, TradeAttachment.self], inMemory: true)
 }

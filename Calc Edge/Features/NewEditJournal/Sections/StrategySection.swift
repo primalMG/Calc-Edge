@@ -4,7 +4,7 @@ struct StrategySection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Strategy") {
+        JournalSectionContainer("Strategy") {
             LabeledContent("Strategy Name") {
                 TextField("", text: optionalTextBinding($trade.strategyName))
             }

@@ -25,7 +25,7 @@ struct TradeJournalDetailView: View {
                     DetailRow(label: "Thesis", value: displayText(trade.thesis))
                     DetailRow(label: "Catalyst", value: displayText(trade.catalyst))
                     DetailRow(label: "Confidence Score", value: "\(trade.confidenceScore)")
-                    DetailRow(label: "A+ Setup", value: formatBool(trade.isAPlusSetup))
+                    DetailRow(label: "A+ Setup", value: formatBool(trade.isAPlusSetup ?? false))
                 }
 
                 DetailSection(title: "Prices") {

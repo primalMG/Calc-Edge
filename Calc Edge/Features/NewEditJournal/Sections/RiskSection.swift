@@ -2,38 +2,48 @@ import SwiftUI
 
 struct RiskSection: View {
     @Bindable var trade: Trade
+    @Binding var isNewJournalEntry: Bool
 
     var body: some View {
-        Section("Risk") {
-            LabeledContent("Planned Risk Amount") {
-                TextField("", text: optionalDecimalBinding($trade.plannedRiskAmount))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
+        JournalSectionContainer("Risk") {
+            LazyVGrid(columns: columns, spacing: 12) {
+                JournalField("Planned Risk Amount") {
+                    TextField("", text: optionalDecimalBinding($trade.plannedRiskAmount))
+                        .textFieldStyle(CustomTextFieldStyle())
+                }
 
-            LabeledContent("Planned Risk Percent") {
-                TextField("", text: optionalDecimalBinding($trade.plannedRiskPercent))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
+                JournalField("Planned Risk Percent") {
+                    TextField("", text: optionalDecimalBinding($trade.plannedRiskPercent))
+                        .textFieldStyle(CustomTextFieldStyle())
+                }
 
-            LabeledContent("Commissions") {
-                TextField("", text: optionalDecimalBinding($trade.commissions))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
+                if isNewJournalEntry {
+                    JournalField("Commissions") {
+                        TextField("", text: optionalDecimalBinding($trade.commissions))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
 
-            LabeledContent("Slippage") {
-                TextField("", text: optionalDecimalBinding($trade.slippage))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
+                    JournalField("Slippage") {
+                        TextField("", text: optionalDecimalBinding($trade.slippage))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
 
-            LabeledContent("MAE") {
-                TextField("", text: optionalDecimalBinding($trade.mae))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
+                    JournalField("MAE") {
+                        TextField("", text: optionalDecimalBinding($trade.mae))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
 
-            LabeledContent("MFE") {
-                TextField("", text: optionalDecimalBinding($trade.mfe))
-                    .textFieldStyle(CustomTextFieldStyle())
+                    JournalField("MFE") {
+                        TextField("", text: optionalDecimalBinding($trade.mfe))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
+                }
             }
         }
     }
+
+    private let columns = [
+        GridItem(.flexible(minimum: 140), spacing: 12),
+        GridItem(.flexible(minimum: 140), spacing: 12)
+    ]
 }

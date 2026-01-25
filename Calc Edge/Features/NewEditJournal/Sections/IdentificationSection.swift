@@ -10,6 +10,7 @@ import SwiftData
 
 struct IdentificationSection: View {
     @Bindable var trade: Trade
+    @Binding var isNewJournalEntry: Bool
     @Query private var accounts: [Account]
     
     @State private var selectedAccountID: Account.ID?
@@ -21,15 +22,17 @@ struct IdentificationSection: View {
     }
     
     var body: some View {
-        Section("Identification") {
+        JournalSectionContainer("Identification") {
             LabeledContent("Ticker") {
                 TextField("", text: $trade.ticker)
-//                            .textInputAutocapitalization(.characters)
+//                    .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
+                    .frame(width: 75)
             }
 
             LabeledContent("Market") {
                 TextField("", text: optionalTextBinding($trade.market))
+                    .frame(width: 75)
             }
 
             Picker("Accounts", selection: $selectedAccountID) {
@@ -57,11 +60,13 @@ struct IdentificationSection: View {
             }
             
             DatePicker("Opened At", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
-
-            Toggle("Closed Trade", isOn: closedTradeBinding)
-
-            if trade.closedAt != nil {
-                DatePicker("Closed At", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+            
+            if isNewJournalEntry {
+                Toggle("Closed Trade", isOn: closedTradeBinding)
+                
+                if trade.closedAt != nil {
+                    DatePicker("Closed At", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                }
             }
         }
         .onAppear {

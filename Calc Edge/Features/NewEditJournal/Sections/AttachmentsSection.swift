@@ -4,7 +4,7 @@ struct AttachmentsSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Attachments") {
+        JournalSectionContainer("Attachments") {
             if trade.attachments.isEmpty {
                 Text("No attachments added yet.")
                     .foregroundStyle(.secondary)

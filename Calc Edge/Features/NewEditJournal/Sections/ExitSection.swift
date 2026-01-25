@@ -4,7 +4,7 @@ struct ExitSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Exit") {
+        JournalSectionContainer("Exit") {
             Picker("Exit Reason", selection: $trade.exitReason) {
                 Text("None")
                     .tag(ExitReason?.none)

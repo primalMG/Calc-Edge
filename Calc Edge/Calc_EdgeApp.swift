@@ -13,7 +13,12 @@ struct Calc_EdgeApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Account.self,
-            Stock.self
+            Stock.self,
+            Trade.self,
+            TradeAttachment.self,
+            TradeContext.self,
+            TradeLeg.self,
+            TradeReview.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

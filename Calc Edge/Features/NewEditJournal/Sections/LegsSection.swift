@@ -4,7 +4,7 @@ struct LegsSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Legs") {
+        JournalSectionContainer("Legs") {
             if trade.legs.isEmpty {
                 Text("No legs added yet.")
                     .foregroundStyle(.secondary)

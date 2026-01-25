@@ -4,7 +4,7 @@ struct MarketContextSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Market Context") {
+        JournalSectionContainer("Market Context") {
             if let context = trade.context {
                 TradeContextEditor(context: context) {
                     trade.context = nil

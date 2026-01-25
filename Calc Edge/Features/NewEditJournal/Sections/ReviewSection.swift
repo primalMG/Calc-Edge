@@ -4,7 +4,7 @@ struct ReviewSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        Section("Review") {
+        JournalSectionContainer("Review") {
             if let review = trade.review {
                 TradeReviewEditor(review: review) {
                     trade.review = nil

@@ -15,13 +15,14 @@ struct TradeJournalView: View {
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var newJournalIsPresent: Bool = false
     @State private var draftTrade = Trade(ticker: "")
+    @State private var navigationPath = NavigationPath()
 
     private var sortedTrades: [Trade] {
         trades.sorted(using: sortOrder)
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             Table(sortedTrades, selection: $selectedTrade, sortOrder: $sortOrder) {
                 TableColumn("Opened At") { trade in
                     Text(formatDate(trade.openedAt))
@@ -41,17 +42,9 @@ struct TradeJournalView: View {
                     Text(trade.instrument.rawValue.capitalized)
                 }
 
-                TableColumn("Market / Account") { trade in
-                    Text("\(trade.market ?? "N/A") / \(trade.account ?? "N/A")")
-                }
-
-                TableColumn("Entry") { trade in
+                TableColumn("Entry Price") { trade in
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Price: \(formatDecimal(trade.entryPrice))")
-                        HStack(spacing: 6) {
-                            Text("Stop: \(formatDecimal(trade.stopPrice))")
-                            Text("Target: \(formatDecimal(trade.targetPrice))")
-                        }
                     }
                 }
 
@@ -65,20 +58,35 @@ struct TradeJournalView: View {
                     }
                 }
 
-                TableColumn("Strategy") { trade in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(trade.strategyName ?? "N/A")
-                        Text(trade.setupType ?? "N/A")
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
                 TableColumn("Confidence") { trade in
                     Text("\(trade.confidenceScore)")
                 }
             }
+            .contextMenu(forSelectionType: Trade.ID.self) { items in
+                Button("Open Trade Detail") {
+                    if let tradeID = items.first {
+                        navigationPath.append(tradeID)
+                    }
+                }
+            } primaryAction: { items in
+                if let tradeID = items.first {
+                    navigationPath.append(tradeID)
+                }
+            }
+            .navigationDestination(for: Trade.ID.self) { tradeID in
+                if let trade = trades.first(where: { $0.id == tradeID }) {
+                    TradeJournalDetailView(trade: trade)
+                } else {
+                    Text("Trade not found")
+                }
+            }
             .navigationTitle("Trade Journal")
             .toolbar {
+                ToolbarItem {
+                    Button("testing") {
+                        print(trades)
+                    }
+                }
                 ToolbarItem {
                     Button {
                         draftTrade = Trade(ticker: "")
@@ -91,7 +99,7 @@ struct TradeJournalView: View {
             .sheet(isPresented: $newJournalIsPresent, onDismiss: {
                 draftTrade = Trade(ticker: "")
             }) {
-                NewEditJournalView(trade: draftTrade)
+                NewJournalView(trade: draftTrade)
             }
         }
     }
