@@ -8,9 +8,16 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @Binding var selectedStock: Stock
-
     private let columns = [GridItem(.adaptive(minimum: 220), spacing: 16)]
+    @State private var selectedStock = Stock(ticker: "",
+                                             entryPrice: 0.0,
+                                             riskPercentage: 0.0,
+                                             stopLoss: 0.0,
+                                             shareCount: 0.0,
+                                             targetPrice: 0.0,
+                                             accountUsed: "",
+                                             balanceAtTrade: 0.0,
+                                             amountRisked: 0.0)
 
     var body: some View {
         ScrollView {
@@ -70,7 +77,7 @@ private struct DashboardCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
-        .background(.thinMaterial)
+//        .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

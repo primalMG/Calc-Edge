@@ -83,11 +83,6 @@ struct TradeJournalView: View {
             .navigationTitle("Trade Journal")
             .toolbar {
                 ToolbarItem {
-                    Button("testing") {
-                        print(trades)
-                    }
-                }
-                ToolbarItem {
                     Button {
                         draftTrade = Trade(ticker: "")
                         newJournalIsPresent.toggle()

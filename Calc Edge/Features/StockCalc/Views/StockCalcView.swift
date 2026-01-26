@@ -6,8 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct StockCalcView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    @State private var toggleAlert: Bool = false
+    
     @Bindable var stock: Stock
     
     var riskRewardRatioColor: Color {
@@ -17,7 +22,6 @@ struct StockCalcView: View {
         return Color.red
     }
     
-//    TODO: Build Calcuation View, Should have similar values but a bit more to the point.
     var body: some View {
         VStack {
             Text("Risk Calculation for \(stock.ticker)")
@@ -117,19 +121,40 @@ struct StockCalcView: View {
         .padding()
         .toolbar {
             ToolbarItemGroup {
-                Button {
-                    
+                NavigationLink {
+                    NewEditRiskCalc(stock: stock)
                 } label: {
-                    Text("Button A")
+                    Image(systemName: "pencil")
                 }
+                .help("Edit Calcuation")
+                .keyboardShortcut("E")
 
                 Button {
-                    
+                    toggleAlert.toggle()
                 } label: {
-                    Text("Button B")
+                    Image(systemName: "trash")
                 }
+                .help("Delete")
+                .keyboardShortcut("D")
+                .alert("Delete Calculation", isPresented: $toggleAlert) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Yes", role: .destructive) {
+                        deleteCalc()
+                    }
+                } message: {
+                    Text("Are you sure you want to do this?")
+                }
+
             }
         }
+    }
+    
+    private func deleteCalc() {
+        withAnimation {
+            modelContext.delete(stock)
+            try? modelContext.save()
+        }
+        dismiss()
     }
 }
 
