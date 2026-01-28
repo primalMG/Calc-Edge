@@ -21,7 +21,13 @@ struct RiskCalcListView: View {
                     NavigationLink {
                         StockCalcView(stock: stock)
                     } label: {
-                        Text(stock.ticker)
+                        HStack {
+                            Text(stock.ticker)
+                            
+//                            Text(stock.createdAt.formatted(date: .abbreviated, time: .omitted))
+                            
+                            Text(stock.profitTotal.formatted())
+                        }
                     }
                 }
                 .onDelete(perform: deleteItems)

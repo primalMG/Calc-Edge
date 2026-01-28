@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RiskSection: View {
     @Bindable var trade: Trade
-    @Binding var isNewJournalEntry: Bool
+    @Binding var inEditMode: Bool
 
     var body: some View {
         JournalSectionContainer("Risk") {
@@ -17,7 +17,7 @@ struct RiskSection: View {
                         .textFieldStyle(CustomTextFieldStyle())
                 }
 
-                if isNewJournalEntry {
+                if inEditMode {
                     JournalField("Commissions") {
                         TextField("", text: optionalDecimalBinding($trade.commissions))
                             .textFieldStyle(CustomTextFieldStyle())
@@ -43,6 +43,7 @@ struct RiskSection: View {
     }
 
     private let columns = [
+        GridItem(.flexible(minimum: 140), spacing: 12),
         GridItem(.flexible(minimum: 140), spacing: 12),
         GridItem(.flexible(minimum: 140), spacing: 12)
     ]

@@ -20,7 +20,9 @@ struct DetailSection<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
-            content
+            HStack {
+                content
+            }
         }
     }
 }

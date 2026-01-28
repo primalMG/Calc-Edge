@@ -180,6 +180,7 @@ struct NewEditRiskCalc: View {
         stock.amountRisked = calcRiskAmount
         stock.accountUsed = selectedAccount.accountName
         modelContext.insert(stock)
+        dismiss()
     }
 }
 

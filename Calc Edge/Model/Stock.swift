@@ -11,6 +11,8 @@ import SwiftData
 @Model
 final class Stock {
     var id = UUID()
+    var createdAt: Date
+    var updatedAt: Date?
     var ticker: String
     var entryPrice: Double
     var riskPercentage: Double
@@ -53,6 +55,8 @@ final class Stock {
     var account: Account?
     
     init(id: UUID = UUID(),
+         createdAt: Date = Date.now,
+         updatedAt: Date = Date.now,
          ticker: String,
          entryPrice: Double,
          riskPercentage: Double,
@@ -64,6 +68,8 @@ final class Stock {
          amountRisked: Double,
         ) {
         self.id = id
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
         self.ticker = ticker
         self.entryPrice = entryPrice
         self.riskPercentage = riskPercentage

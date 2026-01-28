@@ -9,14 +9,16 @@ import SwiftUI
 
 struct DetailRow: View {
     let label: String
-    let value: String
+    @Binding var value: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Text(value)
+            
+            TextField(label, text: $value)
+            
         }
     }
 }

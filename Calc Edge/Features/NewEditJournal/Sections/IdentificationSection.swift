@@ -10,7 +10,7 @@ import SwiftData
 
 struct IdentificationSection: View {
     @Bindable var trade: Trade
-    @Binding var isNewJournalEntry: Bool
+    @Binding var inEditMode: Bool
     @Query private var accounts: [Account]
     
     @State private var selectedAccountID: Account.ID?
@@ -23,19 +23,19 @@ struct IdentificationSection: View {
     
     var body: some View {
         JournalSectionContainer("Identification") {
-            LabeledContent("Ticker") {
+            LabeledContent("Ticker:") {
                 TextField("", text: $trade.ticker)
 //                    .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .frame(width: 75)
             }
 
-            LabeledContent("Market") {
+            LabeledContent("Market:") {
                 TextField("", text: optionalTextBinding($trade.market))
                     .frame(width: 75)
             }
 
-            Picker("Accounts", selection: $selectedAccountID) {
+            Picker("Accounts:", selection: $selectedAccountID) {
                 ForEach(accounts) { account in
                     Text(account.accountName)
                         .tag(account.id as Account.ID?)
@@ -45,30 +45,32 @@ struct IdentificationSection: View {
                 trade.account = selectedAccount.accountName
             }
 
-            Picker("Instrument", selection: $trade.instrument) {
+            Picker("Instrument:", selection: $trade.instrument) {
                 ForEach(InstrumentType.allCases, id: \.self) { instrument in
                     Text(instrument.rawValue.capitalized)
                         .tag(instrument)
                 }
             }
             
-            Picker("Direction", selection: $trade.direction) {
+            Picker("Direction:", selection: $trade.direction) {
                 ForEach(TradeDirection.allCases, id: \.self) { direction in
                     Text(direction.rawValue.capitalized)
                         .tag(direction)
                 }
             }
             
-            DatePicker("Opened At", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
+            DatePicker("Opened At:", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
             
-            if isNewJournalEntry {
-                Toggle("Closed Trade", isOn: closedTradeBinding)
+            if inEditMode {
+                Toggle("Closed Trade:", isOn: closedTradeBinding)
                 
                 if trade.closedAt != nil {
-                    DatePicker("Closed At", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("Closed At:", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
         }
+        .animation(.easeInOut, value: trade.closedAt != nil)
         .onAppear {
             if selectedAccountID == nil {
                 selectedAccountID = accounts.first?.id
@@ -80,10 +82,12 @@ struct IdentificationSection: View {
         Binding(
             get: { trade.closedAt != nil },
             set: { isClosed in
-                if isClosed {
-                    trade.closedAt = trade.closedAt ?? Date()
-                } else {
-                    trade.closedAt = nil
+                withAnimation(.easeInOut) {
+                    if isClosed {
+                        trade.closedAt = trade.closedAt ?? Date()
+                    } else {
+                        trade.closedAt = nil
+                    }
                 }
             }
         )

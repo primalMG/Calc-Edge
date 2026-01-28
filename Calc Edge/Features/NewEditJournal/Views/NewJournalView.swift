@@ -20,9 +20,9 @@ struct NewJournalView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                IdentificationSection(trade: trade, isNewJournalEntry: .constant(false))
+                IdentificationSection(trade: trade, inEditMode: .constant(false))
                 PricesSection(trade: trade)
-                RiskSection(trade: trade, isNewJournalEntry: .constant(false))
+                RiskSection(trade: trade, inEditMode: .constant(false))
 
                 HStack {
                     Button("Save") {

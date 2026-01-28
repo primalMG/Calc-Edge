@@ -12,6 +12,7 @@ struct StockCalcView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var toggleAlert: Bool = false
+    @State private var presentSheet: Bool = false
     
     @Bindable var stock: Stock
     
@@ -121,13 +122,17 @@ struct StockCalcView: View {
         .padding()
         .toolbar {
             ToolbarItemGroup {
-                NavigationLink {
-                    NewEditRiskCalc(stock: stock)
+                Button {
+                    presentSheet.toggle()
                 } label: {
                     Image(systemName: "pencil")
                 }
                 .help("Edit Calcuation")
                 .keyboardShortcut("E")
+                .sheet(isPresented: $presentSheet) {
+                    NewEditRiskCalc(stock: stock)
+                }
+                
 
                 Button {
                     toggleAlert.toggle()
