@@ -3,6 +3,11 @@ import SwiftUI
 import SwiftData
 
 struct TradeJournalDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var toggleDelete: Bool = false
+    
     @Bindable var trade: Trade
 
     var body: some View {
@@ -23,37 +28,33 @@ struct TradeJournalDetailView: View {
                 
                 StrategySection(trade: trade)
                 
-                ReviewSection(trade: trade)
-                MarketContextSection(trade: trade)
+                HStack {
+                    ReviewSection(trade: trade)
+                    MarketContextSection(trade: trade)
+                }
+                
                 LegsSection(trade: trade)
                 AttachmentsSection(trade: trade)
             }
             .padding()
         }
         .navigationTitle(trade.ticker)
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    toggleDelete.toggle()
+                } label: {
+                    Image(systemName: "trash.fill")
+                }
+                .alert("Delete Journal Entry?", isPresented: $toggleDelete) {
+                    
+                }
+            }
+        }
     }
-
-    private func displayText(_ value: String?) -> String {
-        guard let value, !value.isEmpty else { return "N/A" }
-        return value
-    }
-
-    private func formatDate(_ date: Date?) -> String {
-        guard let date else { return "N/A" }
-        return date.formatted()
-    }
-
-    private func formatDecimal(_ value: Decimal?) -> String {
-        guard let value else { return "N/A" }
-        return NSDecimalNumber(decimal: value).stringValue
-    }
-
-    private func formatBool(_ value: Bool) -> String {
-        value ? "Yes" : "No"
-    }
-
-    private func formatImageData(_ data: Data?) -> String {
-        guard let data else { return "No" }
-        return "Yes (\(data.count) bytes)"
+    
+    private func delete() {
+        modelContext.delete(trade)
+        dismiss()
     }
 }
