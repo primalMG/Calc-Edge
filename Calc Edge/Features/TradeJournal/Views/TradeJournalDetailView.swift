@@ -30,10 +30,14 @@ struct TradeJournalDetailView: View {
                 
                 HStack {
                     ReviewSection(trade: trade)
+                    
                     MarketContextSection(trade: trade)
                 }
                 
-                LegsSection(trade: trade)
+                if trade.instrument == .option {
+                    LegsSection(trade: trade)
+                }
+                
                 AttachmentsSection(trade: trade)
             }
             .padding()
@@ -47,7 +51,16 @@ struct TradeJournalDetailView: View {
                     Image(systemName: "trash.fill")
                 }
                 .alert("Delete Journal Entry?", isPresented: $toggleDelete) {
-                    
+                    Button(role: .cancel) { } label: {
+                        Text("Cancel")
+                    }
+
+                    Button(role: .destructive) {
+                        delete()
+                    } label: {
+                        Text("Yes")
+                    }
+
                 }
             }
         }

@@ -5,20 +5,23 @@ struct LegsSection: View {
 
     var body: some View {
         JournalSectionContainer("Legs") {
-            if trade.legs.isEmpty {
-                Text("No legs added yet.")
-                    .foregroundStyle(.secondary)
-            }
-
-            ForEach(trade.legs) { leg in
-                TradeLegEditor(leg: leg) {
-                    removeLeg(leg)
+            VStack(alignment: .leading) {
+                Button("Add Leg") {
+                    trade.legs.append(TradeLeg())
+                }
+                
+                if trade.legs.isEmpty {
+                    Text("No legs added yet.")
+                        .foregroundStyle(.secondary)
+                }
+                
+                ForEach(trade.legs) { leg in
+                    TradeLegEditor(leg: leg) {
+                        removeLeg(leg)
+                    }
                 }
             }
-
-            Button("Add Leg") {
-                trade.legs.append(TradeLeg())
-            }
+//            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -32,13 +35,29 @@ struct LegsSection: View {
 private struct TradeLegEditor: View {
     @Bindable var leg: TradeLeg
     let onRemove: () -> Void
+    
+    @State private var toggleSymbolPopover: Bool = false
 
     var body: some View {
         DisclosureGroup(legTitle) {
-            VStack(spacing: 12) {
-                LabeledContent("Symbol") {
+            Form {
+                LabeledContent {
                     TextField("", text: optionalTextBinding($leg.symbol))
+                        .textFieldStyle(CustomTextFieldStyle())
+                } label: {
+                    Text("Symbol")
+                    Button {
+                        toggleSymbolPopover.toggle()
+                    } label: {
+                        Image(systemName: "info.bubble.fill.rtl")
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $toggleSymbolPopover) {
+                        Text("OCC or OSI Code")
+                            .padding()
+                    }
                 }
+                
 
                 Picker("Instrument", selection: $leg.legInstrument) {
                     ForEach(InstrumentType.allCases, id: \.self) { instrument in
@@ -71,6 +90,7 @@ private struct TradeLegEditor: View {
 
                 LabeledContent("Option Type") {
                     TextField("", text: optionalTextBinding($leg.optionType))
+                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 Button("Remove Leg") {

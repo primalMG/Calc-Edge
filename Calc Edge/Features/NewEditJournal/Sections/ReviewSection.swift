@@ -23,7 +23,7 @@ private struct TradeReviewEditor: View {
     let onRemove: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
+        Form {
             Toggle("Followed Plan", isOn: $review.followedPlan)
 
             Stepper("Entry Quality: \(review.entryQuality)", value: $review.entryQuality, in: 1...5)
@@ -37,29 +37,29 @@ private struct TradeReviewEditor: View {
                 }
             }
 
-            Toggle("Would Retake", isOn: $review.wouldRetake)
+            Toggle("Would Retake?", isOn: $review.wouldRetake)
 
-            LabeledContent("Mistake Type") {
+            LabeledContent("Mistake Type:") {
                 TextField("", text: optionalTextBinding($review.mistakeType))
             }
 
-            LabeledContent("Post Trade Notes") {
+            LabeledContent("Post Trade Notes:") {
                 TextField("", text: optionalTextBinding($review.postTradeNotes))
             }
 
-            LabeledContent("What Went Right") {
+            LabeledContent("What Went Right:") {
                 TextField("", text: optionalTextBinding($review.whatWentRight))
             }
 
-            LabeledContent("What Went Wrong") {
+            LabeledContent("What Went Wrong:") {
                 TextField("", text: optionalTextBinding($review.whatWentWrong))
             }
 
-            LabeledContent("One Improvement") {
+            LabeledContent("One Improvement:") {
                 TextField("", text: optionalTextBinding($review.oneImprovement))
             }
 
-            LabeledContent("Rule Updated") {
+            LabeledContent("Rule Updated:") {
                 TextField("", text: optionalTextBinding($review.ruleCreatedOrUpdated))
             }
 

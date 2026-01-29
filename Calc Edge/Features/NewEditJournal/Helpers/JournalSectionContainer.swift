@@ -35,7 +35,7 @@ struct JournalField<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .trailing, spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
