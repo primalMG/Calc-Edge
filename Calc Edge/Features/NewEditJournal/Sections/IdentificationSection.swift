@@ -21,64 +21,52 @@ struct IdentificationSection: View {
         ?? Account(id: UUID(), accountName: "", accountSize: 0, currency: "")
     }
     
-    private let columns = [
-        GridItem(.flexible(minimum: 140), spacing: 10),
-        GridItem(.flexible(minimum: 140), spacing: 10)
-    ]
-    
     var body: some View {
         JournalSectionContainer("Identification") {
-            Grid(alignment: .trailing) {
-                GridRow {
-                    LabeledContent("Ticker:") {
-                        TextField("", text: $trade.ticker)
-                            .autocorrectionDisabled()
-                            .frame(width: 75)
-                    }
-                    
-                    LabeledContent("Market:") {
-                        TextField("", text: optionalTextBinding($trade.market))
-                            .frame(width: 75)
-                    }
+            LabeledContent("Ticker:") {
+                TextField("", text: $trade.ticker)
+//                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
+                    .frame(width: 75)
+            }
+
+            LabeledContent("Market:") {
+                TextField("", text: optionalTextBinding($trade.market))
+                    .frame(width: 75)
+            }
+
+            Picker("Accounts:", selection: $selectedAccountID) {
+                ForEach(accounts) { account in
+                    Text(account.accountName)
+                        .tag(account.id as Account.ID?)
                 }
-                
-                GridRow {
-                    Picker("Accounts:", selection: $selectedAccountID) {
-                        ForEach(accounts) { account in
-                            Text(account.accountName)
-                                .tag(account.id as Account.ID?)
-                        }
-                    }
-                    .onChange(of: selectedAccountID) { _, _ in
-                        trade.account = selectedAccount.accountName
-                    }
-                    
-                    Picker("Instrument:", selection: $trade.instrument) {
-                        ForEach(InstrumentType.allCases, id: \.self) { instrument in
-                            Text(instrument.rawValue.capitalized)
-                                .tag(instrument)
-                        }
-                    }
+            }
+            .onChange(of: selectedAccountID) { _, _ in
+                trade.account = selectedAccount.accountName
+            }
+
+            Picker("Instrument:", selection: $trade.instrument) {
+                ForEach(InstrumentType.allCases, id: \.self) { instrument in
+                    Text(instrument.rawValue.capitalized)
+                        .tag(instrument)
                 }
+            }
+            
+            Picker("Direction:", selection: $trade.direction) {
+                ForEach(TradeDirection.allCases, id: \.self) { direction in
+                    Text(direction.rawValue.capitalized)
+                        .tag(direction)
+                }
+            }
+            
+            DatePicker("Opened At:", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
+            
+            if inEditMode {
+                Toggle("Closed Trade:", isOn: closedTradeBinding)
                 
-                GridRow {
-                    Picker("Direction:", selection: $trade.direction) {
-                        ForEach(TradeDirection.allCases, id: \.self) { direction in
-                            Text(direction.rawValue.capitalized)
-                                .tag(direction)
-                        }
-                    }
-                    
-                    DatePicker("Opened At:", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
-                    
-                    if inEditMode {
-                        Toggle("Closed Trade:", isOn: closedTradeBinding)
-                        
-                        if trade.closedAt != nil {
-                            DatePicker("Closed At:", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
+                if trade.closedAt != nil {
+                    DatePicker("Closed At:", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
         }

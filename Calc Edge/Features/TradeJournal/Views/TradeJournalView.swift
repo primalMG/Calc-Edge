@@ -18,6 +18,7 @@ struct TradeJournalView: View {
     @State private var navigationPath = NavigationPath()
     
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openWindow) private var openWindow
 
     private var sortedTrades: [Trade] {
         trades.sorted(using: sortOrder)
@@ -92,8 +93,7 @@ struct TradeJournalView: View {
             .toolbar {
                 ToolbarItem {
                     Button {
-                        draftTrade = Trade(ticker: "")
-                        newJournalIsPresent.toggle()
+                        openWindow(id: "new-journal")
                     } label: {
                         Image(systemName: "plus")
                     }

@@ -28,10 +28,17 @@ struct Calc_EdgeApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    @State private var draftTrade = Trade(ticker: "")
 
     var body: some Scene {
         WindowGroup {
             RootView()
+        }
+        .modelContainer(sharedModelContainer)
+        
+        Window("New Journal Entry", id: "new-journal") {
+            NewJournalView(trade: draftTrade)
         }
         .modelContainer(sharedModelContainer)
     }

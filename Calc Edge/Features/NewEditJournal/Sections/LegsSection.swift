@@ -95,12 +95,12 @@ private struct TradeLegEditor: View {
                             .textFieldStyle(CustomTextFieldStyle())
                     }
                     
-//                    Picker("Option Type", selection: $leg.optionType) {
-//                        ForEach(OptionType.allCases, id: \.self) { type in
-//                            Text(type.rawValue)
-//                                .tag(type)
-//                        }
-//                    }
+                    Picker("Option Type", selection: $leg.optionType) {
+                        ForEach(OptionType.allCases, id: \.self) { type in
+                            Text(type.rawValue)
+                                .tag(type)
+                        }
+                    }
 
                 }
                 

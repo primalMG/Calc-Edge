@@ -13,7 +13,7 @@ final class TradeLeg {
     // Options specifics (only filled when legInstrument == .option)
     var optionExpiration: Date?
     var optionStrike: Decimal?
-    var optionType: String?
+    var optionType: OptionType
 
     init(
         symbol: String? = nil,
@@ -23,7 +23,7 @@ final class TradeLeg {
         exitPrice: Decimal? = nil,
         optionExpiration: Date? = nil,
         optionStrike: Decimal? = nil,
-        optionType: String? = nil
+        optionType: OptionType = .call
     ) {
         self.symbol = symbol
         self.legInstrument = legInstrument
