@@ -36,8 +36,8 @@ struct NewJournalView: View {
                     .tint(.red)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             if trade.ticker.isEmpty {

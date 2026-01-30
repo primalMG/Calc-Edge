@@ -21,7 +21,7 @@ struct LegsSection: View {
                     }
                 }
             }
-//            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -40,59 +40,70 @@ private struct TradeLegEditor: View {
 
     var body: some View {
         DisclosureGroup(legTitle) {
-            Form {
-                LabeledContent {
-                    TextField("", text: optionalTextBinding($leg.symbol))
-                        .textFieldStyle(CustomTextFieldStyle())
-                } label: {
-                    Text("Symbol")
-                    Button {
-                        toggleSymbolPopover.toggle()
+            Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 10) {
+                GridRow {
+                    LabeledContent {
+                        TextField("", text: optionalTextBinding($leg.symbol))
+                            .textFieldStyle(CustomTextFieldStyle())
                     } label: {
-                        Image(systemName: "info.bubble.fill.rtl")
+                        Text("Symbol")
+                        Button {
+                            toggleSymbolPopover.toggle()
+                        } label: {
+                            Image(systemName: "info.bubble.fill.rtl")
+                        }
+                        .buttonStyle(.plain)
+                        .popover(isPresented: $toggleSymbolPopover) {
+                            Text("OCC or OSI Code")
+                                .padding()
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .popover(isPresented: $toggleSymbolPopover) {
-                        Text("OCC or OSI Code")
-                            .padding()
+                    
+
+                    Picker("Instrument", selection: $leg.legInstrument) {
+                        ForEach(InstrumentType.allCases, id: \.self) { instrument in
+                            Text(instrument.rawValue.capitalized)
+                                .tag(instrument)
+                        }
                     }
                 }
                 
+                GridRow {
+                    LabeledContent("Quantity") {
+                        TextField("", text: decimalBinding($leg.quantity))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
 
-                Picker("Instrument", selection: $leg.legInstrument) {
-                    ForEach(InstrumentType.allCases, id: \.self) { instrument in
-                        Text(instrument.rawValue.capitalized)
-                            .tag(instrument)
+                    LabeledContent("Entry Price") {
+                        TextField("", text: optionalDecimalBinding($leg.entryPrice))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
+
+                    LabeledContent("Exit Price") {
+                        TextField("", text: optionalDecimalBinding($leg.exitPrice))
+                            .textFieldStyle(CustomTextFieldStyle())
                     }
                 }
-
-                LabeledContent("Quantity") {
-                    TextField("", text: decimalBinding($leg.quantity))
-                        .textFieldStyle(CustomTextFieldStyle())
+                
+                GridRow {
+                    DatePicker("Option Expiration", selection: optionExpirationBinding, displayedComponents: [.date])
                 }
+                
+                GridRow {
+                    LabeledContent("Option Strike") {
+                        TextField("", text: optionalDecimalBinding($leg.optionStrike))
+                            .textFieldStyle(CustomTextFieldStyle())
+                    }
+                    
+//                    Picker("Option Type", selection: $leg.optionType) {
+//                        ForEach(OptionType.allCases, id: \.self) { type in
+//                            Text(type.rawValue)
+//                                .tag(type)
+//                        }
+//                    }
 
-                LabeledContent("Entry Price") {
-                    TextField("", text: optionalDecimalBinding($leg.entryPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
-
-                LabeledContent("Exit Price") {
-                    TextField("", text: optionalDecimalBinding($leg.exitPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
-                }
-
-                DatePicker("Option Expiration", selection: optionExpirationBinding, displayedComponents: [.date])
-
-                LabeledContent("Option Strike") {
-                    TextField("", text: optionalDecimalBinding($leg.optionStrike))
-                        .textFieldStyle(CustomTextFieldStyle())
-                }
-
-                LabeledContent("Option Type") {
-                    TextField("", text: optionalTextBinding($leg.optionType))
-                        .textFieldStyle(CustomTextFieldStyle())
-                }
-
+                
                 Button("Remove Leg") {
                     onRemove()
                 }

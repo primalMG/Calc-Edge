@@ -14,9 +14,7 @@ struct JournalSectionContainer<Content: View>: View {
             Text(title)
                 .font(.headline)
             
-            HStack(spacing: 15) {
-                content
-            }
+            content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()

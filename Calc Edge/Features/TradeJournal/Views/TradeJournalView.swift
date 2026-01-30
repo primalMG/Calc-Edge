@@ -16,6 +16,8 @@ struct TradeJournalView: View {
     @State private var newJournalIsPresent: Bool = false
     @State private var draftTrade = Trade(ticker: "")
     @State private var navigationPath = NavigationPath()
+    
+    @Environment(\.modelContext) private var modelContext
 
     private var sortedTrades: [Trade] {
         trades.sorted(using: sortOrder)
@@ -68,6 +70,12 @@ struct TradeJournalView: View {
                         navigationPath.append(tradeID)
                     }
                 }
+                Button("Delete Trade") {
+                    if let tradeId = items.first {
+                        delete(tradeId: tradeId)
+                    }
+                }
+
             } primaryAction: { items in
                 if let tradeID = items.first {
                     navigationPath.append(tradeID)
@@ -96,6 +104,12 @@ struct TradeJournalView: View {
             }) {
                 NewJournalView(trade: draftTrade)
             }
+        }
+    }
+    
+    private func delete(tradeId: Trade.ID) {
+        if let trade = trades.first(where: { $0.id == tradeId }) {
+            modelContext.delete(trade)
         }
     }
 
