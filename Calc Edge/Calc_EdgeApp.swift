@@ -13,6 +13,7 @@ struct Calc_EdgeApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Account.self,
+            ForexCalculation.self,
             Stock.self,
             Trade.self,
             TradeAttachment.self,
