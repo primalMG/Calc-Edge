@@ -40,7 +40,7 @@ private struct TradeLegEditor: View {
 
     var body: some View {
         DisclosureGroup(legTitle) {
-            Grid(alignment: .trailing, horizontalSpacing: 10, verticalSpacing: 10) {
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
                 GridRow {
                     LabeledContent {
                         TextField("", text: optionalTextBinding($leg.symbol))
@@ -109,8 +109,10 @@ private struct TradeLegEditor: View {
                 }
                 .tint(.red)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var legTitle: String {

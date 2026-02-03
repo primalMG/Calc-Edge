@@ -19,17 +19,25 @@ struct RootSidebarView: View {
             } label: {
                 Label("Dashboard", systemImage: "house")
             }
-
-            NavigationLink {
-                RiskCalcListView(selectedStock: $selectedStock)
-            } label: {
-                Label("Risk Calc", systemImage: "chart.line.uptrend.xyaxis")
-            }
-
+            
             NavigationLink {
                 TradeJournalView()
             } label: {
                 Label("Trade Journal", systemImage: "book")
+            }
+
+            Section("Calculators") {
+                NavigationLink {
+                    RiskCalcListView(selectedStock: $selectedStock)
+                } label: {
+                    Label("Stock Calc", systemImage: "chart.line.uptrend.xyaxis")
+                }
+
+                NavigationLink {
+                    ForexCalcView()
+                } label: {
+                    Label("Forex Calc", systemImage: "dollarsign.circle")
+                }
             }
         }
         .navigationSplitViewColumnWidth(min: 250, ideal: 300)

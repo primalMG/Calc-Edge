@@ -32,7 +32,7 @@ struct RiskCalcListView: View {
                 }
                 .onDelete(perform: deleteItems)
             }
-            .navigationTitle("Risk Calc")
+            .navigationTitle("Stock Calc")
             .toolbar {
                 ToolbarItemGroup {
                     NavigationLink {

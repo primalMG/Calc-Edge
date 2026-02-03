@@ -26,7 +26,7 @@ struct DashboardView: View {
                     RiskCalcListView(selectedStock: $selectedStock)
                 } label: {
                     DashboardCard(
-                        title: "Risk Calc",
+                        title: "Stock Calc",
                         subtitle: "View and manage calculations",
                         systemImage: "chart.line.uptrend.xyaxis"
                     )

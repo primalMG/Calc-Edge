@@ -25,7 +25,7 @@ struct StockCalcView: View {
     
     var body: some View {
         VStack {
-            Text("Risk Calculation for \(stock.ticker)")
+            Text("Stock Calculation for \(stock.ticker)")
                 .font(.largeTitle)
                 
             Divider()
