@@ -23,50 +23,70 @@ struct IdentificationSection: View {
     
     var body: some View {
         JournalSectionContainer("Identification") {
-            LabeledContent("Ticker:") {
-                TextField("", text: $trade.ticker)
-//                    .textInputAutocapitalization(.characters)
-                    .autocorrectionDisabled()
-                    .frame(width: 75)
-            }
-
-            LabeledContent("Market:") {
-                TextField("", text: optionalTextBinding($trade.market))
-                    .frame(width: 75)
-            }
-
-            Picker("Accounts:", selection: $selectedAccountID) {
-                ForEach(accounts) { account in
-                    Text(account.accountName)
-                        .tag(account.id as Account.ID?)
+            LazyVGrid(columns: columns, spacing: 12) {
+                JournalField("Ticker") {
+                    TextField("", text: $trade.ticker)
+//                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                        .textFieldStyle(CustomTextFieldStyle())
                 }
-            }
-            .onChange(of: selectedAccountID) { _, _ in
-                trade.account = selectedAccount.accountName
-            }
 
-            Picker("Instrument:", selection: $trade.instrument) {
-                ForEach(InstrumentType.allCases, id: \.self) { instrument in
-                    Text(instrument.rawValue.capitalized)
-                        .tag(instrument)
+                JournalField("Market") {
+                    TextField("", text: optionalTextBinding($trade.market))
+                        .textFieldStyle(CustomTextFieldStyle())
                 }
-            }
-            
-            Picker("Direction:", selection: $trade.direction) {
-                ForEach(TradeDirection.allCases, id: \.self) { direction in
-                    Text(direction.rawValue.capitalized)
-                        .tag(direction)
+
+                JournalField("Accounts") {
+                    Picker("", selection: $selectedAccountID) {
+                        ForEach(accounts) { account in
+                            Text(account.accountName)
+                                .tag(account.id as Account.ID?)
+                        }
+                    }
+                    .labelsHidden()
+                    .onChange(of: selectedAccountID) { _, _ in
+                        trade.account = selectedAccount.accountName
+                    }
                 }
-            }
-            
-            DatePicker("Opened At:", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
-            
-            if inEditMode {
-                Toggle("Closed Trade:", isOn: closedTradeBinding)
+
+                JournalField("Instrument") {
+                    Picker("", selection: $trade.instrument) {
+                        ForEach(InstrumentType.allCases, id: \.self) { instrument in
+                            Text(instrument.rawValue.capitalized)
+                                .tag(instrument)
+                        }
+                    }
+                    .labelsHidden()
+                }
                 
-                if trade.closedAt != nil {
-                    DatePicker("Closed At:", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                JournalField("Direction") {
+                    Picker("", selection: $trade.direction) {
+                        ForEach(TradeDirection.allCases, id: \.self) { direction in
+                            Text(direction.rawValue.capitalized)
+                                .tag(direction)
+                        }
+                    }
+                    .labelsHidden()
+                }
+                
+                JournalField("Opened At") {
+                    DatePicker("", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
+                        .labelsHidden()
+                }
+                
+                if inEditMode {
+                    JournalField("Closed Trade") {
+                        Toggle("", isOn: closedTradeBinding)
+                            .labelsHidden()
+                    }
+                    
+                    if trade.closedAt != nil {
+                        JournalField("Closed At") {
+                            DatePicker("", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
+                                .labelsHidden()
+                        }
                         .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
             }
         }
@@ -99,4 +119,9 @@ struct IdentificationSection: View {
             set: { trade.closedAt = $0 }
         )
     }
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 180), spacing: 12),
+        GridItem(.adaptive(minimum: 180), spacing: 12)
+    ]
 }

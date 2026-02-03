@@ -28,7 +28,7 @@ struct TradeJournalDetailView: View {
                 
                 StrategySection(trade: trade)
                 
-                HStack {
+                HStack(alignment: .top) {
                     ReviewSection(trade: trade)
                     
                     MarketContextSection(trade: trade)
