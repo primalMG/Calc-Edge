@@ -31,6 +31,7 @@ struct Calc_EdgeApp: App {
     }()
     
     @State private var draftTrade = Trade(ticker: "")
+    @State private var draftForexCalculation = ForexCalculation(pair: "")
 
     var body: some Scene {
         WindowGroup {
@@ -40,6 +41,11 @@ struct Calc_EdgeApp: App {
         
         Window("New Journal Entry", id: "new-journal") {
             NewJournalView(trade: draftTrade)
+        }
+        .modelContainer(sharedModelContainer)
+
+        Window("New Forex Calculation", id: "new-forex-calc") {
+            AddEditForexCalcView(calculation: draftForexCalculation)
         }
         .modelContainer(sharedModelContainer)
     }

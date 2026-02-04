@@ -26,6 +26,12 @@ struct RootSidebarView: View {
                 Label("Trade Journal", systemImage: "book")
             }
 
+            NavigationLink {
+                JournalInsightsView()
+            } label: {
+                Label("Journal Insights", systemImage: "sparkles")
+            }
+
             Section("Calculators") {
                 NavigationLink {
                     RiskCalcListView(selectedStock: $selectedStock)
