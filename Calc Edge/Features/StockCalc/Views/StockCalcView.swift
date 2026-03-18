@@ -29,62 +29,62 @@ struct StockCalcView: View {
             VStack(alignment: .leading, spacing: 20) {
                 header
 
-                StockCalcSection(title: "Overview") {
+                InfoSection(title: "Overview") {
                     LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
-                        StockCalcStatCard(
+                        InfoStatCard(
                             title: "Potential Profit",
                             value: formatCurrency(stock.profitTotal),
                             accentColor: .green
                         )
-                        StockCalcStatCard(
+                        InfoStatCard(
                             title: "Potential Loss",
                             value: formatCurrency(stock.lossTotal),
                             accentColor: .red
                         )
-                        StockCalcStatCard(
+                        InfoStatCard(
                             title: "Risk / Reward",
                             value: formatNumber(stock.riskRewardRatio),
                             accentColor: riskRewardRatioColor
                         )
-                        StockCalcStatCard(
+                        InfoStatCard(
                             title: "Amount Risked",
                             value: formatCurrency(stock.amountRisked)
                         )
                     }
                 }
 
-                StockCalcSection(title: "Profit Breakdown") {
-                    StockCalcRow(title: "Technical Target", detail: formatCurrency(stock.targetPrice))
-                    StockCalcRow(title: "Profit Per Share", detail: formatCurrency(stock.profitDifference))
-                    StockCalcRow(title: "Potential Profit", detail: formatCurrency(stock.profitTotal))
+                InfoSection(title: "Profit Breakdown") {
+                    InfoRow(title: "Technical Target", detail: formatCurrency(stock.targetPrice))
+                    InfoRow(title: "Profit Per Share", detail: formatCurrency(stock.profitDifference))
+                    InfoRow(title: "Potential Profit", detail: formatCurrency(stock.profitTotal))
                 }
 
-                StockCalcSection(title: "Loss Breakdown") {
-                    StockCalcRow(title: "Stop Loss", detail: formatCurrency(stock.stopLoss))
-                    StockCalcRow(title: "Loss Per Share", detail: formatCurrency(stock.lossDiffernce))
-                    StockCalcRow(title: "Potential Loss", detail: formatCurrency(stock.lossTotal))
+                InfoSection(title: "Loss Breakdown") {
+                    InfoRow(title: "Stop Loss", detail: formatCurrency(stock.stopLoss))
+                    InfoRow(title: "Loss Per Share", detail: formatCurrency(stock.lossDiffernce))
+                    InfoRow(title: "Potential Loss", detail: formatCurrency(stock.lossTotal))
                 }
 
-                StockCalcSection(title: "Position Details") {
-                    StockCalcRow(title: "Ticker", detail: stock.ticker)
-                    StockCalcRow(title: "Entry Price", detail: formatCurrency(stock.entryPrice))
-                    StockCalcRow(title: "Shares Bought", detail: formatNumber(stock.shareCount))
+                InfoSection(title: "Position Details") {
+                    InfoRow(title: "Ticker", detail: stock.ticker)
+                    InfoRow(title: "Entry Price", detail: formatCurrency(stock.entryPrice))
+                    InfoRow(title: "Shares Bought", detail: formatNumber(stock.shareCount))
                 }
 
-                StockCalcSection(title: "Account Details") {
-                    StockCalcRow(title: "Account Used", detail: stock.accountUsed)
-                    StockCalcRow(title: "Balance At Trade", detail: formatCurrency(stock.balanceAtTrade))
-                    StockCalcRow(title: "Risk Percentage", detail: formatPercent(stock.riskPercentage / 100))
+                InfoSection(title: "Account Details") {
+                    InfoRow(title: "Account Used", detail: stock.accountUsed)
+                    InfoRow(title: "Balance At Trade", detail: formatCurrency(stock.balanceAtTrade))
+                    InfoRow(title: "Risk Percentage", detail: formatPercent(stock.riskPercentage / 100))
                 }
 
-                StockCalcSection(title: "Timeline") {
-                    StockCalcRow(
+                InfoSection(title: "Timeline") {
+                    InfoRow(
                         title: "Created",
                         detail: stock.createdAt.formatted(date: .abbreviated, time: .shortened)
                     )
 
                     if let updatedAt = stock.updatedAt {
-                        StockCalcRow(
+                        InfoRow(
                             title: "Updated",
                             detail: updatedAt.formatted(date: .abbreviated, time: .shortened)
                         )
@@ -155,73 +155,6 @@ struct StockCalcView: View {
             try? modelContext.save()
         }
         dismiss()
-    }
-}
-
-private struct StockCalcSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.thinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-    }
-}
-
-private struct StockCalcStatCard: View {
-    let title: String
-    let value: String
-    let accentColor: Color?
-
-    init(title: String, value: String, accentColor: Color? = nil) {
-        self.title = title
-        self.value = value
-        self.accentColor = accentColor
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(value)
-                .font(.title3)
-                .fontWeight(.semibold)
-                .foregroundStyle(accentColor ?? .primary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-private struct StockCalcRow: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .fontWeight(.medium)
-
-            Spacer(minLength: 16)
-
-            Text(detail)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.trailing)
-        }
-        .font(.callout)
     }
 }
 

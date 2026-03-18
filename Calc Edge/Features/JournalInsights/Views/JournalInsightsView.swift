@@ -32,24 +32,24 @@ struct JournalInsightsView: View {
                         InsightsBanner(text: "Add entry and exit prices to closed trades to calculate win rates and R multiples.")
                     }
 
-                    InsightsSection(title: "Overview") {
+                    InfoSection(title: "Overview") {
                         LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
-                            InsightStatCard(title: "Total Trades", value: "\(insights.totalTrades)")
-                            InsightStatCard(title: "Closed Trades", value: "\(insights.closedTrades)")
-                            InsightStatCard(title: "Win Rate", value: formatPercent(insights.winRate))
-                            InsightStatCard(title: "Avg R", value: formatR(insights.averageR))
-                            InsightStatCard(title: "Avg Hold", value: formatDuration(insights.averageHoldTime))
-                            InsightStatCard(title: "A+ Win Rate", value: formatPercent(insights.aPlusWinRate))
+                            InfoStatCard(title: "Total Trades", value: "\(insights.totalTrades)")
+                            InfoStatCard(title: "Closed Trades", value: "\(insights.closedTrades)")
+                            InfoStatCard(title: "Win Rate", value: formatPercent(insights.winRate))
+                            InfoStatCard(title: "Avg R", value: formatR(insights.averageR))
+                            InfoStatCard(title: "Avg Hold", value: formatDuration(insights.averageHoldTime))
+                            InfoStatCard(title: "A+ Win Rate", value: formatPercent(insights.aPlusWinRate))
                         }
                     }
 
-                    InsightsSection(title: "Where You Excel") {
+                    InfoSection(title: "Where You Excel") {
                         if insights.strengths.isEmpty {
                             Text("Not enough categorized trades yet. Add at least \(calculator.minSampleSize) trades per category (strategy/setup/timeframe).")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(insights.strengths) { segment in
-                                InsightRow(
+                                InfoRow(
                                     title: "\(segment.category): \(segment.label)",
                                     detail: formatSegmentDetail(segment)
                                 )
@@ -57,13 +57,13 @@ struct JournalInsightsView: View {
                         }
                     }
 
-                    InsightsSection(title: "Needs Attention") {
+                    InfoSection(title: "Needs Attention") {
                         if insights.weaknesses.isEmpty {
                             Text("No underperforming segments yet based on available data.")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(insights.weaknesses) { segment in
-                                InsightRow(
+                                InfoRow(
                                     title: "\(segment.category): \(segment.label)",
                                     detail: formatSegmentDetail(segment)
                                 )
@@ -71,30 +71,30 @@ struct JournalInsightsView: View {
                         }
                     }
 
-                    InsightsSection(title: "Process Quality") {
+                    InfoSection(title: "Process Quality") {
                         LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
-                            InsightStatCard(title: "Followed Plan", value: formatPercent(insights.followedPlanRate))
-                            InsightStatCard(title: "Would Retake", value: formatPercent(insights.wouldRetakeRate))
-                            InsightStatCard(title: "Entry Quality", value: formatRating(insights.entryQualityAverage))
-                            InsightStatCard(title: "Exit Quality", value: formatRating(insights.exitQualityAverage))
+                            InfoStatCard(title: "Followed Plan", value: formatPercent(insights.followedPlanRate))
+                            InfoStatCard(title: "Would Retake", value: formatPercent(insights.wouldRetakeRate))
+                            InfoStatCard(title: "Entry Quality", value: formatRating(insights.entryQualityAverage))
+                            InfoStatCard(title: "Exit Quality", value: formatRating(insights.exitQualityAverage))
                         }
                     }
 
-                    InsightsSection(title: "Data Quality") {
+                    InfoSection(title: "Data Quality") {
                         LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
-                            InsightStatCard(title: "Review Coverage", value: formatPercent(insights.reviewCoverage))
-                            InsightStatCard(title: "Stop Coverage", value: formatPercent(insights.stopCoverage))
-                            InsightStatCard(title: "Exit Reason Coverage", value: formatPercent(insights.exitReasonCoverage))
+                            InfoStatCard(title: "Review Coverage", value: formatPercent(insights.reviewCoverage))
+                            InfoStatCard(title: "Stop Coverage", value: formatPercent(insights.stopCoverage))
+                            InfoStatCard(title: "Exit Reason Coverage", value: formatPercent(insights.exitReasonCoverage))
                         }
                     }
 
-                    InsightsSection(title: "Common Mistakes") {
+                    InfoSection(title: "Common Mistakes") {
                         if insights.topMistakes.isEmpty {
                             Text("No mistake tags recorded yet.")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(insights.topMistakes) { item in
-                                InsightRow(
+                                InfoRow(
                                     title: item.label,
                                     detail: "\(item.count) trades • \(formatPercent(item.percentage))"
                                 )
@@ -102,13 +102,13 @@ struct JournalInsightsView: View {
                         }
                     }
 
-                    InsightsSection(title: "Exit Reasons") {
+                    InfoSection(title: "Exit Reasons") {
                         if insights.exitReasons.isEmpty {
                             Text("No exit reasons recorded yet.")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(insights.exitReasons) { item in
-                                InsightRow(
+                                InfoRow(
                                     title: item.label,
                                     detail: "\(item.count) trades • \(formatPercent(item.percentage))"
                                 )
@@ -175,77 +175,6 @@ struct JournalInsightsView: View {
         let winRate = formatPercent(segment.winRate)
         let avgR = formatR(segment.avgR)
         return "\(segment.trades) trades • Win Rate \(winRate) • Avg \(avgR)"
-    }
-}
-
-private struct InsightsSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            content
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.thinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-    }
-}
-
-private struct InsightStatCard: View {
-    let title: String
-    let value: String
-    let subtitle: String?
-
-    init(title: String, value: String, subtitle: String? = nil) {
-        self.title = title
-        self.value = value
-        self.subtitle = subtitle
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Text(value)
-                .font(.title3)
-                .fontWeight(.semibold)
-
-            if let subtitle {
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
-
-private struct InsightRow: View {
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .fontWeight(.medium)
-
-            Spacer(minLength: 16)
-
-            Text(detail)
-                .foregroundStyle(.secondary)
-        }
-        .font(.callout)
     }
 }
 
