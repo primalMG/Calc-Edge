@@ -23,17 +23,17 @@ struct IdentificationSection: View {
     
     var body: some View {
         JournalSectionContainer("Identification") {
-            LazyVGrid(columns: columns, spacing: 12) {
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
                 JournalField("Ticker") {
                     TextField("", text: $trade.ticker)
 //                        .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
-                        .textFieldStyle(CustomTextFieldStyle())
+//                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Market") {
                     TextField("", text: optionalTextBinding($trade.market))
-                        .textFieldStyle(CustomTextFieldStyle())
+//                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Accounts") {
@@ -121,7 +121,7 @@ struct IdentificationSection: View {
     }
 
     private let columns = [
-        GridItem(.adaptive(minimum: 180), spacing: 12),
-        GridItem(.adaptive(minimum: 180), spacing: 12)
+        GridItem(.adaptive(minimum: 180), spacing: 5),
+        GridItem(.adaptive(minimum: 180), spacing: 5)
     ]
 }

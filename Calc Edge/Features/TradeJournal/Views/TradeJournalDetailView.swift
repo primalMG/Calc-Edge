@@ -19,20 +19,16 @@ struct TradeJournalDetailView: View {
                     ExitSection(trade: trade)
                 }
                 
-                HStack(alignment: .top) {
-                    PricesSection(trade: trade)
-                    
-                    RiskSection(trade: trade, inEditMode: .constant(true))
-                }
+                PricesSection(trade: trade)
+                
+                RiskSection(trade: trade, inEditMode: .constant(true))
                 
                 
                 StrategySection(trade: trade)
                 
-                HStack(alignment: .top) {
-                    ReviewSection(trade: trade)
-                    
-                    MarketContextSection(trade: trade)
-                }
+                ReviewSection(trade: trade)
+                
+                MarketContextSection(trade: trade)
                 
                 if trade.instrument == .option {
                     LegsSection(trade: trade)

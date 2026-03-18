@@ -23,17 +23,16 @@ private struct TradeContextEditor: View {
     let onRemove: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
+        Form {
             Picker("Market Regime", selection: $context.marketRegime) {
                 ForEach(MarketRegime.allCases, id: \.self) { regime in
                     Text(regime.rawValue.capitalized)
-                        .tag(regime)
+                            .tag(regime)
                 }
             }
 
             LabeledContent("VIX") {
                 TextField("", text: optionalDecimalBinding($context.vix))
-                    .textFieldStyle(CustomTextFieldStyle())
             }
 
             LabeledContent("Index Trend") {
