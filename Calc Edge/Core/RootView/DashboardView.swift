@@ -133,8 +133,6 @@ private struct DashboardCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .frame(minHeight: 280)
-        .background(.thinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.08), radius: 6, x: 0, y: 4)
     }
 }

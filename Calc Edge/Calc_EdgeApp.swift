@@ -39,6 +39,7 @@ struct Calc_EdgeApp: App {
         }
         .modelContainer(sharedModelContainer)
         
+        #if os(macOS)
         Window("New Journal Entry", id: "new-journal") {
             NewJournalView(trade: draftTrade)
         }
@@ -48,5 +49,6 @@ struct Calc_EdgeApp: App {
             AddEditForexCalcView(calculation: draftForexCalculation)
         }
         .modelContainer(sharedModelContainer)
+        #endif
     }
 }

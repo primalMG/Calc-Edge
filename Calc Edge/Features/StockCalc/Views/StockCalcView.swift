@@ -130,7 +130,7 @@ struct StockCalcView: View {
                 .help("Edit Calcuation")
                 .keyboardShortcut("E")
                 .sheet(isPresented: $presentSheet) {
-                    NewEditRiskCalc(stock: stock)
+                    NewEditRiskCalc(stock: stock, isNew: false)
                 }
                 
 

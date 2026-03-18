@@ -13,6 +13,7 @@ struct NewEditRiskCalc: View {
     @Environment(\.dismiss) private var dismiss
     
     @Bindable var stock: Stock
+    let isNew: Bool
     @Query private var accounts: [Account]
     
     @State private var selectedAccountID: Account.ID?
@@ -179,12 +180,19 @@ struct NewEditRiskCalc: View {
         stock.shareCount = calcShares
         stock.amountRisked = calcRiskAmount
         stock.accountUsed = selectedAccount.accountName
-        modelContext.insert(stock)
+        stock.balanceAtTrade = selectedAccount.accountSize
+        stock.account = selectedAccount
+
+        if isNew {
+            modelContext.insert(stock)
+        } else {
+            stock.updatedAt = .now
+        }
         dismiss()
     }
 }
 
 #Preview {
-    NewEditRiskCalc(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100))
+    NewEditRiskCalc(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100), isNew: true)
         .modelContainer(for: Account.self, inMemory: true)
 }

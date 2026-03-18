@@ -56,7 +56,7 @@ final class Stock {
     
     init(id: UUID = UUID(),
          createdAt: Date = Date.now,
-         updatedAt: Date = Date.now,
+         updatedAt: Date? = nil,
          ticker: String,
          entryPrice: Double,
          riskPercentage: Double,
@@ -81,5 +81,4 @@ final class Stock {
         self.amountRisked = amountRisked
     }
 }
-
 

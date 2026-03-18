@@ -62,3 +62,7 @@ struct RootSidebarView: View {
         }
     }
 }
+
+#Preview {
+    RootSidebarView()
+}

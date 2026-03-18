@@ -10,47 +10,165 @@ import SwiftData
 
 struct RiskCalcListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var stockCalcs: [Stock]
+    @Query(sort: \Stock.createdAt, order: .reverse) private var stockCalcs: [Stock]
 
     @Binding var selectedStock: Stock
+    #if os(macOS)
+    @State private var selectedStockID: UUID?
+    #endif
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(stockCalcs) { stock in
-                    NavigationLink {
-                        StockCalcView(stock: stock)
-                    } label: {
-                        HStack {
-                            Text(stock.ticker)
-                            
-//                            Text(stock.createdAt.formatted(date: .abbreviated, time: .omitted))
-                            
-                            Text(stock.profitTotal.formatted())
-                        }
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
+            listContent
             .navigationTitle("Stock Calc")
             .toolbar {
                 ToolbarItemGroup {
                     NavigationLink {
-                        NewEditRiskCalc(stock: selectedStock)
+                        NewEditRiskCalc(stock: selectedStock, isNew: true)
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
                     .help("New Calculation")
                 }
             }
+            #if os(macOS)
+            .inspector(isPresented: inspectorIsPresented) {
+                if let inspectorStock {
+                    StockCalcView(stock: inspectorStock)
+                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
+                } else {
+                    ContentUnavailableView("Select a Calculation", systemImage: "chart.line.uptrend.xyaxis")
+                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
+                }
+            }
+            .frame(minWidth: 300, idealWidth: 320)
+            .onAppear(perform: syncInitialSelection)
+            .onChange(of: selectedStockID, updateSelectedStock)
+            .onChange(of: stockCalcs.count) { _, _ in
+                keepSelectionInSync()
+            }
+            #endif
         }
+    }
+
+    #if os(macOS)
+    private var inspectorStock: Stock? {
+        guard let selectedStockID else { return nil }
+        return stockCalcs.first(where: { $0.id == selectedStockID })
+    }
+
+    private var inspectorIsPresented: Binding<Bool> {
+        Binding(
+            get: { selectedStockID != nil },
+            set: { isPresented in
+                if !isPresented {
+                    selectedStockID = nil
+                }
+            }
+        )
+    }
+    #endif
+
+    @ViewBuilder
+    private var listContent: some View {
+        #if os(macOS)
+        List(selection: $selectedStockID) {
+            ForEach(stockCalcs) { stock in
+                RiskCalcRow(stock: stock)
+                    .tag(stock.id)
+            }
+            .onDelete(perform: deleteItems)
+        }
+        #else
+        List {
+            ForEach(stockCalcs) { stock in
+                NavigationLink {
+                    StockCalcView(stock: stock)
+                } label: {
+                    RiskCalcRow(stock: stock)
+                }
+            }
+            .onDelete(perform: deleteItems)
+        }
+        #endif
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
+                #if os(macOS)
+                if stockCalcs[index].id == selectedStockID {
+                    selectedStockID = nil
+                }
+                #endif
                 modelContext.delete(stockCalcs[index])
             }
         }
+    }
+
+    #if os(macOS)
+    private func syncInitialSelection() {
+        if let matchingStock = stockCalcs.first(where: { $0.id == selectedStock.id }) {
+            selectedStockID = matchingStock.id
+            return
+        }
+
+        if selectedStockID == nil {
+            selectedStockID = stockCalcs.first?.id
+        }
+    }
+
+    private func updateSelectedStock(oldValue: UUID?, newValue: UUID?) {
+        guard let newValue,
+              let stock = stockCalcs.first(where: { $0.id == newValue }) else {
+            return
+        }
+
+        selectedStock = stock
+    }
+
+    private func keepSelectionInSync() {
+        if let selectedStockID,
+           stockCalcs.contains(where: { $0.id == selectedStockID }) {
+            return
+        }
+
+        self.selectedStockID = stockCalcs.first?.id
+    }
+    #endif
+}
+
+private struct RiskCalcRow: View {
+    let stock: Stock
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(stock.ticker)
+                    .font(.headline)
+
+                Spacer()
+
+                if let updatedAt = stock.updatedAt {
+                    Text("Updated \(updatedAt.formatted(date: .abbreviated, time: .shortened))")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            HStack(spacing: 12) {
+                Label(stock.accountUsed, systemImage: "person.crop.circle")
+                Label("Profit \(stock.profitTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.up.right")
+                    .foregroundStyle(.green)
+                Label("Loss \(stock.lossTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.down.right")
+                    .foregroundStyle(.red)
+            }
+            .font(.subheadline)
+
+            Text("Created \(stock.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
     }
 }
