@@ -16,6 +16,7 @@ struct RiskCalcListView: View {
     #if os(macOS)
     @State private var selectedStockID: UUID?
     #endif
+    @State private var presentSheet: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -23,12 +24,16 @@ struct RiskCalcListView: View {
             .navigationTitle("Stock Calc")
             .toolbar {
                 ToolbarItemGroup {
-                    NavigationLink {
-                        NewEditRiskCalc(stock: selectedStock, isNew: true)
+                    Button {
+                        selectedStock = Stock(ticker: "", entryPrice: 0.0, riskPercentage: 0.0, stopLoss: 0.0, shareCount: 0.0, targetPrice: 0.0, accountUsed: "", balanceAtTrade: 0.0, amountRisked: 0.0)
+                        presentSheet.toggle()
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
                     .help("New Calculation")
+                    .sheet(isPresented: $presentSheet) {
+                        NewEditRiskCalc(stock: selectedStock, isNew: true)
+                    }
                 }
             }
             #if os(macOS)
@@ -172,3 +177,4 @@ private struct RiskCalcRow: View {
         .padding(.vertical, 4)
     }
 }
+

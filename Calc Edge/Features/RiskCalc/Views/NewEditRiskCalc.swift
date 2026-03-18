@@ -167,6 +167,7 @@ struct NewEditRiskCalc: View {
                 if selectedAccountID == nil {
                     selectedAccountID = accounts.first?.id
                 }
+                    
             }
             .padding()
             .frame(minWidth: 200, idealWidth: 200, maxWidth: 500)

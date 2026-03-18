@@ -29,22 +29,9 @@
 		FBD9350D2F13F9A600FFFE73 /* Calc EdgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calc EdgeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		FB5BBCD12F6975570010B565 /* Exceptions for "Calc Edge" folder in "Calc Edge" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"Calc-Edge-Info.plist",
-			);
-			target = FBD934F32F13F9A400FFFE73 /* Calc Edge */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FBD934F62F13F9A400FFFE73 /* Calc Edge */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				FB5BBCD12F6975570010B565 /* Exceptions for "Calc Edge" folder in "Calc Edge" target */,
-			);
 			path = "Calc Edge";
 			sourceTree = "<group>";
 		};
