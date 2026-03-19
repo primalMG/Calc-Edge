@@ -7,6 +7,10 @@ struct TradeJournalDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var toggleDelete: Bool = false
+    @State private var persistedStrategyName: String = ""
+    @State private var pendingStrategyName: String = ""
+    @State private var pendingTradeID: UUID?
+    @State private var strategySuggestionSaveTask: Task<Void, Never>?
     
     @Bindable var trade: Trade
 
@@ -39,6 +43,19 @@ struct TradeJournalDetailView: View {
             .padding()
         }
         .navigationTitle(trade.ticker)
+        .onAppear {
+            configureStrategyTracking()
+        }
+        .onChange(of: trade.strategyName) { _, _ in
+            queueStrategySuggestionSave()
+        }
+        .onChange(of: trade.tradeId) { _, _ in
+            flushPendingStrategySuggestionSave()
+            configureStrategyTracking()
+        }
+        .onDisappear {
+            flushPendingStrategySuggestionSave()
+        }
         .toolbar {
             ToolbarItem {
                 Button {
@@ -65,5 +82,72 @@ struct TradeJournalDetailView: View {
     private func delete() {
         modelContext.delete(trade)
         dismiss()
+    }
+
+    private var normalizedStrategyName: String {
+        trade.strategyName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+
+    private func configureStrategyTracking() {
+        let strategyName = normalizedStrategyName
+
+        persistedStrategyName = strategyName
+        pendingStrategyName = strategyName
+        pendingTradeID = trade.tradeId
+    }
+
+    private func queueStrategySuggestionSave() {
+        pendingStrategyName = normalizedStrategyName
+        pendingTradeID = trade.tradeId
+        strategySuggestionSaveTask?.cancel()
+        strategySuggestionSaveTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+
+            guard !Task.isCancelled else {
+                return
+            }
+
+            await MainActor.run {
+                persistPendingStrategySuggestionIfNeeded()
+            }
+        }
+    }
+
+    private func flushPendingStrategySuggestionSave() {
+        strategySuggestionSaveTask?.cancel()
+        persistPendingStrategySuggestionIfNeeded()
+    }
+
+    private func persistPendingStrategySuggestionIfNeeded() {
+        let strategyName = pendingStrategyName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !strategyName.isEmpty, strategyName != persistedStrategyName else {
+            return
+        }
+
+        let uniqueKey = TradeFieldSuggestion.makeUniqueKey(
+            field: StrategySuggestionField.strategyName.rawValue,
+            value: strategyName
+        )
+        let descriptor = FetchDescriptor<TradeFieldSuggestion>(
+            predicate: #Predicate { suggestion in
+                suggestion.uniqueKey == uniqueKey
+            }
+        )
+
+        if let existingSuggestion = try? modelContext.fetch(descriptor).first {
+            existingSuggestion.value = strategyName
+            existingSuggestion.useCount += 1
+            existingSuggestion.lastUsedAt = .now
+        } else {
+            let suggestion = TradeFieldSuggestion(
+                field: StrategySuggestionField.strategyName.rawValue,
+                value: strategyName
+            )
+            modelContext.insert(suggestion)
+        }
+
+        persistedStrategyName = strategyName
+        try? modelContext.save()
     }
 }
