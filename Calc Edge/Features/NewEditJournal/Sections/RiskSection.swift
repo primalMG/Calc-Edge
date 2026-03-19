@@ -9,33 +9,27 @@ struct RiskSection: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 JournalField("Planned Risk Amount") {
                     TextField("", text: optionalDecimalBinding($trade.plannedRiskAmount))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Planned Risk Percent") {
                     TextField("", text: optionalDecimalBinding($trade.plannedRiskPercent))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 if inEditMode {
                     JournalField("Commissions") {
                         TextField("", text: optionalDecimalBinding($trade.commissions))
-                            .textFieldStyle(CustomTextFieldStyle())
                     }
 
                     JournalField("Slippage") {
                         TextField("", text: optionalDecimalBinding($trade.slippage))
-                            .textFieldStyle(CustomTextFieldStyle())
                     }
 
                     JournalField("MAE") {
                         TextField("", text: optionalDecimalBinding($trade.mae))
-                            .textFieldStyle(CustomTextFieldStyle())
                     }
 
                     JournalField("MFE") {
                         TextField("", text: optionalDecimalBinding($trade.mfe))
-                            .textFieldStyle(CustomTextFieldStyle())
                     }
                 }
             }

@@ -8,22 +8,18 @@ struct PricesSection: View {
             LazyVGrid(columns: columns, spacing: 12) {
                 JournalField("Entry Price") {
                     TextField("", text: optionalDecimalBinding($trade.entryPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Exit Price") {
                     TextField("", text: optionalDecimalBinding($trade.exitPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Stop Price") {
                     TextField("", text: optionalDecimalBinding($trade.stopPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
 
                 JournalField("Target Price") {
                     TextField("", text: optionalDecimalBinding($trade.targetPrice))
-                        .textFieldStyle(CustomTextFieldStyle())
                 }
             }
         }
