@@ -7,10 +7,9 @@ struct TradeJournalDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var toggleDelete: Bool = false
-    @State private var persistedStrategyName: String = ""
-    @State private var pendingStrategyName: String = ""
-    @State private var pendingTradeID: UUID?
-    @State private var strategySuggestionSaveTask: Task<Void, Never>?
+    @State private var persistedSuggestionValues: [TradeSuggestionField: String] = [:]
+    @State private var pendingSuggestionValues: [TradeSuggestionField: String] = [:]
+    @State private var suggestionSaveTask: Task<Void, Never>?
     
     @Bindable var trade: Trade
 
@@ -44,17 +43,56 @@ struct TradeJournalDetailView: View {
         }
         .navigationTitle(trade.ticker)
         .onAppear {
-            configureStrategyTracking()
+            configureSuggestionTracking()
         }
         .onChange(of: trade.strategyName) { _, _ in
-            queueStrategySuggestionSave()
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.setupType) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.timeframe) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.catalyst) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.mistakeType) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.postTradeNotes) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.whatWentRight) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.whatWentWrong) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.oneImprovement) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.review?.ruleCreatedOrUpdated) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.context?.indexTrend) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.context?.sectorStrength) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.context?.newsDuringTrade) { _, _ in
+            queueSuggestionSave()
+        }
+        .onChange(of: trade.context?.timeOfDayTag) { _, _ in
+            queueSuggestionSave()
         }
         .onChange(of: trade.tradeId) { _, _ in
-            flushPendingStrategySuggestionSave()
-            configureStrategyTracking()
+            flushPendingSuggestionSave()
+            configureSuggestionTracking()
         }
         .onDisappear {
-            flushPendingStrategySuggestionSave()
+            flushPendingSuggestionSave()
         }
         .toolbar {
             ToolbarItem {
@@ -84,23 +122,43 @@ struct TradeJournalDetailView: View {
         dismiss()
     }
 
-    private var normalizedStrategyName: String {
-        trade.strategyName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    private var currentSuggestionValues: [TradeSuggestionField: String] {
+        var values: [TradeSuggestionField: String] = [:]
+
+        updateSuggestionValue(&values, field: .strategyName, with: trade.strategyName)
+        updateSuggestionValue(&values, field: .setupType, with: trade.setupType)
+        updateSuggestionValue(&values, field: .timeframe, with: trade.timeframe)
+        updateSuggestionValue(&values, field: .catalyst, with: trade.catalyst)
+
+        if let review = trade.review {
+            updateSuggestionValue(&values, field: .reviewMistakeType, with: review.mistakeType)
+            updateSuggestionValue(&values, field: .reviewPostTradeNotes, with: review.postTradeNotes)
+            updateSuggestionValue(&values, field: .reviewWhatWentRight, with: review.whatWentRight)
+            updateSuggestionValue(&values, field: .reviewWhatWentWrong, with: review.whatWentWrong)
+            updateSuggestionValue(&values, field: .reviewOneImprovement, with: review.oneImprovement)
+            updateSuggestionValue(&values, field: .reviewRuleCreatedOrUpdated, with: review.ruleCreatedOrUpdated)
+        }
+
+        if let context = trade.context {
+            updateSuggestionValue(&values, field: .marketIndexTrend, with: context.indexTrend)
+            updateSuggestionValue(&values, field: .marketSectorStrength, with: context.sectorStrength)
+            updateSuggestionValue(&values, field: .marketNewsDuringTrade, with: context.newsDuringTrade)
+            updateSuggestionValue(&values, field: .marketTimeOfDayTag, with: context.timeOfDayTag)
+        }
+
+        return values
     }
 
-    private func configureStrategyTracking() {
-        let strategyName = normalizedStrategyName
-
-        persistedStrategyName = strategyName
-        pendingStrategyName = strategyName
-        pendingTradeID = trade.tradeId
+    private func configureSuggestionTracking() {
+        let values = currentSuggestionValues
+        persistedSuggestionValues = values
+        pendingSuggestionValues = values
     }
 
-    private func queueStrategySuggestionSave() {
-        pendingStrategyName = normalizedStrategyName
-        pendingTradeID = trade.tradeId
-        strategySuggestionSaveTask?.cancel()
-        strategySuggestionSaveTask = Task {
+    private func queueSuggestionSave() {
+        pendingSuggestionValues = currentSuggestionValues
+        suggestionSaveTask?.cancel()
+        suggestionSaveTask = Task {
             try? await Task.sleep(for: .seconds(2))
 
             guard !Task.isCancelled else {
@@ -108,46 +166,47 @@ struct TradeJournalDetailView: View {
             }
 
             await MainActor.run {
-                persistPendingStrategySuggestionIfNeeded()
+                persistPendingSuggestionValuesIfNeeded()
             }
         }
     }
 
-    private func flushPendingStrategySuggestionSave() {
-        strategySuggestionSaveTask?.cancel()
-        persistPendingStrategySuggestionIfNeeded()
+    private func flushPendingSuggestionSave() {
+        suggestionSaveTask?.cancel()
+        persistPendingSuggestionValuesIfNeeded()
     }
 
-    private func persistPendingStrategySuggestionIfNeeded() {
-        let strategyName = pendingStrategyName.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !strategyName.isEmpty, strategyName != persistedStrategyName else {
+    private func persistPendingSuggestionValuesIfNeeded() {
+        guard pendingSuggestionValues != persistedSuggestionValues else {
             return
         }
 
-        let uniqueKey = TradeFieldSuggestion.makeUniqueKey(
-            field: StrategySuggestionField.strategyName.rawValue,
-            value: strategyName
-        )
-        let descriptor = FetchDescriptor<TradeFieldSuggestion>(
-            predicate: #Predicate { suggestion in
-                suggestion.uniqueKey == uniqueKey
-            }
-        )
+        var didPersistSuggestions = false
 
-        if let existingSuggestion = try? modelContext.fetch(descriptor).first {
-            existingSuggestion.value = strategyName
-            existingSuggestion.useCount += 1
-            existingSuggestion.lastUsedAt = .now
-        } else {
-            let suggestion = TradeFieldSuggestion(
-                field: StrategySuggestionField.strategyName.rawValue,
-                value: strategyName
-            )
-            modelContext.insert(suggestion)
+        for (field, value) in pendingSuggestionValues {
+            if persistedSuggestionValues[field] != value {
+                modelContext.upsertTradeSuggestion(field: field, value: value)
+                didPersistSuggestions = true
+            }
         }
 
-        persistedStrategyName = strategyName
-        try? modelContext.save()
+        persistedSuggestionValues = pendingSuggestionValues
+
+        if didPersistSuggestions {
+            try? modelContext.save()
+        }
+    }
+
+    private func updateSuggestionValue(
+        _ values: inout [TradeSuggestionField: String],
+        field: TradeSuggestionField,
+        with value: String?
+    ) {
+        guard let trimmedValue = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !trimmedValue.isEmpty else {
+            return
+        }
+
+        values[field] = trimmedValue
     }
 }

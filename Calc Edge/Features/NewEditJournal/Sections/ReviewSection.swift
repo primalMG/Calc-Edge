@@ -40,27 +40,27 @@ private struct TradeReviewEditor: View {
             Toggle("Would Retake?", isOn: $review.wouldRetake)
 
             LabeledContent("Mistake Type:") {
-                TextField("", text: optionalTextBinding($review.mistakeType))
+                SuggestingOptionalTextField(field: .reviewMistakeType, text: $review.mistakeType)
             }
 
             LabeledContent("Post Trade Notes:") {
-                TextField("", text: optionalTextBinding($review.postTradeNotes))
+                SuggestingOptionalTextField(field: .reviewPostTradeNotes, text: $review.postTradeNotes)
             }
 
             LabeledContent("What Went Right:") {
-                TextField("", text: optionalTextBinding($review.whatWentRight))
+                SuggestingOptionalTextField(field: .reviewWhatWentRight, text: $review.whatWentRight)
             }
 
             LabeledContent("What Went Wrong:") {
-                TextField("", text: optionalTextBinding($review.whatWentWrong))
+                SuggestingOptionalTextField(field: .reviewWhatWentWrong, text: $review.whatWentWrong)
             }
 
             LabeledContent("One Improvement:") {
-                TextField("", text: optionalTextBinding($review.oneImprovement))
+                SuggestingOptionalTextField(field: .reviewOneImprovement, text: $review.oneImprovement)
             }
 
             LabeledContent("Rule Updated:") {
-                TextField("", text: optionalTextBinding($review.ruleCreatedOrUpdated))
+                SuggestingOptionalTextField(field: .reviewRuleCreatedOrUpdated, text: $review.ruleCreatedOrUpdated)
             }
 
             Button("Remove Review") {

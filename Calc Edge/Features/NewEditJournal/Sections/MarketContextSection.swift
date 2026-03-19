@@ -36,19 +36,19 @@ private struct TradeContextEditor: View {
             }
 
             LabeledContent("Index Trend") {
-                TextField("", text: optionalTextBinding($context.indexTrend))
+                SuggestingOptionalTextField(field: .marketIndexTrend, text: $context.indexTrend)
             }
 
             LabeledContent("Sector Strength") {
-                TextField("", text: optionalTextBinding($context.sectorStrength))
+                SuggestingOptionalTextField(field: .marketSectorStrength, text: $context.sectorStrength)
             }
 
             LabeledContent("News During Trade") {
-                TextField("", text: optionalTextBinding($context.newsDuringTrade))
+                SuggestingOptionalTextField(field: .marketNewsDuringTrade, text: $context.newsDuringTrade)
             }
 
             LabeledContent("Time Of Day") {
-                TextField("", text: optionalTextBinding($context.timeOfDayTag))
+                SuggestingOptionalTextField(field: .marketTimeOfDayTag, text: $context.timeOfDayTag)
             }
 
             Button("Remove Context") {
