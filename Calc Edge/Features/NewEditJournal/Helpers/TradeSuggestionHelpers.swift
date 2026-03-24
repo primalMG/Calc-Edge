@@ -16,6 +16,39 @@ enum TradeSuggestionField: String, CaseIterable {
     case marketSectorStrength
     case marketNewsDuringTrade
     case marketTimeOfDayTag
+
+    var title: String {
+        switch self {
+        case .strategyName:
+            "Strategy Name"
+        case .setupType:
+            "Setup Type"
+        case .timeframe:
+            "Timeframe"
+        case .catalyst:
+            "Catalyst"
+        case .reviewMistakeType:
+            "Review Mistake Type"
+        case .reviewPostTradeNotes:
+            "Review Post Trade Notes"
+        case .reviewWhatWentRight:
+            "Review What Went Right"
+        case .reviewWhatWentWrong:
+            "Review What Went Wrong"
+        case .reviewOneImprovement:
+            "Review One Improvement"
+        case .reviewRuleCreatedOrUpdated:
+            "Review Rule Updated"
+        case .marketIndexTrend:
+            "Market Index Trend"
+        case .marketSectorStrength:
+            "Market Sector Strength"
+        case .marketNewsDuringTrade:
+            "Market News During Trade"
+        case .marketTimeOfDayTag:
+            "Market Time Of Day"
+        }
+    }
 }
 
 extension ModelContext {

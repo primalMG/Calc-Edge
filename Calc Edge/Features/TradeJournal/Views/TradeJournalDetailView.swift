@@ -45,47 +45,8 @@ struct TradeJournalDetailView: View {
         .onAppear {
             configureSuggestionTracking()
         }
-        .onChange(of: trade.strategyName) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.setupType) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.timeframe) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.catalyst) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.mistakeType) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.postTradeNotes) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.whatWentRight) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.whatWentWrong) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.oneImprovement) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.review?.ruleCreatedOrUpdated) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.context?.indexTrend) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.context?.sectorStrength) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.context?.newsDuringTrade) { _, _ in
-            queueSuggestionSave()
-        }
-        .onChange(of: trade.context?.timeOfDayTag) { _, _ in
-            queueSuggestionSave()
+        .onChange(of: currentSuggestionValues) { _, newValues in
+            queueSuggestionSave(with: newValues)
         }
         .onChange(of: trade.tradeId) { _, _ in
             flushPendingSuggestionSave()
@@ -155,8 +116,8 @@ struct TradeJournalDetailView: View {
         pendingSuggestionValues = values
     }
 
-    private func queueSuggestionSave() {
-        pendingSuggestionValues = currentSuggestionValues
+    private func queueSuggestionSave(with values: [TradeSuggestionField: String]) {
+        pendingSuggestionValues = values
         suggestionSaveTask?.cancel()
         suggestionSaveTask = Task {
             try? await Task.sleep(for: .seconds(2))

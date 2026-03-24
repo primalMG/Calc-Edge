@@ -13,6 +13,7 @@ struct AddEditForexCalcView: View {
     @Environment(\.dismiss) private var dismiss
 
     @Bindable var calculation: ForexCalculation
+    let isNew: Bool
 
     var body: some View {
         Form {
@@ -106,13 +107,20 @@ struct AddEditForexCalcView: View {
     }
 
     private func save() {
-        calculation.updatedAt = .now
-        modelContext.insert(calculation)
+        calculation.pair = calculation.normalizedPair
+        calculation.accountCurrency = calculation.accountCurrency.uppercased()
+
+        if isNew {
+            modelContext.insert(calculation)
+        } else {
+            calculation.updatedAt = .now
+        }
+
         dismiss()
     }
 }
 
 #Preview {
-    AddEditForexCalcView(calculation: ForexCalculation(pair: "EURUSD"))
+    AddEditForexCalcView(calculation: ForexCalculation(pair: "EURUSD"), isNew: true)
         .modelContainer(for: ForexCalculation.self, inMemory: true)
 }

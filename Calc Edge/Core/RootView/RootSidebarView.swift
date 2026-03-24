@@ -45,6 +45,14 @@ struct RootSidebarView: View {
                     Label("Forex Calc", systemImage: "dollarsign.circle")
                 }
             }
+            
+            Section("Suggestions") {
+                NavigationLink {
+                    SuggestionsView()
+                } label: {
+                    Label("Suggestions", systemImage: "text.badge.star")
+                }
+            }
         }
         .navigationSplitViewColumnWidth(min: 250, ideal: 300)
         .toolbar {

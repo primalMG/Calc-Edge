@@ -106,6 +106,14 @@ final class ForexCalculation {
         return Decimal(0.0001)
     }
 
+    var derivedUnits: Decimal? {
+        if let units {
+            return units
+        }
+        guard let lotSize else { return nil }
+        return lotSize * Decimal(100000)
+    }
+
     var derivedRiskAmount: Decimal? {
         if let riskAmount {
             return riskAmount
@@ -113,6 +121,81 @@ final class ForexCalculation {
         guard let accountBalance, let riskPercent else { return nil }
         let hundred = Decimal(100)
         return accountBalance * (riskPercent / hundred)
+    }
+
+    var derivedStopLossPips: Decimal? {
+        if let stopLossPips {
+            return stopLossPips
+        }
+        guard let entryPrice, let stopLossPrice, pipSize != 0 else { return nil }
+        let distance = abs(entryPrice - stopLossPrice)
+        return distance / pipSize
+    }
+
+    var derivedTakeProfitPips: Decimal? {
+        if let takeProfitPips {
+            return takeProfitPips
+        }
+        guard let entryPrice, let takeProfitPrice, pipSize != 0 else { return nil }
+        let distance = abs(takeProfitPrice - entryPrice)
+        return distance / pipSize
+    }
+
+    var pipValuePerUnit: Decimal? {
+        guard let conversionRate = effectiveQuoteToAccountRate else { return nil }
+        return pipSize * conversionRate
+    }
+
+    var totalPipValue: Decimal? {
+        guard let derivedUnits, let pipValuePerUnit else { return nil }
+        return derivedUnits * pipValuePerUnit
+    }
+
+    var derivedPositionSizeUnits: Decimal? {
+        guard let riskAmount = derivedRiskAmount,
+              let stopLossPips = derivedStopLossPips,
+              stopLossPips != 0,
+              let pipValuePerUnit else {
+            return nil
+        }
+
+        return riskAmount / (stopLossPips * pipValuePerUnit)
+    }
+
+    var derivedMarginRequired: Decimal? {
+        guard let leverage, leverage != 0,
+              let derivedUnits,
+              let entryPrice else {
+            return nil
+        }
+
+        return (derivedUnits * entryPrice) / leverage
+    }
+
+    var derivedRiskRewardRatio: Decimal? {
+        guard let stopLossPips = derivedStopLossPips,
+              let takeProfitPips = derivedTakeProfitPips,
+              stopLossPips != 0 else {
+            return nil
+        }
+
+        return takeProfitPips / stopLossPips
+    }
+
+    var effectiveQuoteToAccountRate: Decimal? {
+        if let quoteToAccountRate {
+            return quoteToAccountRate
+        }
+
+        if quoteCurrency == accountCurrency {
+            return Decimal(1)
+        }
+
+        return nil
+    }
+
+    static var emptyDraft: ForexCalculation {
+        ForexCalculation(pair: "")
     }
 
     private static func normalizePair(_ pair: String) -> String {

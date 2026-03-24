@@ -47,7 +47,7 @@ struct Calc_EdgeApp: App {
         .modelContainer(sharedModelContainer)
 
         Window("New Forex Calculation", id: "new-forex-calc") {
-            AddEditForexCalcView(calculation: draftForexCalculation)
+            AddEditForexCalcView(calculation: draftForexCalculation, isNew: true)
         }
         .modelContainer(sharedModelContainer)
         #endif
