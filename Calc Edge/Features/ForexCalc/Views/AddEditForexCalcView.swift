@@ -11,12 +11,37 @@ import SwiftData
 struct AddEditForexCalcView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var accounts: [Account]
 
     @Bindable var calculation: ForexCalculation
     let isNew: Bool
+    @State private var selectedAccountID: Account.ID?
 
     var body: some View {
         Form {
+            Section("Account") {
+                Picker("Saved Account", selection: $selectedAccountID) {
+                    Text("None")
+                        .tag(nil as Account.ID?)
+
+                    ForEach(accounts) { account in
+                        Text(account.accountName)
+                            .tag(account.id as Account.ID?)
+                    }
+                }
+
+                if let selectedAccount {
+                    LabeledContent("Account Size:") {
+                        Text("\(selectedAccount.currency) \(formatAccountSize(selectedAccount.accountSize))")
+                    }
+                    .foregroundStyle(.secondary)
+                } else if accounts.isEmpty {
+                    Text("Add an account in Accounts to reuse saved account sizes here.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
             Section("Basics") {
                 LabeledContent("Calculator Type:") {
                     Picker("", selection: $calculation.calculator) {
@@ -40,6 +65,7 @@ struct AddEditForexCalcView: View {
             }
 
             calculatorFields
+            liveResultsSection
 
             HStack {
                 Button("Save") {
@@ -57,6 +83,10 @@ struct AddEditForexCalcView: View {
         .padding()
         .frame(minWidth: 520, idealWidth: 620, maxWidth: 800)
         .frame(minHeight: 520)
+        .onAppear(perform: configureInitialAccountSelection)
+        .onChange(of: selectedAccountID) { _, _ in
+            applySelectedAccount()
+        }
     }
 
     @ViewBuilder
@@ -99,11 +129,55 @@ struct AddEditForexCalcView: View {
         }
     }
 
+    @ViewBuilder
+    private var liveResultsSection: some View {
+        switch calculation.calculator {
+        case .pipValue:
+            Section("Live Results") {
+                resultRow("Derived Units", calculation.derivedUnits)
+                resultRow("Pip Size", calculation.pipSize)
+                resultRow("Quote to Account Rate", calculation.effectiveQuoteToAccountRate)
+                resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
+                resultRow("Total Pip Value", calculation.totalPipValue)
+            }
+        case .positionSize:
+            Section("Live Results") {
+                resultRow("Derived Risk Amount", calculation.derivedRiskAmount)
+                resultRow("Derived Stop Loss (Pips)", calculation.derivedStopLossPips)
+                resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
+                resultRow("Position Size Units", calculation.derivedPositionSizeUnits)
+            }
+        case .margin:
+            Section("Live Results") {
+                resultRow("Derived Units", calculation.derivedUnits)
+                resultRow("Margin Required", calculation.derivedMarginRequired)
+            }
+        case .riskReward:
+            Section("Live Results") {
+                resultRow("Derived Stop Loss (Pips)", calculation.derivedStopLossPips)
+                resultRow("Derived Take Profit (Pips)", calculation.derivedTakeProfitPips)
+                resultRow("Risk / Reward Ratio", calculation.derivedRiskRewardRatio)
+            }
+        }
+    }
+
     private func decimalField(_ label: String, _ value: Binding<Decimal?>) -> some View {
         LabeledContent(label + ":") {
             TextField("", text: optionalDecimalBinding(value))
                 .textFieldStyle(CustomTextFieldStyle())
         }
+    }
+
+    private func resultRow(_ label: String, _ value: Decimal?) -> some View {
+        LabeledContent(label + ":") {
+            Text(format(value))
+                .foregroundStyle(value == nil ? .secondary : .primary)
+        }
+    }
+
+    private func format(_ value: Decimal?) -> String {
+        guard let value else { return "Waiting for inputs" }
+        return NSDecimalNumber(decimal: value).stringValue
     }
 
     private func save() {
@@ -118,9 +192,35 @@ struct AddEditForexCalcView: View {
 
         dismiss()
     }
+
+    private var selectedAccount: Account? {
+        guard let selectedAccountID else { return nil }
+        return accounts.first(where: { $0.id == selectedAccountID })
+    }
+
+    private func configureInitialAccountSelection() {
+        if selectedAccountID == nil {
+            selectedAccountID = accounts.first?.id
+        }
+
+        if calculation.accountBalance == nil, !accounts.isEmpty {
+            applySelectedAccount()
+        }
+    }
+
+    private func applySelectedAccount() {
+        guard let selectedAccount else { return }
+
+        calculation.accountBalance = Decimal(selectedAccount.accountSize)
+        calculation.accountCurrency = selectedAccount.currency.uppercased()
+    }
+
+    private func formatAccountSize(_ value: Double) -> String {
+        String(format: "%.2f", value)
+    }
 }
 
 #Preview {
     AddEditForexCalcView(calculation: ForexCalculation(pair: "EURUSD"), isNew: true)
-        .modelContainer(for: ForexCalculation.self, inMemory: true)
+        .modelContainer(for: [Account.self, ForexCalculation.self], inMemory: true)
 }
