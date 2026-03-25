@@ -30,6 +30,8 @@ struct JournalInsightsView: View {
                         InsightsBanner(text: "Add closed trades to unlock performance insights.")
                     } else if insights.pricedTrades == 0 {
                         InsightsBanner(text: "Add entry and exit prices to closed trades to calculate win rates and R multiples.")
+                    } else if insights.riskDefinedTrades == 0 {
+                        InsightsBanner(text: "Add stop prices to closed trades to calculate expectancy, profit factor, and average winner/loser.")
                     }
 
                     InfoSection(title: "Overview") {
@@ -37,15 +39,53 @@ struct JournalInsightsView: View {
                             InfoStatCard(title: "Total Trades", value: "\(insights.totalTrades)")
                             InfoStatCard(title: "Closed Trades", value: "\(insights.closedTrades)")
                             InfoStatCard(title: "Win Rate", value: formatPercent(insights.winRate))
-                            InfoStatCard(title: "Avg R", value: formatR(insights.averageR))
+                            InfoStatCard(title: "Expectancy", value: formatR(insights.expectancy))
+                            InfoStatCard(title: "Profit Factor", value: formatProfitFactor(insights.profitFactor))
+                            InfoStatCard(title: "Avg Winner", value: formatR(insights.averageWinner))
+                            InfoStatCard(title: "Avg Loser", value: formatR(insights.averageLoser))
                             InfoStatCard(title: "Avg Hold", value: formatDuration(insights.averageHoldTime))
-                            InfoStatCard(title: "A+ Win Rate", value: formatPercent(insights.aPlusWinRate))
                         }
+                    }
+
+                    InfoSection(title: "Setup Readout") {
+                        if insights.bestSetup == nil && insights.worstSetup == nil {
+                            Text("Not enough setup-tagged trades yet. Add at least \(calculator.minSampleSize) trades per setup.")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            if let bestSetup = insights.bestSetup {
+                                InfoRow(title: "Best Setup: \(bestSetup.label)", detail: formatSegmentDetail(bestSetup))
+                            }
+
+                            if let worstSetup = insights.worstSetup {
+                                InfoRow(title: "Worst Setup: \(worstSetup.label)", detail: formatSegmentDetail(worstSetup))
+                            }
+                        }
+                    }
+
+                    InfoSection(title: "Performance By Instrument") {
+                        segmentList(
+                            insights.performanceByInstrument,
+                            emptyText: "Not enough instrument-tagged trades yet."
+                        )
+                    }
+
+                    InfoSection(title: "Performance By Direction") {
+                        segmentList(
+                            insights.performanceByDirection,
+                            emptyText: "Not enough directional trade data yet."
+                        )
+                    }
+
+                    InfoSection(title: "Performance By Account") {
+                        segmentList(
+                            insights.performanceByAccount,
+                            emptyText: "Not enough account-tagged trades yet."
+                        )
                     }
 
                     InfoSection(title: "Where You Excel") {
                         if insights.strengths.isEmpty {
-                            Text("Not enough categorized trades yet. Add at least \(calculator.minSampleSize) trades per category (strategy/setup/timeframe).")
+                            Text("Not enough categorized trades yet. Add at least \(calculator.minSampleSize) trades per category.")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(insights.strengths) { segment in
@@ -73,6 +113,8 @@ struct JournalInsightsView: View {
 
                     InfoSection(title: "Process Quality") {
                         LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
+                            InfoStatCard(title: "A+ Win Rate", value: formatPercent(insights.aPlusWinRate))
+                            InfoStatCard(title: "Non-A+ Win Rate", value: formatPercent(insights.nonAPlusWinRate))
                             InfoStatCard(title: "Followed Plan", value: formatPercent(insights.followedPlanRate))
                             InfoStatCard(title: "Would Retake", value: formatPercent(insights.wouldRetakeRate))
                             InfoStatCard(title: "Entry Quality", value: formatRating(insights.entryQualityAverage))
@@ -158,6 +200,12 @@ struct JournalInsightsView: View {
         return String(format: "%.2fR", value)
     }
 
+    private func formatProfitFactor(_ value: Double?) -> String {
+        guard let value else { return "N/A" }
+        guard value.isFinite else { return "Inf" }
+        return String(format: "%.2f", value)
+    }
+
     private func formatRating(_ value: Double?) -> String {
         guard let value else { return "N/A" }
         return String(format: "%.1f / 5", value)
@@ -172,9 +220,33 @@ struct JournalInsightsView: View {
     }
 
     private func formatSegmentDetail(_ segment: TradeInsights.SegmentPerformance) -> String {
-        let winRate = formatPercent(segment.winRate)
-        let avgR = formatR(segment.avgR)
-        return "\(segment.trades) trades • Win Rate \(winRate) • Avg \(avgR)"
+        var parts = ["\(segment.trades) trades"]
+
+        if segment.winRate != nil {
+            parts.append("Win Rate \(formatPercent(segment.winRate))")
+        }
+
+        if segment.expectancy != nil {
+            parts.append("Exp \(formatR(segment.expectancy))")
+        }
+
+        if segment.profitFactor != nil {
+            parts.append("PF \(formatProfitFactor(segment.profitFactor))")
+        }
+
+        return parts.joined(separator: " • ")
+    }
+
+    @ViewBuilder
+    private func segmentList(_ segments: [TradeInsights.SegmentPerformance], emptyText: String) -> some View {
+        if segments.isEmpty {
+            Text(emptyText)
+                .foregroundStyle(.secondary)
+        } else {
+            ForEach(segments) { segment in
+                InfoRow(title: segment.label, detail: formatSegmentDetail(segment))
+            }
+        }
     }
 }
 

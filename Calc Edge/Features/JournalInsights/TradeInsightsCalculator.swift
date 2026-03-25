@@ -8,7 +8,10 @@ struct TradeInsights {
         let trades: Int
         let wins: Int
         let winRate: Double?
-        let avgR: Double?
+        let expectancy: Double?
+        let averageWinner: Double?
+        let averageLoser: Double?
+        let profitFactor: Double?
     }
 
     struct CountedItem: Identifiable {
@@ -21,8 +24,12 @@ struct TradeInsights {
     let totalTrades: Int
     let closedTrades: Int
     let pricedTrades: Int
+    let riskDefinedTrades: Int
     let winRate: Double?
-    let averageR: Double?
+    let averageWinner: Double?
+    let averageLoser: Double?
+    let expectancy: Double?
+    let profitFactor: Double?
     let averageHoldTime: TimeInterval?
     let aPlusWinRate: Double?
     let nonAPlusWinRate: Double?
@@ -32,6 +39,11 @@ struct TradeInsights {
     let entryQualityAverage: Double?
     let exitQualityAverage: Double?
 
+    let bestSetup: SegmentPerformance?
+    let worstSetup: SegmentPerformance?
+    let performanceByInstrument: [SegmentPerformance]
+    let performanceByDirection: [SegmentPerformance]
+    let performanceByAccount: [SegmentPerformance]
     let strengths: [SegmentPerformance]
     let weaknesses: [SegmentPerformance]
     let topMistakes: [CountedItem]
@@ -55,14 +67,21 @@ struct TradeInsightsCalculator {
         let totalTrades = trades.count
         let closedTrades = trades.filter { $0.closedAt != nil }
         let pricedTrades = closedTrades.filter { hasEntryAndExit($0) }
+        let riskDefinedTrades = pricedTrades.filter { rMultiple(for: $0) != nil }
         let reviewTrades = trades.filter { $0.review != nil }
+        let rMultiples = riskDefinedTrades.compactMap { rMultiple(for: $0) }
+        let winningRMultiples = rMultiples.filter { $0 > 0 }
+        let losingRMultiples = rMultiples.filter { $0 < 0 }
 
         let winRate = rate(wins(in: pricedTrades), pricedTrades.count)
-        let averageR = average(pricedTrades.compactMap { rMultiple(for: $0) })
+        let averageWinner = average(winningRMultiples)
+        let averageLoser = average(losingRMultiples)
+        let expectancy = average(rMultiples)
+        let profitFactor = profitFactor(for: rMultiples)
         let averageHoldTime = averageHoldDuration(in: closedTrades)
 
-        let aPlusTrades = pricedTrades.filter { $0.isAPlusSetup }
-        let nonAPlusTrades = pricedTrades.filter { !$0.isAPlusSetup }
+        let aPlusTrades = riskDefinedTrades.filter { $0.isAPlusSetup }
+        let nonAPlusTrades = riskDefinedTrades.filter { !$0.isAPlusSetup }
 
         let aPlusWinRate = rate(wins(in: aPlusTrades), aPlusTrades.count)
         let nonAPlusWinRate = rate(wins(in: nonAPlusTrades), nonAPlusTrades.count)
@@ -75,6 +94,12 @@ struct TradeInsightsCalculator {
 
         let segments = buildSegments(from: pricedTrades)
         let filteredSegments = segments.filter { $0.trades >= minSampleSize && $0.label != "Unspecified" }
+        let setupSegments = filteredSegments.filter { $0.category == "Setup" }
+        let bestSetup = setupSegments.sorted(by: sortStrengths).first
+        let worstSetup = setupSegments.sorted(by: sortWeaknesses).first
+        let performanceByInstrument = segmentsForCategory("Instrument", in: segments)
+        let performanceByDirection = segmentsForCategory("Direction", in: segments)
+        let performanceByAccount = segmentsForCategory("Account", in: segments)
 
         let strengths = Array(filteredSegments.sorted(by: sortStrengths).prefix(3))
         let weaknesses = Array(filteredSegments.sorted(by: sortWeaknesses).prefix(3))
@@ -90,8 +115,12 @@ struct TradeInsightsCalculator {
             totalTrades: totalTrades,
             closedTrades: closedTrades.count,
             pricedTrades: pricedTrades.count,
+            riskDefinedTrades: riskDefinedTrades.count,
             winRate: winRate,
-            averageR: averageR,
+            averageWinner: averageWinner,
+            averageLoser: averageLoser,
+            expectancy: expectancy,
+            profitFactor: profitFactor,
             averageHoldTime: averageHoldTime,
             aPlusWinRate: aPlusWinRate,
             nonAPlusWinRate: nonAPlusWinRate,
@@ -99,6 +128,11 @@ struct TradeInsightsCalculator {
             wouldRetakeRate: wouldRetakeRate,
             entryQualityAverage: entryQualityAverage,
             exitQualityAverage: exitQualityAverage,
+            bestSetup: bestSetup,
+            worstSetup: worstSetup,
+            performanceByInstrument: performanceByInstrument,
+            performanceByDirection: performanceByDirection,
+            performanceByAccount: performanceByAccount,
             strengths: strengths,
             weaknesses: weaknesses,
             topMistakes: topMistakes,
@@ -117,6 +151,7 @@ struct TradeInsightsCalculator {
         segments += segmentPerformance(for: trades, category: "Timeframe") { $0.timeframe }
         segments += segmentPerformance(for: trades, category: "Instrument") { $0.instrument.rawValue.capitalized }
         segments += segmentPerformance(for: trades, category: "Direction") { $0.direction.rawValue.capitalized }
+        segments += segmentPerformance(for: trades, category: "Account") { $0.account }
 
         let emotionalTrades = trades.filter { $0.review != nil }
         segments += segmentPerformance(for: emotionalTrades, category: "Emotion") {
@@ -139,7 +174,9 @@ struct TradeInsightsCalculator {
         return grouped.map { label, trades in
             let winCount = wins(in: trades)
             let winRate = rate(winCount, trades.count)
-            let avgR = average(trades.compactMap { rMultiple(for: $0) })
+            let rMultiples = trades.compactMap { rMultiple(for: $0) }
+            let winningRMultiples = rMultiples.filter { $0 > 0 }
+            let losingRMultiples = rMultiples.filter { $0 < 0 }
 
             return TradeInsights.SegmentPerformance(
                 id: "\(category):\(label)",
@@ -148,9 +185,21 @@ struct TradeInsightsCalculator {
                 trades: trades.count,
                 wins: winCount,
                 winRate: winRate,
-                avgR: avgR
+                expectancy: average(rMultiples),
+                averageWinner: average(winningRMultiples),
+                averageLoser: average(losingRMultiples),
+                profitFactor: profitFactor(for: rMultiples)
             )
         }
+    }
+
+    private func segmentsForCategory(
+        _ category: String,
+        in segments: [TradeInsights.SegmentPerformance]
+    ) -> [TradeInsights.SegmentPerformance] {
+        segments
+            .filter { $0.category == category && $0.label != "Unspecified" && $0.trades >= minSampleSize }
+            .sorted(by: sortStrengths)
     }
 
     private func topMistakeItems(from reviews: [TradeReview]) -> [TradeInsights.CountedItem] {
@@ -252,6 +301,15 @@ struct TradeInsightsCalculator {
         return values.reduce(0, +) / Double(values.count)
     }
 
+    private func profitFactor(for values: [Double]) -> Double? {
+        let grossProfit = values.filter { $0 > 0 }.reduce(0, +)
+        let grossLoss = abs(values.filter { $0 < 0 }.reduce(0, +))
+
+        guard grossProfit > 0 || grossLoss > 0 else { return nil }
+        guard grossLoss > 0 else { return .infinity }
+        return grossProfit / grossLoss
+    }
+
     private func rate(_ part: Int, _ total: Int) -> Double? {
         guard total > 0 else { return nil }
         return Double(part) / Double(total)
@@ -266,19 +324,33 @@ struct TradeInsightsCalculator {
         _ lhs: TradeInsights.SegmentPerformance,
         _ rhs: TradeInsights.SegmentPerformance
     ) -> Bool {
+        let lhsExpectancy = lhs.expectancy ?? -Double.greatestFiniteMagnitude
+        let rhsExpectancy = rhs.expectancy ?? -Double.greatestFiniteMagnitude
+        if lhsExpectancy != rhsExpectancy {
+            return lhsExpectancy > rhsExpectancy
+        }
+
         if lhs.winRate != rhs.winRate {
             return (lhs.winRate ?? 0) > (rhs.winRate ?? 0)
         }
-        return (lhs.avgR ?? 0) > (rhs.avgR ?? 0)
+
+        return lhs.trades > rhs.trades
     }
 
     private func sortWeaknesses(
         _ lhs: TradeInsights.SegmentPerformance,
         _ rhs: TradeInsights.SegmentPerformance
     ) -> Bool {
+        let lhsExpectancy = lhs.expectancy ?? Double.greatestFiniteMagnitude
+        let rhsExpectancy = rhs.expectancy ?? Double.greatestFiniteMagnitude
+        if lhsExpectancy != rhsExpectancy {
+            return lhsExpectancy < rhsExpectancy
+        }
+
         if lhs.winRate != rhs.winRate {
             return (lhs.winRate ?? 0) < (rhs.winRate ?? 0)
         }
-        return (lhs.avgR ?? 0) < (rhs.avgR ?? 0)
+
+        return lhs.trades > rhs.trades
     }
 }

@@ -1,0 +1,6 @@
+Target dependency graph (3 targets)
+Target 'Calc EdgeTests' in project 'Calc Edge'
+➜ Explicit dependency on target 'Calc Edge' in project 'Calc Edge'
+Target 'Calc EdgeUITests' in project 'Calc Edge'
+➜ Explicit dependency on target 'Calc Edge' in project 'Calc Edge'
+Target 'Calc Edge' in project 'Calc Edge' (no dependencies)

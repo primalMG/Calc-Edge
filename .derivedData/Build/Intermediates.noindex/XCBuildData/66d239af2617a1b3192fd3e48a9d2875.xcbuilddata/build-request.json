@@ -1,0 +1,72 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildAndRun"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "4f32ace546cdd56a1c41bfee0bef526a708eced22a3a0673b77977544dba1727"
+    },
+    {
+      "guid" : "4f32ace546cdd56a1c41bfee0bef526a813378764435020c1910e21b0badbe51"
+    },
+    {
+      "guid" : "4f32ace546cdd56a1c41bfee0bef526aabd436154a84b7257e9577cce7f4a0d2"
+    }
+  ],
+  "containerPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/Calc Edge.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "platform" : "macosx",
+      "sdk" : "macosx26.2",
+      "sdkVariant" : "macos",
+      "supportedArchitectures" : [
+        "arm64e",
+        "arm64",
+        "x86_64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Products",
+      "derivedDataPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData",
+      "indexDataStoreFolderPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "CODE_SIGNING_ALLOWED" : "NO",
+          "CODE_SIGNING_REQUIRED" : "NO"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "test",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

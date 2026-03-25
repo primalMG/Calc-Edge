@@ -1,0 +1,29 @@
+{
+  "" : {
+    "diagnostics" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc EdgeUITests-primary.dia",
+    "emit-module-dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc EdgeUITests-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc EdgeUITests-primary-emit-module.dia",
+    "pch" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc EdgeUITests-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc EdgeUITests-primary.swiftdeps"
+  },
+  "/Users/marcusgardner/Documents/swift-projects/Calc Edge/Calc EdgeUITests/Calc_EdgeUITests.swift" : {
+    "const-values" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.swiftconstvalues",
+    "dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.d",
+    "diagnostics" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.dia",
+    "index-unit-output-path" : "/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.o",
+    "llvm-bc" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.bc",
+    "object" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.o",
+    "swift-dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests.swiftdeps",
+    "swiftmodule" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITests~partial.swiftmodule"
+  },
+  "/Users/marcusgardner/Documents/swift-projects/Calc Edge/Calc EdgeUITests/Calc_EdgeUITestsLaunchTests.swift" : {
+    "const-values" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.swiftconstvalues",
+    "dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.d",
+    "diagnostics" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.dia",
+    "index-unit-output-path" : "/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.o",
+    "llvm-bc" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.bc",
+    "object" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.o",
+    "swift-dependencies" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests.swiftdeps",
+    "swiftmodule" : "/Users/marcusgardner/Documents/swift-projects/Calc Edge/.derivedData/Build/Intermediates.noindex/Calc Edge.build/Debug/Calc EdgeUITests.build/Objects-normal/arm64/Calc_EdgeUITestsLaunchTests~partial.swiftmodule"
+  }
+}
