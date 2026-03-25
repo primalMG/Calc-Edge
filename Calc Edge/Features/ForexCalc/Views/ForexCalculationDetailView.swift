@@ -147,7 +147,7 @@ struct ForexCalculationDetailView: View {
 
         appendRow(&rows, title: "Account Balance", value: calculation.accountBalance)
         appendRow(&rows, title: "Risk Percent", value: calculation.riskPercent)
-        appendRow(&rows, title: "Risk Amount", value: calculation.riskAmount)
+        appendRow(&rows, title: "Risk Amount", value: calculation.derivedRiskAmount)
         appendRow(&rows, title: "Entry Price", value: calculation.entryPrice)
         appendRow(&rows, title: "Stop Loss Price", value: calculation.stopLossPrice)
         appendRow(&rows, title: "Stop Loss (Pips)", value: calculation.stopLossPips)

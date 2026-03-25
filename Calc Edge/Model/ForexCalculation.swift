@@ -115,12 +115,12 @@ final class ForexCalculation {
     }
 
     var derivedRiskAmount: Decimal? {
-        if let riskAmount {
-            return riskAmount
+        if let accountBalance, let riskPercent {
+            let hundred = Decimal(100)
+            return accountBalance * (riskPercent / hundred)
         }
-        guard let accountBalance, let riskPercent else { return nil }
-        let hundred = Decimal(100)
-        return accountBalance * (riskPercent / hundred)
+
+        return riskAmount
     }
 
     var derivedStopLossPips: Decimal? {

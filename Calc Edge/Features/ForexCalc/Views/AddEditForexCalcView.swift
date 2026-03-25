@@ -20,27 +20,30 @@ struct AddEditForexCalcView: View {
     var body: some View {
         Form {
             Section("Account") {
-                Picker("Saved Account", selection: $selectedAccountID) {
-                    Text("None")
-                        .tag(nil as Account.ID?)
-
-                    ForEach(accounts) { account in
-                        Text(account.accountName)
-                            .tag(account.id as Account.ID?)
-                    }
-                }
-
-                if let selectedAccount {
-                    LabeledContent("Account Size:") {
-                        Text("\(selectedAccount.currency) \(formatAccountSize(selectedAccount.accountSize))")
-                    }
-                    .foregroundStyle(.secondary)
-                } else if accounts.isEmpty {
+                if accounts.isEmpty {
                     Text("Add an account in Accounts to reuse saved account sizes here.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                } else {
+                    Picker("Saved Account", selection: $selectedAccountID) {
+                        ForEach(accounts) { account in
+                            Text(account.accountName)
+                                .tag(account.id as Account.ID?)
+                        }
+                    }
+                }
+
+                LabeledContent("Account Currency:") {
+                    Text(displayAccountCurrency)
+                        .foregroundStyle(.secondary)
+                }
+
+                LabeledContent("Account Size:") {
+                    Text(displayAccountSize)
+                        .foregroundStyle(.secondary)
                 }
             }
+            .padding(.top, 10)
 
             Section("Basics") {
                 LabeledContent("Calculator Type:") {
@@ -57,12 +60,8 @@ struct AddEditForexCalcView: View {
                     TextField("", text: $calculation.pair)
                         .autocorrectionDisabled()
                 }
-
-                LabeledContent("Account Currency:") {
-                    TextField("", text: $calculation.accountCurrency)
-                        .autocorrectionDisabled()
-                }
             }
+            .padding(.top, 10)
 
             calculatorFields
             liveResultsSection
@@ -87,6 +86,9 @@ struct AddEditForexCalcView: View {
         .onChange(of: selectedAccountID) { _, _ in
             applySelectedAccount()
         }
+        .onChange(of: calculation.riskPercent) { _, _ in
+            calculation.riskAmount = calculation.derivedRiskAmount
+        }
     }
 
     @ViewBuilder
@@ -101,9 +103,8 @@ struct AddEditForexCalcView: View {
             }
         case .positionSize:
             Section("Position Size Inputs") {
-                decimalField("Account Balance", $calculation.accountBalance)
                 decimalField("Risk Percent", $calculation.riskPercent)
-                decimalField("Risk Amount", $calculation.riskAmount)
+                calculatedRow("Risk Amount", calculation.derivedRiskAmount)
                 decimalField("Entry Price", $calculation.entryPrice)
                 decimalField("Stop Loss Price", $calculation.stopLossPrice)
                 decimalField("Stop Loss (Pips)", $calculation.stopLossPips)
@@ -111,7 +112,6 @@ struct AddEditForexCalcView: View {
             }
         case .margin:
             Section("Margin Inputs") {
-                decimalField("Account Balance", $calculation.accountBalance)
                 decimalField("Leverage", $calculation.leverage)
                 decimalField("Entry Price", $calculation.entryPrice)
                 decimalField("Units", $calculation.units)
@@ -175,6 +175,13 @@ struct AddEditForexCalcView: View {
         }
     }
 
+    private func calculatedRow(_ label: String, _ value: Decimal?) -> some View {
+        LabeledContent(label + ":") {
+            Text(format(value))
+                .foregroundStyle(.secondary)
+        }
+    }
+
     private func format(_ value: Decimal?) -> String {
         guard let value else { return "Waiting for inputs" }
         return NSDecimalNumber(decimal: value).stringValue
@@ -182,7 +189,11 @@ struct AddEditForexCalcView: View {
 
     private func save() {
         calculation.pair = calculation.normalizedPair
-        calculation.accountCurrency = calculation.accountCurrency.uppercased()
+        if let selectedAccount {
+            calculation.accountBalance = Decimal(selectedAccount.accountSize)
+            calculation.accountCurrency = selectedAccount.currency.uppercased()
+        }
+        calculation.riskAmount = calculation.derivedRiskAmount
 
         if isNew {
             modelContext.insert(calculation)
@@ -203,7 +214,7 @@ struct AddEditForexCalcView: View {
             selectedAccountID = accounts.first?.id
         }
 
-        if calculation.accountBalance == nil, !accounts.isEmpty {
+        if !accounts.isEmpty {
             applySelectedAccount()
         }
     }
@@ -213,10 +224,35 @@ struct AddEditForexCalcView: View {
 
         calculation.accountBalance = Decimal(selectedAccount.accountSize)
         calculation.accountCurrency = selectedAccount.currency.uppercased()
+        calculation.riskAmount = calculation.derivedRiskAmount
     }
 
     private func formatAccountSize(_ value: Double) -> String {
         String(format: "%.2f", value)
+    }
+
+    private var displayAccountCurrency: String {
+        if let selectedAccount {
+            return selectedAccount.currency.uppercased()
+        }
+
+        if !calculation.accountCurrency.isEmpty {
+            return calculation.accountCurrency.uppercased()
+        }
+
+        return "No account selected"
+    }
+
+    private var displayAccountSize: String {
+        if let selectedAccount {
+            return formatAccountSize(selectedAccount.accountSize)
+        }
+
+        if let accountBalance = calculation.accountBalance {
+            return NSDecimalNumber(decimal: accountBalance).stringValue
+        }
+
+        return "No account selected"
     }
 }
 
