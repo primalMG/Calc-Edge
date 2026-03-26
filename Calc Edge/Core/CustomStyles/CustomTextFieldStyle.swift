@@ -11,12 +11,12 @@ struct CustomTextFieldStyle: TextFieldStyle {
     
    func _body(configuration: TextField<Self._Label>) -> some View {
        configuration
-           .padding(6)
+           .padding(4)
            .frame(width: 100)
            .textFieldStyle(.plain)
            .overlay {
-               RoundedRectangle(cornerRadius: 6)
-                   .stroke(.white)
+               RoundedRectangle(cornerRadius: 10)
+                   .stroke(.primary)
            }
     }
 }

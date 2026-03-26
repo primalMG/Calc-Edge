@@ -52,17 +52,17 @@ struct DashboardView: View {
                     )
                 }
 
-                NavigationLink {
-                    ForexCalcView()
-                } label: {
-                    DashboardCard(
-                        title: "Forex Calc",
-                        subtitle: "Plan FX positions",
-                        systemImage: "dollarsign.circle",
-                        recentTitle: "Updates",
-                        recentItems: ["Coming soon"]
-                    )
-                }
+//                NavigationLink {
+//                    ForexCalcView()
+//                } label: {
+//                    DashboardCard(
+//                        title: "Forex Calc",
+//                        subtitle: "Plan FX positions",
+//                        systemImage: "dollarsign.circle",
+//                        recentTitle: "Updates",
+//                        recentItems: ["Coming soon"]
+//                    )
+//                }
 
                 NavigationLink {
                     JournalInsightsView()

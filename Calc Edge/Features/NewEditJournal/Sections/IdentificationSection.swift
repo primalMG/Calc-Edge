@@ -23,67 +23,86 @@ struct IdentificationSection: View {
     
     var body: some View {
         JournalSectionContainer("Identification") {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
-                JournalField("Ticker") {
-                    TextField("", text: $trade.ticker)
-//                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-//                        .textFieldStyle(CustomTextFieldStyle())
-                }
+            VStack(alignment: .leading, spacing: 10) {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
+                    JournalField("Ticker") {
+                        TextField("", text: $trade.ticker)
+                            .autocorrectionDisabled()
+                        #if os(iOS)
+                        .textInputAutocapitalization(.characters)
+                        .textFieldStyle(CustomTextFieldStyle())
+                        #endif
+                    }
 
-                JournalField("Market") {
-                    TextField("", text: optionalTextBinding($trade.market))
-//                        .textFieldStyle(CustomTextFieldStyle())
-                }
+                    JournalField("Market") {
+                        TextField("", text: optionalTextBinding($trade.market))
+                        #if os(iOS)
+                        .textFieldStyle(CustomTextFieldStyle())
+                        #endif
+                        
+                    }
 
-                JournalField("Accounts") {
-                    Picker("", selection: $selectedAccountID) {
-                        ForEach(accounts) { account in
-                            Text(account.accountName)
-                                .tag(account.id as Account.ID?)
-                        }
-                    }
-                    .labelsHidden()
-                    .onChange(of: selectedAccountID) { _, _ in
-                        trade.account = selectedAccount.accountName
-                    }
-                }
-
-                JournalField("Instrument") {
-                    Picker("", selection: $trade.instrument) {
-                        ForEach(InstrumentType.allCases, id: \.self) { instrument in
-                            Text(instrument.rawValue.capitalized)
-                                .tag(instrument)
-                        }
-                    }
-                    .labelsHidden()
-                }
-                
-                JournalField("Direction") {
-                    Picker("", selection: $trade.direction) {
-                        ForEach(TradeDirection.allCases, id: \.self) { direction in
-                            Text(direction.rawValue.capitalized)
-                                .tag(direction)
-                        }
-                    }
-                    .labelsHidden()
-                }
-                
-                JournalField("Opened At") {
-                    DatePicker("", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
-                        .labelsHidden()
-                }
-                
-                if inEditMode {
-                    JournalField("Closed Trade") {
-                        Toggle("", isOn: closedTradeBinding)
+                    JournalField("Accounts") {
+                        if !accounts.isEmpty {
+                            Picker("", selection: $selectedAccountID) {
+                                ForEach(accounts) { account in
+                                    Text(account.accountName)
+                                        .tag(account.id as Account.ID?)
+                                }
+                            }
                             .labelsHidden()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .onChange(of: selectedAccountID) { _, _ in
+                                trade.account = selectedAccount.accountName
+                            }
+                        } else {
+                            Text("No Accounts Found")
+                                .font(.caption)
+                        }
                     }
-                    
-                    if trade.closedAt != nil {
+
+                    JournalField("Instrument") {
+                        Picker("", selection: $trade.instrument) {
+                            ForEach(InstrumentType.allCases, id: \.self) { instrument in
+                                Text(instrument.rawValue.capitalized)
+                                    .tag(instrument)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    JournalField("Direction") {
+                        Picker("", selection: $trade.direction) {
+                            ForEach(TradeDirection.allCases, id: \.self) { direction in
+                                Text(direction.rawValue.capitalized)
+                                    .tag(direction)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    if inEditMode {
+                        JournalField("Closed Trade") {
+                            Toggle("", isOn: closedTradeBinding)
+                                .labelsHidden()
+                        }
+                    }
+                }
+
+                datePickersLayout {
+                    JournalField("Opened At") {
+                        DatePicker("", selection: $trade.openedAt, displayedComponents: [.date, .hourAndMinute])
+                            .labelsHidden()
+                            .datePickerStyle(.compact)
+                    }
+
+                    if inEditMode, trade.closedAt != nil {
                         JournalField("Closed At") {
                             DatePicker("", selection: closedAtBinding, displayedComponents: [.date, .hourAndMinute])
                                 .labelsHidden()
+                                .datePickerStyle(.compact)
                         }
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
@@ -120,8 +139,30 @@ struct IdentificationSection: View {
         )
     }
 
+    @ViewBuilder
+    private func datePickersLayout<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        #if os(macOS)
+        HStack(alignment: .top, spacing: 10) {
+            content()
+        }
+        #else
+        VStack(alignment: .leading, spacing: 10) {
+            content()
+        }
+        #endif
+    }
+
+    #if os(macOS)
     private let columns = [
         GridItem(.adaptive(minimum: 180), spacing: 5),
         GridItem(.adaptive(minimum: 180), spacing: 5)
     ]
+    #else
+    private let columns = [
+        GridItem(.adaptive(minimum: 200), spacing: 5),
+        GridItem(.adaptive(minimum: 200), spacing: 5)
+    ]
+    #endif
 }

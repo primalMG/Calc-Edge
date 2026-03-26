@@ -14,22 +14,26 @@ struct RootSidebarView: View {
 
     var body: some View {
         List {
+            #if os(macOS)
             NavigationLink {
                 DashboardView()
             } label: {
                 Label("Dashboard", systemImage: "house")
             }
+            #endif
             
-            NavigationLink {
-                TradeJournalView()
-            } label: {
-                Label("Trade Journal", systemImage: "book")
-            }
+            Section("Journals") {
+                NavigationLink {
+                    TradeJournalView()
+                } label: {
+                    Label("Trade Journal", systemImage: "book")
+                }
 
-            NavigationLink {
-                JournalInsightsView()
-            } label: {
-                Label("Journal Insights", systemImage: "sparkles")
+                NavigationLink {
+                    JournalInsightsView()
+                } label: {
+                    Label("Journal Insights", systemImage: "sparkles")
+                }
             }
 
             Section("Calculators") {
@@ -39,11 +43,11 @@ struct RootSidebarView: View {
                     Label("Stock Calc", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
-                NavigationLink {
-                    ForexCalcView()
-                } label: {
-                    Label("Forex Calc", systemImage: "dollarsign.circle")
-                }
+//                NavigationLink {
+//                    ForexCalcView()
+//                } label: {
+//                    Label("Forex Calc", systemImage: "dollarsign.circle")
+//                }
             }
             
             Section("Suggestions") {

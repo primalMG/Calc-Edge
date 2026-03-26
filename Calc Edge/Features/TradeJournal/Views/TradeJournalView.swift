@@ -13,6 +13,9 @@ struct TradeJournalView: View {
     @Query private var trades: [Trade]
     @State private var selectedTradeID: Trade.ID?
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
+    #if os(iOS)
+    @State private var presentSheet: Bool = false
+    #endif
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.openWindow) private var openWindow
@@ -81,12 +84,21 @@ struct TradeJournalView: View {
         .toolbar {
             ToolbarItem {
                 Button {
+                    #if os(macOS)
                     openWindow(id: "new-journal")
+                    #else
+                    presentSheet.toggle()
+                    #endif
                 } label: {
                     Image(systemName: "plus")
                 }
             }
         }
+        #if os(iOS)
+        .sheet(isPresented: $presentSheet) {
+            NewJournalView(trade: Trade(ticker: ""))
+        }
+        #endif
     }
 
     private var selectedTrade: Trade? {

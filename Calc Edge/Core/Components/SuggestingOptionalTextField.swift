@@ -10,10 +10,12 @@ struct SuggestingOptionalTextField: View {
 
     var body: some View {
         TextField("", text: optionalTextBinding($text))
+        #if os(macOS)
             .textInputSuggestions(matchingSuggestions, id: \.uniqueKey) { suggestion in
                 Text(suggestion.value)
                     .textInputCompletion(suggestion.value)
             }
+        #endif
     }
 
     private var matchingSuggestions: [TradeFieldSuggestion] {
