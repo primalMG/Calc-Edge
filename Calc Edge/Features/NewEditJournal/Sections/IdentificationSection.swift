@@ -112,7 +112,9 @@ struct IdentificationSection: View {
         .animation(.easeInOut, value: trade.closedAt != nil)
         .onAppear {
             if selectedAccountID == nil {
-                selectedAccountID = accounts.first?.id
+                selectedAccountID =
+                    accounts.first(where: { $0.accountName == trade.account })?.id
+                    ?? accounts.first?.id
             }
         }
     }
@@ -137,6 +139,19 @@ struct IdentificationSection: View {
             get: { trade.closedAt ?? Date() },
             set: { trade.closedAt = $0 }
         )
+    }
+
+    private var selectedAccountLabel: String {
+        if let selectedAccountID,
+           let account = accounts.first(where: { $0.id == selectedAccountID }) {
+            return account.accountName
+        }
+
+        if let account = trade.account, !account.isEmpty {
+            return account
+        }
+
+        return accounts.first?.accountName ?? "Select Account"
     }
 
     @ViewBuilder

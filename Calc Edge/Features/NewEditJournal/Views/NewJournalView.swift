@@ -18,26 +18,30 @@ struct NewJournalView: View {
     @State private var isNew: Bool = false
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                IdentificationSection(trade: trade, inEditMode: .constant(false))
-                PricesSection(trade: trade)
-                RiskSection(trade: trade, inEditMode: .constant(false))
-
-                HStack {
-                    Button("Save") {
-                        save()
+        IdenticaftioSectionLayout {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    IdentificationSection(trade: trade, inEditMode: .constant(false))
+                    PricesSection(trade: trade)
+                    RiskSection(trade: trade, inEditMode: .constant(false))
+                    
+#if os(macOS)
+                    HStack {
+                        Button("Save") {
+                            save()
+                        }
+                        .tint(.green)
+                        
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .tint(.red)
                     }
-                    .tint(.green)
-
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .tint(.red)
+#endif
                 }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .onAppear {
             if trade.ticker.isEmpty {
@@ -49,6 +53,36 @@ struct NewJournalView: View {
     private func save() {
         trade.ticker = trade.ticker.uppercased()
         modelContext.insert(trade)
+    }
+    
+    @ViewBuilder
+    private func IdenticaftioSectionLayout<Cotent: View>(
+        @ViewBuilder content: () -> Cotent
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            #if os(macOS)
+            content()
+            #elseif os(iOS)
+            NavigationStack {
+                content()
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                dismiss()
+                            }
+                            .tint(.red)
+                        }
+                        
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Save") {
+                                save()
+                            }
+                            .tint(.green)
+                        }
+                    }
+            }
+            #endif
+        }
     }
 }
 
