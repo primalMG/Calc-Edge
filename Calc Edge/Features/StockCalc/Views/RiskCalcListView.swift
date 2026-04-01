@@ -19,41 +19,39 @@ struct RiskCalcListView: View {
     @State private var presentSheet: Bool = false
 
     var body: some View {
-        NavigationStack {
-            listContent
-            .navigationTitle("Stock Calc")
-            .toolbar {
-                ToolbarItemGroup {
-                    Button {
-                        selectedStock = Stock(ticker: "", entryPrice: 0.0, riskPercentage: 0.0, stopLoss: 0.0, shareCount: 0.0, targetPrice: 0.0, accountUsed: "", balanceAtTrade: 0.0, amountRisked: 0.0)
-                        presentSheet.toggle()
-                    } label: {
-                        Image(systemName: "square.and.pencil")
-                    }
-                    .help("New Calculation")
-                    .sheet(isPresented: $presentSheet) {
-                        NewEditRiskCalc(stock: selectedStock, isNew: true)
-                    }
+        listContent
+        .navigationTitle("Stock Calc")
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    selectedStock = Stock(ticker: "", entryPrice: 0.0, riskPercentage: 0.0, stopLoss: 0.0, shareCount: 0.0, targetPrice: 0.0, accountUsed: "", balanceAtTrade: 0.0, amountRisked: 0.0)
+                    presentSheet.toggle()
+                } label: {
+                    Image(systemName: "square.and.pencil")
+                }
+                .help("New Calculation")
+                .sheet(isPresented: $presentSheet) {
+                    NewEditRiskCalc(stock: selectedStock, isNew: true)
                 }
             }
-            #if os(macOS)
-            .inspector(isPresented: inspectorIsPresented) {
-                if let inspectorStock {
-                    StockCalcView(stock: inspectorStock)
-                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
-                } else {
-                    ContentUnavailableView("Select a Calculation", systemImage: "chart.line.uptrend.xyaxis")
-                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
-                }
-            }
-            .frame(minWidth: 300, idealWidth: 320)
-            .onAppear(perform: syncInitialSelection)
-            .onChange(of: selectedStockID, updateSelectedStock)
-            .onChange(of: stockCalcs.count) { _, _ in
-                keepSelectionInSync()
-            }
-            #endif
         }
+        #if os(macOS)
+        .inspector(isPresented: inspectorIsPresented) {
+            if let inspectorStock {
+                StockCalcView(stock: inspectorStock)
+                    .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
+            } else {
+                ContentUnavailableView("Select a Calculation", systemImage: "chart.line.uptrend.xyaxis")
+                    .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
+            }
+        }
+        .frame(minWidth: 300, idealWidth: 320)
+        .onAppear(perform: syncInitialSelection)
+        .onChange(of: selectedStockID, updateSelectedStock)
+        .onChange(of: stockCalcs.count) { _, _ in
+            keepSelectionInSync()
+        }
+        #endif
     }
 
     #if os(macOS)

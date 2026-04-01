@@ -19,41 +19,39 @@ struct ForexCalcView: View {
     #endif
 
     var body: some View {
-        NavigationStack {
-            listContent
-                .navigationTitle("Forex Calc")
-                .toolbar {
-                    ToolbarItemGroup {
-                        Button {
-                            draftCalculation = .emptyDraft
-                            presentSheet = true
-                        } label: {
-                            Image(systemName: "square.and.pencil")
-                        }
-                        .help("New Calculation")
-                        .sheet(isPresented: $presentSheet) {
-                            AddEditForexCalcView(calculation: draftCalculation, isNew: true)
-                        }
+        listContent
+            .navigationTitle("Forex Calc")
+            .toolbar {
+                ToolbarItemGroup {
+                    Button {
+                        draftCalculation = .emptyDraft
+                        presentSheet = true
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                    }
+                    .help("New Calculation")
+                    .sheet(isPresented: $presentSheet) {
+                        AddEditForexCalcView(calculation: draftCalculation, isNew: true)
                     }
                 }
-                #if os(macOS)
-                .inspector(isPresented: inspectorIsPresented) {
-                    if let inspectorCalculation {
-                        ForexCalculationDetailView(calculation: inspectorCalculation)
-                            .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
-                    } else {
-                        ContentUnavailableView("Select a Calculation", systemImage: "dollarsign.circle")
-                            .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
-                    }
+            }
+            #if os(macOS)
+            .inspector(isPresented: inspectorIsPresented) {
+                if let inspectorCalculation {
+                    ForexCalculationDetailView(calculation: inspectorCalculation)
+                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
+                } else {
+                    ContentUnavailableView("Select a Calculation", systemImage: "dollarsign.circle")
+                        .inspectorColumnWidth(min: 450, ideal: 540, max: 800)
                 }
-                .frame(minWidth: 300, idealWidth: 320)
-                .onAppear(perform: syncInitialSelection)
-                .onChange(of: selectedCalculationID, updateSelection)
-                .onChange(of: calculations.count) { _, _ in
-                    keepSelectionInSync()
-                }
-                #endif
-        }
+            }
+            .frame(minWidth: 300, idealWidth: 320)
+            .onAppear(perform: syncInitialSelection)
+            .onChange(of: selectedCalculationID, updateSelection)
+            .onChange(of: calculations.count) { _, _ in
+                keepSelectionInSync()
+            }
+            #endif
     }
 
     #if os(macOS)

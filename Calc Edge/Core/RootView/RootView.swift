@@ -11,11 +11,24 @@ import SwiftData
 struct RootView: View {
     
     var body: some View {
-        NavigationSplitView {
+        rootViewLayout {
             RootSidebarView()
+        }
+    }
+    
+    @ViewBuilder
+    private func rootViewLayout<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        #if os(macOS)
+        NavigationSplitView {
+            content()
         } detail: {
             DashboardView()
         }
+        #else
+        NavigationStack {
+            content()
+        }
+        #endif
     }
 }
 
