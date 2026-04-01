@@ -11,15 +11,15 @@ import SwiftData
 @Model
 final class Stock {
     var id = UUID()
-    var createdAt: Date
+    var createdAt: Date = Date.now
     var updatedAt: Date?
-    var ticker: String
-    var entryPrice: Double
-    var riskPercentage: Double
+    var ticker: String = ""
+    var entryPrice: Double = 0
+    var riskPercentage: Double = 0
     
 //    MARK: Loss Data
-    var stopLoss: Double
-    var shareCount: Double
+    var stopLoss: Double = 0
+    var shareCount: Double = 0
     
     var lossDiffernce: Double {
         entryPrice - stopLoss
@@ -31,7 +31,7 @@ final class Stock {
     
     
 //    MARK: Profit Data
-    var targetPrice: Double
+    var targetPrice: Double = 0
     var profitDifference: Double {
         targetPrice - entryPrice
     }
@@ -41,9 +41,9 @@ final class Stock {
     }
     
 //    MARK: Account Data
-    var accountUsed: String
-    var balanceAtTrade: Double
-    var amountRisked: Double
+    var accountUsed: String = ""
+    var balanceAtTrade: Double = 0
+    var amountRisked: Double = 0
     
 //    MARK: R/R Ratio
     var riskRewardRatio: Double {
@@ -81,4 +81,3 @@ final class Stock {
         self.amountRisked = amountRisked
     }
 }
-

@@ -2,20 +2,27 @@ import SwiftUI
 
 struct LegsSection: View {
     @Bindable var trade: Trade
+    
+    private var legs: [TradeLeg] {
+        trade.legs ?? []
+    }
 
     var body: some View {
         JournalSectionContainer("Legs") {
             VStack(alignment: .leading) {
                 Button("Add Leg") {
-                    trade.legs.append(TradeLeg())
+                    if trade.legs == nil {
+                        trade.legs = []
+                    }
+                    trade.legs?.append(TradeLeg())
                 }
                 
-                if trade.legs.isEmpty {
+                if legs.isEmpty {
                     Text("No legs added yet.")
                         .foregroundStyle(.secondary)
                 }
                 
-                ForEach(trade.legs) { leg in
+                ForEach(legs) { leg in
                     TradeLegEditor(leg: leg) {
                         removeLeg(leg)
                     }
@@ -26,8 +33,8 @@ struct LegsSection: View {
     }
 
     private func removeLeg(_ leg: TradeLeg) {
-        if let index = trade.legs.firstIndex(where: { $0 === leg }) {
-            trade.legs.remove(at: index)
+        if let index = trade.legs?.firstIndex(where: { $0 === leg }) {
+            trade.legs?.remove(at: index)
         }
     }
 }

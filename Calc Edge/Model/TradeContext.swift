@@ -3,12 +3,13 @@ import SwiftData
 
 @Model
 final class TradeContext {
-    var marketRegime: MarketRegime
+    var marketRegime: MarketRegime = MarketRegime.unknown
     var vix: Decimal?
     var indexTrend: String?
     var sectorStrength: String?
     var newsDuringTrade: String?
     var timeOfDayTag: String?
+    var trade: Trade?
 
     init(
         marketRegime: MarketRegime = .unknown,

@@ -27,7 +27,12 @@ struct Calc_EdgeApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            fatalError(
+                """
+                Could not create ModelContainer: \(error)
+                If you recently enabled CloudKit, remove the existing app data/store once and relaunch so SwiftData can rebuild the container with the updated schema.
+                """
+            )
         }
     }()
     

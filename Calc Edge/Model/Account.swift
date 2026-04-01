@@ -10,18 +10,18 @@ import SwiftData
 
 @Model
 final class Account {
-    var id: UUID
-    var accountName: String
-    var accountSize: Double
-    var currency: String
+    var id: UUID = UUID()
+    var accountName: String = ""
+    var accountSize: Double = 0
+    var currency: String = "USD"
     
-    var stocks: [Stock]
+    var stocks: [Stock]? = []
     
-    init(id: UUID,
-         accountName: String,
-         accountSize: Double,
-         currency: String,
-         stocks: [Stock] = []
+    init(id: UUID = UUID(),
+         accountName: String = "",
+         accountSize: Double = 0,
+         currency: String = "USD",
+         stocks: [Stock]? = []
     ) {
         self.id = id
         self.accountName = accountName

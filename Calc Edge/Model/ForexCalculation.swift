@@ -10,14 +10,14 @@ import SwiftData
 
 @Model
 final class ForexCalculation {
-    var id: UUID
-    var createdAt: Date
+    var id: UUID = UUID()
+    var createdAt: Date = Date.now
     var updatedAt: Date?
-    var calculator: ForexCalculatorType
+    var calculator: ForexCalculatorType = ForexCalculatorType.pipValue
 
     // Core identifiers
-    var pair: String
-    var accountCurrency: String
+    var pair: String = ""
+    var accountCurrency: String = "USD"
 
     // Account inputs
     var accountBalance: Decimal?
@@ -44,7 +44,7 @@ final class ForexCalculation {
         id: UUID = UUID(),
         createdAt: Date = .now,
         updatedAt: Date? = nil,
-        calculator: ForexCalculatorType = .pipValue,
+        calculator: ForexCalculatorType = ForexCalculatorType.pipValue,
         pair: String,
         accountCurrency: String = "USD",
         accountBalance: Decimal? = nil,

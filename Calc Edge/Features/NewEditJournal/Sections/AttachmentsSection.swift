@@ -2,29 +2,36 @@ import SwiftUI
 
 struct AttachmentsSection: View {
     @Bindable var trade: Trade
+    
+    private var attachments: [TradeAttachment] {
+        trade.attachments ?? []
+    }
 
     var body: some View {
         JournalSectionContainer("Attachments") {
-            if trade.attachments.isEmpty {
+            if attachments.isEmpty {
                 Text("No attachments added yet.")
                     .foregroundStyle(.secondary)
             }
 
-            ForEach(trade.attachments) { attachment in
+            ForEach(attachments) { attachment in
                 TradeAttachmentEditor(attachment: attachment) {
                     removeAttachment(attachment)
                 }
             }
 
             Button("Add Attachment") {
-                trade.attachments.append(TradeAttachment(kind: ""))
+                if trade.attachments == nil {
+                    trade.attachments = []
+                }
+                trade.attachments?.append(TradeAttachment(kind: ""))
             }
         }
     }
 
     private func removeAttachment(_ attachment: TradeAttachment) {
-        if let index = trade.attachments.firstIndex(where: { $0 === attachment }) {
-            trade.attachments.remove(at: index)
+        if let index = trade.attachments?.firstIndex(where: { $0 === attachment }) {
+            trade.attachments?.remove(at: index)
         }
     }
 }

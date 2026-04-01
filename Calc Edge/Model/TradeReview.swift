@@ -3,18 +3,19 @@ import SwiftData
 
 @Model
 final class TradeReview {
-    var followedPlan: Bool
-    var entryQuality: Int
-    var exitQuality: Int
-    var emotionalState: EmotionalState
+    var followedPlan: Bool = true
+    var entryQuality: Int = 3
+    var exitQuality: Int = 3
+    var emotionalState: EmotionalState = EmotionalState.unknown
     var mistakeType: String?
-    var wouldRetake: Bool
+    var wouldRetake: Bool = true
 
     @Attribute(.externalStorage) var postTradeNotes: String?
     @Attribute(.externalStorage) var whatWentRight: String?
     @Attribute(.externalStorage) var whatWentWrong: String?
     var oneImprovement: String?
     var ruleCreatedOrUpdated: String?
+    var trade: Trade?
 
     init(
         followedPlan: Bool = true,

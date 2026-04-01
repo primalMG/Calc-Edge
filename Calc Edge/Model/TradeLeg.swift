@@ -4,8 +4,8 @@ import SwiftData
 @Model
 final class TradeLeg {
     var symbol: String?
-    var legInstrument: InstrumentType
-    var quantity: Decimal
+    var legInstrument: InstrumentType = InstrumentType.stock
+    var quantity: Decimal = 0
 
     var entryPrice: Decimal?
     var exitPrice: Decimal?
@@ -13,11 +13,12 @@ final class TradeLeg {
     // Options specifics (only filled when legInstrument == .option)
     var optionExpiration: Date?
     var optionStrike: Decimal?
-    var optionType: OptionType
+    var optionType: OptionType = OptionType.call
+    var trade: Trade?
 
     init(
         symbol: String? = nil,
-        legInstrument: InstrumentType = .stock,
+        legInstrument: InstrumentType = InstrumentType.stock,
         quantity: Decimal = 0,
         entryPrice: Decimal? = nil,
         exitPrice: Decimal? = nil,

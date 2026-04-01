@@ -3,12 +3,13 @@ import SwiftData
 
 @Model
 final class TradeAttachment {
-    var kind: String
-    var createdAt: Date
+    var kind: String = ""
+    var createdAt: Date = Date.now
     var note: String?
 
     @Attribute(.externalStorage) var imageData: Data?
     var urlString: String?
+    var trade: Trade?
 
     init(
         kind: String,

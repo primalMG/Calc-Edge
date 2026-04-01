@@ -4,15 +4,15 @@ import SwiftData
 @Model
 final class Trade {
     // Identification
-    @Attribute(.unique) var tradeId: UUID
-    var openedAt: Date
+    var tradeId: UUID = UUID()
+    var openedAt: Date = Date.now
     var closedAt: Date?
 
-    var ticker: String
+    var ticker: String = ""
     var market: String?
     var account: String?
-    var instrument: InstrumentType
-    var direction: TradeDirection
+    var instrument: InstrumentType = InstrumentType.stock
+    var direction: TradeDirection = TradeDirection.long
 
     // Strategy & thesis
     var strategyName: String?
@@ -20,8 +20,8 @@ final class Trade {
     var timeframe: String?
     @Attribute(.externalStorage) var thesis: String?
     var catalyst: String?
-    var confidenceScore: Int
-    var isAPlusSetup: Bool
+    var confidenceScore: Int = 3
+    var isAPlusSetup: Bool = false
 
     // Entry/Exit (for simple single-leg trades)
     var entryPrice: Decimal?
@@ -49,10 +49,10 @@ final class Trade {
     var exitReason: ExitReason?
 
     // Relationships
-    @Relationship(deleteRule: .cascade) var legs: [TradeLeg] = []
-    @Relationship(deleteRule: .cascade) var context: TradeContext?
-    @Relationship(deleteRule: .cascade) var review: TradeReview?
-    @Relationship(deleteRule: .cascade) var attachments: [TradeAttachment] = []
+    @Relationship(deleteRule: .cascade, inverse: \TradeLeg.trade) var legs: [TradeLeg]? = []
+    @Relationship(deleteRule: .cascade, inverse: \TradeContext.trade) var context: TradeContext?
+    @Relationship(deleteRule: .cascade, inverse: \TradeReview.trade) var review: TradeReview?
+    @Relationship(deleteRule: .cascade, inverse: \TradeAttachment.trade) var attachments: [TradeAttachment]? = []
 
     init(
         tradeId: UUID = UUID(),

@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 final class TradeFieldSuggestion {
-    @Attribute(.unique) var uniqueKey: String
-    var field: String
-    var value: String
-    var useCount: Int
-    var lastUsedAt: Date
+    var uniqueKey: String = ""
+    var field: String = ""
+    var value: String = ""
+    var useCount: Int = 1
+    var lastUsedAt: Date = Date.now
 
     init(field: String, value: String, useCount: Int = 1, lastUsedAt: Date = .now) {
         let trimmedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
