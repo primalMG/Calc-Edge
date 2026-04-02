@@ -20,3 +20,17 @@ struct CustomTextFieldStyle: TextFieldStyle {
            }
     }
 }
+
+struct JournalCustomTextFieldStyle: TextFieldStyle {
+    
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding(4)
+            .frame(maxWidth: .infinity)
+            .textFieldStyle(.plain)
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(.primary)
+            }
+    }
+}

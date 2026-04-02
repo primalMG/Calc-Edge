@@ -14,32 +14,29 @@ struct TradeJournalDetailView: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                IdentificationSection(trade: trade, inEditMode: .constant(true))
-                
-                if trade.closedAt != nil {
-                    ExitSection(trade: trade)
-                }
-                
-                PricesSection(trade: trade)
-                
-                RiskSection(trade: trade, inEditMode: .constant(true))
-                
-                
-                StrategySection(trade: trade)
-                
-                ReviewSection(trade: trade)
-                
-                MarketContextSection(trade: trade)
-                
-                if trade.instrument == .option {
-                    LegsSection(trade: trade)
-                }
-                
-                AttachmentsSection(trade: trade)
+        journalViewLayout {
+            IdentificationSection(trade: trade, inEditMode: .constant(true))
+            
+            if trade.closedAt != nil {
+                ExitSection(trade: trade)
             }
-            .padding()
+            
+            PricesSection(trade: trade)
+            
+            RiskSection(trade: trade, inEditMode: .constant(true))
+            
+            
+            StrategySection(trade: trade)
+            
+            ReviewSection(trade: trade)
+            
+            MarketContextSection(trade: trade)
+            
+            if trade.instrument == .option {
+                LegsSection(trade: trade)
+            }
+            
+            AttachmentsSection(trade: trade)
         }
         .navigationTitle(trade.ticker)
         .onAppear {
@@ -76,6 +73,25 @@ struct TradeJournalDetailView: View {
                 }
             }
         }
+    }
+    
+    @ViewBuilder
+    private func journalViewLayout<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        #if os(iOS)
+        Form {
+            content()
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
+        }
+        .listRowBackground(Color.clear)
+        #else
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                content()
+            }
+            .padding()
+        }
+        #endif
     }
     
     private func delete() {
