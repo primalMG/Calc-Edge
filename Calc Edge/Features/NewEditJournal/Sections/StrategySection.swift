@@ -27,24 +27,30 @@ struct StrategySection: View {
                         #endif
                 }
                 
-                JournalField("Thesis") {
-                    TextField("", text: optionalTextBinding($trade.thesis))
-                    #if os(iOS)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    #endif
-                }
-                
                 JournalField("Catalyst") {
                     SuggestingOptionalTextField(field: .catalyst, text: $trade.catalyst)
                     #if os(iOS)
                     .textFieldStyle(CustomTextFieldStyle())
                     #endif
                 }
-                
-                Stepper("Confidence Score: \(trade.confidenceScore)", value: $trade.confidenceScore, in: 1...5)
-                
-                Toggle("A+ Setup", isOn: $trade.isAPlusSetup)
             }
+            
+            JournalField("Thesis") {
+                TextField("", text: optionalTextBinding($trade.thesis))
+                #if os(iOS)
+                    .padding(4)
+                    .frame(maxWidth: .infinity)
+                    .textFieldStyle(.plain)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(.primary)
+                    }
+                #endif
+            }
+            
+            Stepper("Confidence Score: \(trade.confidenceScore)", value: $trade.confidenceScore, in: 1...5)
+            
+            Toggle("A+ Setup", isOn: $trade.isAPlusSetup)
         }
     }
     

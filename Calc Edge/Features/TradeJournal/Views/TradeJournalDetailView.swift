@@ -32,7 +32,9 @@ struct TradeJournalDetailView: View {
     @State private var persistedSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var pendingSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var suggestionSaveTask: Task<Void, Never>?
+    #if os(iOS)
     @State private var activeSheet: ActiveTradeJournalSheet?
+    #endif
 
     @Bindable var trade: Trade
 
@@ -88,6 +90,7 @@ struct TradeJournalDetailView: View {
                 }
             }
         }
+        #if os(iOS)
         .sheet(item: $activeSheet) { sheet in
             NavigationStack {
                 ScrollView {
@@ -108,6 +111,7 @@ struct TradeJournalDetailView: View {
             }
             .presentationDetents(detents(for: sheet))
         }
+        #endif
     }
 
     @ViewBuilder
