@@ -4,7 +4,7 @@ struct StrategySection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        JournalSectionContainer("Strategy") {
+        strategySectionLayout {
             LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
                 JournalField("Strategy Name") {
                     SuggestingOptionalTextField(field: .strategyName, text: $trade.strategyName)
@@ -46,6 +46,18 @@ struct StrategySection: View {
                 Toggle("A+ Setup", isOn: $trade.isAPlusSetup)
             }
         }
+    }
+    
+    private func strategySectionLayout<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        #if os(macOS)
+        JournalSectionContainer("Strategy") {
+            content()
+        }
+        #else
+        content()
+        #endif
     }
     
 #if os(macOS)

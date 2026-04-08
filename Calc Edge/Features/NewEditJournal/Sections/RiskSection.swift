@@ -5,7 +5,7 @@ struct RiskSection: View {
     @Binding var inEditMode: Bool
 
     var body: some View {
-        JournalSectionContainer("Risk") {
+        riskSectionLayout {
             LazyVGrid(columns: columns, spacing: 12) {
                 JournalField("Planned Risk Amount") {
                     TextField("", text: optionalDecimalBinding($trade.plannedRiskAmount))
@@ -52,6 +52,18 @@ struct RiskSection: View {
                 }
             }
         }
+    }
+    
+    private func riskSectionLayout<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        #if os(macOS)
+        JournalSectionContainer("Risk") {
+            content()
+        }
+        #else
+        content()
+        #endif
     }
 
 #if os(macOS)

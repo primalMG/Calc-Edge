@@ -4,7 +4,7 @@ struct ReviewSection: View {
     @Bindable var trade: Trade
 
     var body: some View {
-        JournalSectionContainer("Review") {
+        reviewSectionLayout {
             if let review = trade.review {
                 TradeReviewEditor(review: review) {
                     trade.review = nil
@@ -15,6 +15,18 @@ struct ReviewSection: View {
                 }
             }
         }
+    }
+    
+    private func reviewSectionLayout<Content: View>(
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        #if os(macOS)
+        JournalSectionContainer("Review") {
+            content()
+        }
+        #else
+        content()
+        #endif
     }
 }
 
@@ -96,6 +108,7 @@ private struct TradeReviewEditor: View {
             }
             .tint(.red)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(.borderless)
         }
     }
 
