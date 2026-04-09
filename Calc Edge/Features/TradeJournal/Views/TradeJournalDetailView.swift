@@ -195,7 +195,7 @@ struct TradeJournalDetailView: View {
         case .risk:
             return [.fraction(0.35)]
         case .context:
-            return [.fraction(0.45)]
+            return [.fraction(0.4)]
         case .strategy:
             return [.fraction(0.47)]
         case .review:

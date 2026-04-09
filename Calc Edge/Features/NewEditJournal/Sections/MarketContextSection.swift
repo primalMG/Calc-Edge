@@ -52,34 +52,34 @@ private struct TradeContextEditor: View {
                     .textFieldStyle(CustomTextFieldStyle())
                     #endif
                 }
-            }
+                
+                JournalField("Index Trend") {
+                    SuggestingOptionalTextField(field: .marketIndexTrend, text: $context.indexTrend)
+                    #if os(iOS)
+                    .textFieldStyle(CustomTextFieldStyle())
+                    #endif
+                }
 
-            JournalField("Index Trend") {
-                SuggestingOptionalTextField(field: .marketIndexTrend, text: $context.indexTrend)
-                #if os(iOS)
-                .textFieldStyle(CustomTextFieldStyle())
-                #endif
-            }
+                JournalField("Sector Strength") {
+                    SuggestingOptionalTextField(field: .marketSectorStrength, text: $context.sectorStrength)
+                    #if os(iOS)
+                    .textFieldStyle(CustomTextFieldStyle())
+                    #endif
+                }
 
-            JournalField("Sector Strength") {
-                SuggestingOptionalTextField(field: .marketSectorStrength, text: $context.sectorStrength)
-                #if os(iOS)
-                .textFieldStyle(CustomTextFieldStyle())
-                #endif
-            }
+                JournalField("News During Trade") {
+                    SuggestingOptionalTextField(field: .marketNewsDuringTrade, text: $context.newsDuringTrade)
+                    #if os(iOS)
+                    .textFieldStyle(CustomTextFieldStyle())
+                    #endif
+                }
 
-            JournalField("News During Trade") {
-                SuggestingOptionalTextField(field: .marketNewsDuringTrade, text: $context.newsDuringTrade)
-                #if os(iOS)
-                .textFieldStyle(CustomTextFieldStyle())
-                #endif
-            }
-
-            JournalField("Time Of Day") {
-                SuggestingOptionalTextField(field: .marketTimeOfDayTag, text: $context.timeOfDayTag)
-                #if os(iOS)
-                .textFieldStyle(CustomTextFieldStyle())
-                #endif
+                JournalField("Time Of Day") {
+                    SuggestingOptionalTextField(field: .marketTimeOfDayTag, text: $context.timeOfDayTag)
+                    #if os(iOS)
+                    .textFieldStyle(CustomTextFieldStyle())
+                    #endif
+                }
             }
 
             Button("Remove Context") {
