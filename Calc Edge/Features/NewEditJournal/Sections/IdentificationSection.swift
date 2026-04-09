@@ -44,14 +44,12 @@ struct IdentificationSection: View {
 
                     JournalField("Accounts") {
                         if !accounts.isEmpty {
-                            Picker("", selection: $selectedAccountID) {
+                            JournalMenuPicker(selectedAccountLabel, selection: $selectedAccountID) {
                                 ForEach(accounts) { account in
                                     Text(account.accountName)
                                         .tag(account.id as Account.ID?)
                                 }
                             }
-                            .labelsHidden()
-                            .frame(maxWidth: .infinity, alignment: .leading)
                             .onChange(of: selectedAccountID) { _, _ in
                                 trade.account = selectedAccount.accountName
                             }
@@ -62,25 +60,21 @@ struct IdentificationSection: View {
                     }
 
                     JournalField("Instrument") {
-                        Picker("", selection: $trade.instrument) {
+                        JournalMenuPicker(trade.instrument.rawValue.capitalized, selection: $trade.instrument) {
                             ForEach(InstrumentType.allCases, id: \.self) { instrument in
                                 Text(instrument.rawValue.capitalized)
                                     .tag(instrument)
                             }
                         }
-                        .labelsHidden()
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     JournalField("Direction") {
-                        Picker("", selection: $trade.direction) {
+                        JournalMenuPicker(trade.direction.rawValue.capitalized, selection: $trade.direction) {
                             ForEach(TradeDirection.allCases, id: \.self) { direction in
                                 Text(direction.rawValue.capitalized)
                                     .tag(direction)
                             }
                         }
-                        .labelsHidden()
-                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
                     if inEditMode {
@@ -180,4 +174,8 @@ struct IdentificationSection: View {
         GridItem(.adaptive(minimum: 200), spacing: 5)
     ]
     #endif
+}
+
+#Preview {
+    IdentificationSection(trade: Trade(ticker: "DAL"), inEditMode: .constant(true))
 }

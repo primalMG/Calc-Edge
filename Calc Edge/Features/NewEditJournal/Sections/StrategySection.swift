@@ -38,13 +38,7 @@ struct StrategySection: View {
             JournalField("Thesis") {
                 TextField("", text: optionalTextBinding($trade.thesis))
                 #if os(iOS)
-                    .padding(4)
-                    .frame(maxWidth: .infinity)
-                    .textFieldStyle(.plain)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(.primary)
-                    }
+                    .textFieldStyle(JournalCustomTextFieldStyle())
                 #endif
             }
             

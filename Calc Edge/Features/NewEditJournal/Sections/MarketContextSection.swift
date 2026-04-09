@@ -38,14 +38,12 @@ private struct TradeContextEditor: View {
         VStack(alignment: .leading, spacing: 12) {
             LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
                 JournalField("Market Regime") {
-                    Picker("", selection: $context.marketRegime) {
+                    JournalMenuPicker(context.marketRegime.rawValue.capitalized, selection: $context.marketRegime) {
                         ForEach(MarketRegime.allCases, id: \.self) { regime in
                             Text(regime.rawValue.capitalized)
                                 .tag(regime)
                         }
                     }
-                    .labelsHidden()
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 JournalField("VIX") {

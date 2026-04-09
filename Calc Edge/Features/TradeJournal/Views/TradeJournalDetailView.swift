@@ -194,8 +194,10 @@ struct TradeJournalDetailView: View {
         switch sheet {
         case .risk:
             return [.fraction(0.35)]
-        case  .strategy, .context:
+        case .context:
             return [.fraction(0.45)]
+        case .strategy:
+            return [.fraction(0.47)]
         case .review:
             return [.large]
         }
@@ -423,4 +425,8 @@ private struct SheetLauncherCard: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    TradeJournalDetailView(trade: Trade(ticker: "DAL"))
 }
