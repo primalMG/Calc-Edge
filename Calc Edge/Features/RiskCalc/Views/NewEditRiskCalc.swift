@@ -11,177 +11,209 @@ import SwiftData
 struct NewEditRiskCalc: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+    @Query private var accounts: [Account]
+
     @Bindable var stock: Stock
     let isNew: Bool
-    @Query private var accounts: [Account]
-    
+
     @State private var selectedAccountID: Account.ID?
 
-    private var selectedAccount: Account {
-        accounts.first(where: { $0.id == selectedAccountID })
-        ?? accounts.first
-        ?? Account(id: UUID(), accountName: "", accountSize: 0, currency: "")
+    private var selectedAccount: Account? {
+        accounts.first(where: { $0.id == selectedAccountID }) ?? accounts.first
     }
-    
+
+    private var selectedAccountSize: Double {
+        selectedAccount?.accountSize ?? 0
+    }
 
     private var calcShares: Double {
-        stock.riskPercentage / 100 * selectedAccount.accountSize / stock.entryPrice
-    }
-    
-    private var calcRiskAmount: Double {
-        selectedAccount.accountSize * (stock.riskPercentage / 100)
-    }
-    
-    var body: some View {
-        HStack {
-            Form {
-                Section {
-                    HStack {
-                        Picker("Accounts:", selection: $selectedAccountID) {
-                            ForEach(accounts) { account in
-                                Text(account.accountName)
-                                    .tag(account.id as Account.ID?)
-                            }
-                        }
-                        
-                        Button {
-                            print("Open Accounts Sheet")
-                        } label: {
-                            Image(systemName: "person.2.fill")
-                        }
-                        .help("Open accounts view")
-                        .frame(width: 20)
-
-                    }
-                    
-                    HStack {
-                        LabeledContent("Balance:") {
-                            Text(selectedAccount.currency + ", ")
-                            
-                            Text(String(format: "%.2f", selectedAccount.accountSize))
-                        }
-                    }
-                    
-                    LabeledContent("Risk Percentage (%):") {
-                        TextField("", value: $stock.riskPercentage, formatter: doubleFormatter)
-                            .textFieldStyle(CustomTextFieldStyle())
-                    }
-                   
-                    LabeledContent("Ammount at Risk:") {
-                        Text(String(format: "%.2f", calcRiskAmount))
-                    }
-                    
-                } header: {
-                    Text("Account")
-                }
-                
-                Section {
-                    
-                    LabeledContent("Ticker/Stock:") {
-                        TextField("", text: $stock.ticker)
-                            .textFieldStyle(CustomTextFieldStyle())
-                    }
-                    
-                    LabeledContent("# Shares Bought:") {
-                        Text(String(format: "%.2f", calcShares))
-                    }
-                    
-                    LabeledContent("Entry Price:") {
-                        TextField("", value: $stock.entryPrice, formatter: doubleFormatter)
-                            .textFieldStyle(CustomTextFieldStyle())
-                    }
-                    
-                } header: {
-                    Text("Stock Details")
-                        .padding(.top, 15)
-                }
-                
-                Section {
-
-                    LabeledContent("Stop Loss:") {
-                        TextField("", value: $stock.stopLoss, formatter: doubleFormatter)
-                            .textFieldStyle(CustomTextFieldStyle())
-                            .onChange(of: stock.stopLoss) { _, _ in
-                                stock.shareCount = calcShares
-                            }
-                    }
-                    
-                    LabeledContent("Loss difference:") {
-                        Text(String(format: "%.2f", stock.lossDiffernce))
-                    }
-                    
-                    LabeledContent("Loss Total:") {
-                        Text(String(format: "%.2f", stock.lossTotal))
-                    }
-                    
-                    
-                } header: {
-                    Text("Loss Details")
-                        .padding(.top, 15)
-                }
-                
-                Section {
-                    
-                    LabeledContent("Technical Target:") {
-                        TextField("", value: $stock.targetPrice, formatter: doubleFormatter)
-                            .textFieldStyle(CustomTextFieldStyle())
-                            .onChange(of: stock.targetPrice) { _, _ in
-                                stock.shareCount = calcShares
-                            }
-                    }
-//                    TODO: Add conditional that hides the values until something is entered
-                    LabeledContent("Gain Per Share:") {
-                        Text(String(format: "%.2f", stock.profitDifference))
-                    }
-                    
-                    LabeledContent("Profit:") {
-                        Text(String(format: "%.2f", stock.profitTotal))
-                    }
-                    
-                } header: {
-                    Text("Profit Details")
-                        .padding(.top, 15)
-                }
-                
-//                TODO: Add Risk/Reward ratio calc
-
-                HStack() {
-                    Button {
-                        save()
-                    } label: {
-                        Text("Save")
-                    }
-                    .tint(.green)
-                    
-                    Button {
-                        dismiss()
-                    } label: {
-                        Text("Cancel")
-                    }
-                    .tint(.red)
-                }
-                .padding(.top, 10)
-            }
-            .onAppear {
-                if selectedAccountID == nil {
-                    selectedAccountID = accounts.first?.id
-                }
-                    
-            }
-            .padding()
-            .frame(minWidth: 200, idealWidth: 200, maxWidth: 500)
+        guard stock.entryPrice != 0 else {
+            return 0
         }
-        .padding()
-        .frame(minHeight: 600)
+
+        return calcRiskAmount / stock.entryPrice
     }
-    
-//    TODO: Add clearing of the filled after the save button is pressed
+
+    private var calcRiskAmount: Double {
+        selectedAccountSize * (stock.riskPercentage / 100)
+    }
+
+    var body: some View {
+        content
+            .onAppear(perform: configureInitialAccountSelection)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        #if os(iOS)
+        NavigationStack {
+            formContent
+        }
+        #else
+        formContent
+        #endif
+    }
+
+    private var formContent: some View {
+        Form {
+            accountSection
+            stockDetailsSection
+            riskSetupSection
+            targetSetupSection
+            resultsSection
+            actionSection
+        }
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .tint(.red)
+            }
+
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save", action: save)
+                    .tint(.green)
+            }
+        }
+        #endif
+        #if os(macOS)
+        .padding()
+        .frame(minWidth: 360, idealWidth: 520, maxWidth: 680)
+        .frame(minHeight: 600)
+        #endif
+    }
+
+    @ViewBuilder
+    private var accountSection: some View {
+        Section("Account") {
+            if accounts.isEmpty {
+                Text("Add an account in Accounts to reuse saved account sizes here.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                HStack {
+                    Picker("Accounts:", selection: $selectedAccountID) {
+                        ForEach(accounts) { account in
+                            Text(account.accountName)
+                                .tag(account.id as Account.ID?)
+                        }
+                    }
+
+                    Button {
+                        print("Open Accounts Sheet")
+                    } label: {
+                        Image(systemName: "person.2.fill")
+                    }
+                    .help("Open accounts view")
+                    .frame(width: 20)
+                }
+            }
+
+            LabeledContent("Balance:") {
+                Text(displayAccountBalance)
+                    .foregroundStyle(.secondary)
+            }
+
+            LabeledContent("Risk Percentage (%):") {
+                TextField("", value: $stock.riskPercentage, formatter: doubleFormatter)
+                    .textFieldStyle(CustomTextFieldStyle())
+            }
+        }
+    }
+
+    private var stockDetailsSection: some View {
+        Section("Stock Details") {
+            LabeledContent("Ticker/Stock:") {
+                TextField("", text: $stock.ticker)
+                    .autocorrectionDisabled()
+                    .textFieldStyle(CustomTextFieldStyle())
+            }
+
+            LabeledContent("Entry Price:") {
+                TextField("", value: $stock.entryPrice, formatter: doubleFormatter)
+                    .textFieldStyle(CustomTextFieldStyle())
+            }
+        }
+    }
+
+    private var riskSetupSection: some View {
+        Section("Loss Inputs") {
+            LabeledContent("Stop Loss:") {
+                TextField("", value: $stock.stopLoss, formatter: doubleFormatter)
+                    .textFieldStyle(CustomTextFieldStyle())
+            }
+        }
+    }
+
+    private var targetSetupSection: some View {
+        Section("Profit Inputs") {
+            LabeledContent("Technical Target:") {
+                TextField("", value: $stock.targetPrice, formatter: doubleFormatter)
+                    .textFieldStyle(CustomTextFieldStyle())
+            }
+        }
+    }
+
+    private var resultsSection: some View {
+        Section("Live Results") {
+            resultRow("Amount at Risk", calcRiskAmount)
+            resultRow("Shares Bought", calcShares)
+            resultRow("Loss Difference", stock.lossDiffernce)
+            resultRow("Loss Total", stock.lossTotal)
+            resultRow("Gain Per Share", stock.profitDifference)
+            resultRow("Profit", stock.profitTotal)
+            resultRow("Risk / Reward", stock.riskRewardRatio)
+        }
+    }
+
+    @ViewBuilder
+    private var actionSection: some View {
+        #if os(macOS)
+        HStack {
+            Button("Save", action: save)
+                .tint(.green)
+
+            Button("Cancel") {
+                dismiss()
+            }
+            .tint(.red)
+        }
+        .padding(.top, 8)
+        #endif
+    }
+
+    private func resultRow(_ label: String, _ value: Double) -> some View {
+        LabeledContent(label + ":") {
+            Text(format(value))
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func format(_ value: Double) -> String {
+        String(format: "%.2f", value)
+    }
+
+    private func configureInitialAccountSelection() {
+        if selectedAccountID == nil {
+            selectedAccountID = accounts.first?.id
+        }
+    }
+
+    private var displayAccountBalance: String {
+        guard let selectedAccount else {
+            return "No account selected"
+        }
+
+        return "\(selectedAccount.currency.uppercased()), \(format(selectedAccount.accountSize))"
+    }
+
     private func save() {
         stock.shareCount = calcShares
         stock.amountRisked = calcRiskAmount
-        stock.accountUsed = selectedAccount.accountName
-        stock.balanceAtTrade = selectedAccount.accountSize
+        stock.accountUsed = selectedAccount?.accountName ?? ""
+        stock.balanceAtTrade = selectedAccount?.accountSize ?? 0
         stock.account = selectedAccount
 
         if isNew {
@@ -189,11 +221,25 @@ struct NewEditRiskCalc: View {
         } else {
             stock.updatedAt = .now
         }
+
         dismiss()
     }
 }
 
 #Preview {
-    NewEditRiskCalc(stock: Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100), isNew: true)
-        .modelContainer(for: Account.self, inMemory: true)
+    NewEditRiskCalc(
+        stock: Stock(
+            ticker: "DAL",
+            entryPrice: 47.5,
+            riskPercentage: 1,
+            stopLoss: 45.5,
+            shareCount: 2,
+            targetPrice: 55.5,
+            accountUsed: "WeBull",
+            balanceAtTrade: 5000,
+            amountRisked: 100
+        ),
+        isNew: true
+    )
+    .modelContainer(for: Account.self, inMemory: true)
 }
