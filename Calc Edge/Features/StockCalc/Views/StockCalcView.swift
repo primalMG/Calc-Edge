@@ -20,8 +20,28 @@ struct StockCalcView: View {
         GridItem(.adaptive(minimum: 180), spacing: 12)
     ]
 
+    private var lossDifference: Double {
+        stock.entryPrice - stock.stopLoss
+    }
+
+    private var lossTotal: Double {
+        lossDifference * stock.shareCount
+    }
+
+    private var profitDifference: Double {
+        stock.targetPrice - stock.entryPrice
+    }
+
+    private var profitTotal: Double {
+        profitDifference * stock.shareCount
+    }
+
+    private var riskRewardRatio: Double {
+        lossTotal == 0 ? 0 : profitTotal / lossTotal
+    }
+
     private var riskRewardRatioColor: Color {
-        stock.riskRewardRatio > 1.5 ? .green : .red
+        riskRewardRatio > 1.5 ? .green : .red
     }
 
     var body: some View {
@@ -33,17 +53,17 @@ struct StockCalcView: View {
                     LazyVGrid(columns: statColumns, alignment: .leading, spacing: 12) {
                         InfoStatCard(
                             title: "Potential Profit",
-                            value: formatCurrency(stock.profitTotal),
+                            value: formatCurrency(profitTotal),
                             accentColor: .green
                         )
                         InfoStatCard(
                             title: "Potential Loss",
-                            value: formatCurrency(stock.lossTotal),
+                            value: formatCurrency(lossTotal),
                             accentColor: .red
                         )
                         InfoStatCard(
                             title: "Risk / Reward",
-                            value: formatNumber(stock.riskRewardRatio),
+                            value: formatNumber(riskRewardRatio),
                             accentColor: riskRewardRatioColor
                         )
                         InfoStatCard(
@@ -55,14 +75,14 @@ struct StockCalcView: View {
 
                 InfoSection(title: "Profit Breakdown") {
                     InfoRow(title: "Technical Target", detail: formatCurrency(stock.targetPrice))
-                    InfoRow(title: "Profit Per Share", detail: formatCurrency(stock.profitDifference))
-                    InfoRow(title: "Potential Profit", detail: formatCurrency(stock.profitTotal))
+                    InfoRow(title: "Profit Per Share", detail: formatCurrency(profitDifference))
+                    InfoRow(title: "Potential Profit", detail: formatCurrency(profitTotal))
                 }
 
                 InfoSection(title: "Loss Breakdown") {
                     InfoRow(title: "Stop Loss", detail: formatCurrency(stock.stopLoss))
-                    InfoRow(title: "Loss Per Share", detail: formatCurrency(stock.lossDiffernce))
-                    InfoRow(title: "Potential Loss", detail: formatCurrency(stock.lossTotal))
+                    InfoRow(title: "Loss Per Share", detail: formatCurrency(lossDifference))
+                    InfoRow(title: "Potential Loss", detail: formatCurrency(lossTotal))
                 }
 
                 InfoSection(title: "Position Details") {

@@ -38,6 +38,26 @@ struct NewEditRiskCalc: View {
         selectedAccountSize * (stock.riskPercentage / 100)
     }
 
+    private var lossDifference: Double {
+        stock.entryPrice - stock.stopLoss
+    }
+
+    private var lossTotal: Double {
+        lossDifference * stock.shareCount
+    }
+
+    private var profitDifference: Double {
+        stock.targetPrice - stock.entryPrice
+    }
+
+    private var profitTotal: Double {
+        profitDifference * stock.shareCount
+    }
+
+    private var riskRewardRatio: Double {
+        lossTotal == 0 ? 0 : profitTotal / lossTotal
+    }
+
     var body: some View {
         content
             .onAppear(perform: configureInitialAccountSelection)
@@ -127,6 +147,9 @@ struct NewEditRiskCalc: View {
         Section("Stock Details") {
             LabeledContent("Ticker/Stock:") {
                 TextField("", text: $stock.ticker)
+                #if os(iOS)
+                    .textInputAutocapitalization(.characters)
+                #endif
                     .autocorrectionDisabled()
                     .textFieldStyle(CustomTextFieldStyle())
             }
@@ -160,11 +183,11 @@ struct NewEditRiskCalc: View {
         Section("Live Results") {
             resultRow("Amount at Risk", calcRiskAmount)
             resultRow("Shares Bought", calcShares)
-            resultRow("Loss Difference", stock.lossDiffernce)
-            resultRow("Loss Total", stock.lossTotal)
-            resultRow("Gain Per Share", stock.profitDifference)
-            resultRow("Profit", stock.profitTotal)
-            resultRow("Risk / Reward", stock.riskRewardRatio)
+            resultRow("Loss Difference", lossDifference)
+            resultRow("Loss Total", lossTotal)
+            resultRow("Gain Per Share", profitDifference)
+            resultRow("Profit", profitTotal)
+            resultRow("Risk / Reward", riskRewardRatio)
         }
     }
 
@@ -210,11 +233,7 @@ struct NewEditRiskCalc: View {
     }
 
     private func save() {
-        stock.shareCount = calcShares
-        stock.amountRisked = calcRiskAmount
-        stock.accountUsed = selectedAccount?.accountName ?? ""
-        stock.balanceAtTrade = selectedAccount?.accountSize ?? 0
-        stock.account = selectedAccount
+        applyCalculatedStockSnapshot()
 
         if isNew {
             modelContext.insert(stock)
@@ -223,6 +242,27 @@ struct NewEditRiskCalc: View {
         }
 
         dismiss()
+    }
+
+    private func applyCalculatedStockSnapshot() {
+        let snapshotShareCount = calcShares
+        let snapshotAmountRisked = calcRiskAmount
+        let snapshotLossDifference = stock.entryPrice - stock.stopLoss
+        let snapshotLossTotal = snapshotLossDifference * snapshotShareCount
+        let snapshotProfitDifference = stock.targetPrice - stock.entryPrice
+        let snapshotProfitTotal = snapshotProfitDifference * snapshotShareCount
+        let snapshotRiskRewardRatio = snapshotLossTotal == 0 ? 0 : snapshotProfitTotal / snapshotLossTotal
+
+        stock.shareCount = snapshotShareCount
+        stock.amountRisked = snapshotAmountRisked
+        stock.account = selectedAccount
+        stock.accountUsed = selectedAccount?.accountName ?? ""
+        stock.balanceAtTrade = selectedAccount?.accountSize ?? 0
+        stock.lossDiffernce = snapshotLossDifference
+        stock.lossTotal = snapshotLossTotal
+        stock.profitDifference = snapshotProfitDifference
+        stock.profitTotal = snapshotProfitTotal
+        stock.riskRewardRatio = snapshotRiskRewardRatio
     }
 }
 

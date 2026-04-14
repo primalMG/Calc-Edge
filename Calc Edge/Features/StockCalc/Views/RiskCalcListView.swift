@@ -143,6 +143,22 @@ struct RiskCalcListView: View {
 
 private struct RiskCalcRow: View {
     let stock: Stock
+
+    private var lossDifference: Double {
+        stock.entryPrice - stock.stopLoss
+    }
+
+    private var lossTotal: Double {
+        lossDifference * stock.shareCount
+    }
+
+    private var profitDifference: Double {
+        stock.targetPrice - stock.entryPrice
+    }
+
+    private var profitTotal: Double {
+        profitDifference * stock.shareCount
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -161,9 +177,9 @@ private struct RiskCalcRow: View {
 
             HStack(spacing: 12) {
                 Label(stock.accountUsed, systemImage: "person.crop.circle")
-                Label("Profit \(stock.profitTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.up.right")
+                Label("Profit \(profitTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.up.right")
                     .foregroundStyle(.green)
-                Label("Loss \(stock.lossTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.down.right")
+                Label("Loss \(lossTotal.formatted(.number.precision(.fractionLength(2))))", systemImage: "arrow.down.right")
                     .foregroundStyle(.red)
             }
             .font(.subheadline)
@@ -175,4 +191,3 @@ private struct RiskCalcRow: View {
         .padding(.vertical, 4)
     }
 }
-

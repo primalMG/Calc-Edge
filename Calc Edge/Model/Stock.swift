@@ -21,24 +21,16 @@ final class Stock {
     var stopLoss: Double = 0
     var shareCount: Double = 0
     
-    var lossDiffernce: Double {
-        entryPrice - stopLoss
-    }
+    var lossDiffernce: Double = 0
     
-    var lossTotal: Double {
-        lossDiffernce * shareCount
-    }
+    var lossTotal: Double = 0
     
     
 //    MARK: Profit Data
     var targetPrice: Double = 0
-    var profitDifference: Double {
-        targetPrice - entryPrice
-    }
+    var profitDifference: Double = 0
     
-    var profitTotal: Double {
-        profitDifference * shareCount
-    }
+    var profitTotal: Double = 0
     
 //    MARK: Account Data
     var accountUsed: String = ""
@@ -46,9 +38,7 @@ final class Stock {
     var amountRisked: Double = 0
     
 //    MARK: R/R Ratio
-    var riskRewardRatio: Double {
-        lossTotal == 0 ? 0 : profitTotal / lossTotal
-    }
+    var riskRewardRatio: Double = 0 
 
     
     @Relationship(inverse: \Account.stocks)
