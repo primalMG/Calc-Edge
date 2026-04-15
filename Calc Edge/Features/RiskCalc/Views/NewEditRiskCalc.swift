@@ -26,7 +26,7 @@ struct NewEditRiskCalc: View {
         selectedAccount?.accountSize ?? 0
     }
 
-    private var calcShares: Double {
+    private var shareCount: Double {
         guard stock.entryPrice != 0 else {
             return 0
         }
@@ -43,7 +43,7 @@ struct NewEditRiskCalc: View {
     }
 
     private var lossTotal: Double {
-        lossDifference * stock.shareCount
+        lossDifference * shareCount
     }
 
     private var profitDifference: Double {
@@ -51,7 +51,7 @@ struct NewEditRiskCalc: View {
     }
 
     private var profitTotal: Double {
-        profitDifference * stock.shareCount
+        profitDifference * shareCount
     }
 
     private var riskRewardRatio: Double {
@@ -182,7 +182,7 @@ struct NewEditRiskCalc: View {
     private var resultsSection: some View {
         Section("Live Results") {
             resultRow("Amount at Risk", calcRiskAmount)
-            resultRow("Shares Bought", calcShares)
+            resultRow("Shares Bought", shareCount)
             resultRow("Loss Difference", lossDifference)
             resultRow("Loss Total", lossTotal)
             resultRow("Gain Per Share", profitDifference)
@@ -215,7 +215,7 @@ struct NewEditRiskCalc: View {
     }
 
     private func format(_ value: Double) -> String {
-        String(format: "%.2f", value)
+        value.formatted(.number.precision(.fractionLength(2)))
     }
 
     private func configureInitialAccountSelection() {
@@ -245,24 +245,16 @@ struct NewEditRiskCalc: View {
     }
 
     private func applyCalculatedStockSnapshot() {
-        let snapshotShareCount = calcShares
-        let snapshotAmountRisked = calcRiskAmount
-        let snapshotLossDifference = stock.entryPrice - stock.stopLoss
-        let snapshotLossTotal = snapshotLossDifference * snapshotShareCount
-        let snapshotProfitDifference = stock.targetPrice - stock.entryPrice
-        let snapshotProfitTotal = snapshotProfitDifference * snapshotShareCount
-        let snapshotRiskRewardRatio = snapshotLossTotal == 0 ? 0 : snapshotProfitTotal / snapshotLossTotal
-
-        stock.shareCount = snapshotShareCount
-        stock.amountRisked = snapshotAmountRisked
+        stock.shareCount = shareCount
+        stock.amountRisked = calcRiskAmount
         stock.account = selectedAccount
         stock.accountUsed = selectedAccount?.accountName ?? ""
         stock.balanceAtTrade = selectedAccount?.accountSize ?? 0
-        stock.lossDiffernce = snapshotLossDifference
-        stock.lossTotal = snapshotLossTotal
-        stock.profitDifference = snapshotProfitDifference
-        stock.profitTotal = snapshotProfitTotal
-        stock.riskRewardRatio = snapshotRiskRewardRatio
+        stock.lossDiffernce = lossDifference
+        stock.lossTotal = lossTotal
+        stock.profitDifference = profitDifference
+        stock.profitTotal = profitTotal
+        stock.riskRewardRatio = riskRewardRatio
     }
 }
 

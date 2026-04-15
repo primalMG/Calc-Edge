@@ -43,11 +43,11 @@ struct RootSidebarView: View {
                     Label("Stock Calc", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
-//                NavigationLink {
-//                    ForexCalcView()
-//                } label: {
-//                    Label("Forex Calc", systemImage: "dollarsign.circle")
-//                }
+                NavigationLink {
+                    ForexCalcView()
+                } label: {
+                    Label("Forex Calc", systemImage: "dollarsign.circle")
+                }
             }
             
             Section("Suggestions") {
