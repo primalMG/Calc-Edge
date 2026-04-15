@@ -24,6 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FBD935202F13F9A700FFFE73 /* BuildSettings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/BuildSettings.xcconfig; sourceTree = "<group>"; };
 		FBD934F42F13F9A400FFFE73 /* Calc Edge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Calc Edge.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBD935032F13F9A600FFFE73 /* Calc EdgeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calc EdgeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBD9350D2F13F9A600FFFE73 /* Calc EdgeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Calc EdgeUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -75,6 +76,7 @@
 		FBD934EB2F13F9A400FFFE73 = {
 			isa = PBXGroup;
 			children = (
+				FBD935202F13F9A700FFFE73 /* BuildSettings.xcconfig */,
 				FBD934F62F13F9A400FFFE73 /* Calc Edge */,
 				FBD935062F13F9A600FFFE73 /* Calc EdgeTests */,
 				FBD935102F13F9A600FFFE73 /* Calc EdgeUITests */,
@@ -391,6 +393,7 @@
 		};
 		FBD935182F13F9A600FFFE73 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FBD935202F13F9A700FFFE73 /* BuildSettings.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -428,6 +431,7 @@
 		};
 		FBD935192F13F9A600FFFE73 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = FBD935202F13F9A700FFFE73 /* BuildSettings.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

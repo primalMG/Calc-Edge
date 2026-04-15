@@ -16,6 +16,10 @@ struct AddEditForexCalcView: View {
     @Bindable var calculation: ForexCalculation
     let isNew: Bool
     @State private var selectedAccountID: Account.ID?
+    @State private var isFetchingQuoteRate = false
+    @State private var quoteRateErrorMessage: String?
+
+    private let ratesClient = OpenExchangeRatesClient()
 
     var body: some View {
         Form {
@@ -99,6 +103,7 @@ struct AddEditForexCalcView: View {
                 decimalField("Lot Size", $calculation.lotSize)
                 decimalField("Units", $calculation.units)
                 decimalField("Pip Size Override", $calculation.pipSizeOverride)
+                quoteRateFetchControls
                 decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
             }
         case .positionSize:
@@ -108,6 +113,7 @@ struct AddEditForexCalcView: View {
                 decimalField("Entry Price", $calculation.entryPrice)
                 decimalField("Stop Loss Price", $calculation.stopLossPrice)
                 decimalField("Stop Loss (Pips)", $calculation.stopLossPips)
+                quoteRateFetchControls
                 decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
             }
         case .margin:
@@ -116,6 +122,7 @@ struct AddEditForexCalcView: View {
                 decimalField("Entry Price", $calculation.entryPrice)
                 decimalField("Units", $calculation.units)
                 decimalField("Lot Size", $calculation.lotSize)
+                quoteRateFetchControls
                 decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
             }
         case .riskReward:
@@ -182,6 +189,31 @@ struct AddEditForexCalcView: View {
         }
     }
 
+    private var quoteRateFetchControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button {
+                fetchLatestQuoteRate()
+            } label: {
+                if isFetchingQuoteRate {
+                    Label("Fetching latest rate...", systemImage: "hourglass")
+                } else {
+                    Label("Use Latest Market Rate", systemImage: "arrow.clockwise")
+                }
+            }
+            .disabled(!canFetchQuoteRate || isFetchingQuoteRate)
+
+            if let quoteRateErrorMessage {
+                Text(quoteRateErrorMessage)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+    }
+
+    private var canFetchQuoteRate: Bool {
+        calculation.normalizedPair.count == 6 && calculation.accountCurrency.count == 3
+    }
+
     private func format(_ value: Decimal?) -> String {
         guard let value else { return "Waiting for inputs" }
         return NSDecimalNumber(decimal: value).stringValue
@@ -202,6 +234,43 @@ struct AddEditForexCalcView: View {
         }
 
         dismiss()
+    }
+
+    private func fetchLatestQuoteRate() {
+        guard canFetchQuoteRate else {
+            quoteRateErrorMessage = "Enter a valid pair (e.g. EURUSD) and account currency first."
+            return
+        }
+
+        guard let appID = AppSecrets.openExchangeRatesAppID else {
+            quoteRateErrorMessage = "Missing OPEN_EXCHANGE_RATES_APP_ID in app secrets."
+            return
+        }
+
+        let pair = calculation.normalizedPair
+        let accountCurrency = calculation.accountCurrency
+        quoteRateErrorMessage = nil
+        isFetchingQuoteRate = true
+
+        Task {
+            do {
+                let rate = try await ratesClient.quoteToAccountRate(
+                    for: pair,
+                    accountCurrency: accountCurrency,
+                    appID: appID
+                )
+
+                await MainActor.run {
+                    calculation.quoteToAccountRate = rate
+                    isFetchingQuoteRate = false
+                }
+            } catch {
+                await MainActor.run {
+                    quoteRateErrorMessage = error.localizedDescription
+                    isFetchingQuoteRate = false
+                }
+            }
+        }
     }
 
     private var selectedAccount: Account? {
