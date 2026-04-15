@@ -1,0 +1,9 @@
+//
+// Shared build settings for Calc Edge.
+// Local secrets are loaded from Secrets.xcconfig (ignored by git).
+//
+
+// Alias legacy key name to app_id used by Open Exchange Rates.
+OPEN_EXCHANGE_RATES_APP_ID = $(OPEN_EXCHANGE_RATES_API_KEY)
+
+#include? "Secrets.xcconfig"
