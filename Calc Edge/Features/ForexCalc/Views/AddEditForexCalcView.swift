@@ -60,9 +60,10 @@ struct AddEditForexCalcView: View {
                     .labelsHidden()
                 }
 
-                LabeledContent("Pair:") {
+                LabeledContent("Pair (Base is USD):") {
                     TextField("", text: $calculation.pair)
                         .autocorrectionDisabled()
+                    Text("/USD")
                 }
             }
             .padding(.top, 10)
@@ -197,7 +198,7 @@ struct AddEditForexCalcView: View {
                 if isFetchingQuoteRate {
                     Label("Fetching latest rate...", systemImage: "hourglass")
                 } else {
-                    Label("Use Latest Market Rate", systemImage: "arrow.clockwise")
+                    Label("Use Latest Pair Rate", systemImage: "arrow.clockwise")
                 }
             }
             .disabled(!canFetchQuoteRate || isFetchingQuoteRate)
@@ -211,7 +212,7 @@ struct AddEditForexCalcView: View {
     }
 
     private var canFetchQuoteRate: Bool {
-        calculation.normalizedPair.count == 6 && calculation.accountCurrency.count == 3
+        calculation.normalizedPair.count == 6
     }
 
     private func format(_ value: Decimal?) -> String {
@@ -238,7 +239,7 @@ struct AddEditForexCalcView: View {
 
     private func fetchLatestQuoteRate() {
         guard canFetchQuoteRate else {
-            quoteRateErrorMessage = "Enter a valid pair (e.g. EURUSD) and account currency first."
+            quoteRateErrorMessage = "Enter a valid pair first (e.g. GBPUSD)."
             return
         }
 
@@ -248,15 +249,13 @@ struct AddEditForexCalcView: View {
         }
 
         let pair = calculation.normalizedPair
-        let accountCurrency = calculation.accountCurrency
         quoteRateErrorMessage = nil
         isFetchingQuoteRate = true
 
         Task {
             do {
-                let rate = try await ratesClient.quoteToAccountRate(
+                let rate = try await ratesClient.latestPairRate(
                     for: pair,
-                    accountCurrency: accountCurrency,
                     appID: appID
                 )
 

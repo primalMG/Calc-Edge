@@ -80,6 +80,7 @@ struct OpenExchangeRatesClient {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 15
+        request.allHTTPHeaderFields = ["accept": "application/json"]
 
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -94,42 +95,35 @@ struct OpenExchangeRatesClient {
         return try decoder.decode(OpenExchangeRatesLatestResponse.self, from: data)
     }
 
-    func quoteToAccountRate(for pair: String, accountCurrency: String, appID: String) async throws -> Decimal {
+    func latestPairRate(for pair: String, appID: String) async throws -> Decimal {
         let normalizedPair = normalizePair(pair)
         guard normalizedPair.count == 6 else {
             throw OpenExchangeRatesError.invalidPair(pair)
         }
 
+        let baseCurrency = String(normalizedPair.prefix(3))
         let quoteCurrency = String(normalizedPair.suffix(3))
-        let normalizedAccountCurrency = normalizeCurrency(accountCurrency)
-
-        guard normalizedAccountCurrency.count == 3 else {
-            throw OpenExchangeRatesError.invalidCurrencyCode(accountCurrency)
-        }
-        
-        print(quoteCurrency)
-        print(normalizedAccountCurrency)
-
-        if quoteCurrency == normalizedAccountCurrency {
-            return Decimal(1)
-        }
 
         let response = try await latestRates(
             appID: appID,
-            symbols: [quoteCurrency, normalizedAccountCurrency]
+            symbols: [baseCurrency, quoteCurrency]
         )
 
+        guard let basePerUSD = response.rates[baseCurrency] else {
+            throw OpenExchangeRatesError.missingRate(symbol: baseCurrency)
+        }
         guard let quotePerUSD = response.rates[quoteCurrency] else {
             throw OpenExchangeRatesError.missingRate(symbol: quoteCurrency)
         }
-        guard let accountPerUSD = response.rates[normalizedAccountCurrency] else {
-            throw OpenExchangeRatesError.missingRate(symbol: normalizedAccountCurrency)
+        guard basePerUSD != 0 else {
+            throw OpenExchangeRatesError.invalidRate(symbol: baseCurrency)
         }
         guard quotePerUSD != 0 else {
             throw OpenExchangeRatesError.invalidRate(symbol: quoteCurrency)
         }
 
-        return accountPerUSD / quotePerUSD
+        // API values are "currency per USD", so quote/base = quotePerUSD / basePerUSD.
+        return quotePerUSD / basePerUSD
     }
 
     private func normalizePair(_ pair: String) -> String {
