@@ -110,9 +110,9 @@ struct ForexCalculationDetailView: View {
         case .pipValue:
             [
                 DetailCard(title: "Pip Value", value: format(calculation.totalPipValue), accentColor: .green),
-                DetailCard(title: "Units", value: format(calculation.derivedUnits), accentColor: nil),
                 DetailCard(title: "Pip Size", value: format(calculation.pipSize), accentColor: nil),
-                DetailCard(title: "Quote / Account Rate", value: format(calculation.effectiveQuoteToAccountRate), accentColor: nil)
+                DetailCard(title: marketRateTitle, value: format(calculation.marketPairRate), accentColor: nil),
+                DetailCard(title: quoteToAccountTitle, value: format(calculation.effectiveQuoteToAccountRate), accentColor: nil)
             ]
         case .positionSize:
             [
@@ -154,10 +154,13 @@ struct ForexCalculationDetailView: View {
         appendRow(&rows, title: "Take Profit Price", value: calculation.takeProfitPrice)
         appendRow(&rows, title: "Take Profit (Pips)", value: calculation.takeProfitPips)
         appendRow(&rows, title: "Lot Size", value: calculation.lotSize)
-        appendRow(&rows, title: "Units", value: calculation.units)
+        if calculation.calculator != .pipValue {
+            appendRow(&rows, title: "Units", value: calculation.units)
+        }
         appendRow(&rows, title: "Leverage", value: calculation.leverage)
-        appendRow(&rows, title: "Quote / Account Rate", value: calculation.quoteToAccountRate)
-        appendRow(&rows, title: "Pip Size Override", value: calculation.pipSizeOverride)
+        appendRow(&rows, title: marketRateTitle, value: calculation.marketPairRate)
+        appendRow(&rows, title: quoteToAccountTitle, value: calculation.quoteToAccountRate)
+        appendRow(&rows, title: "Pip Size", value: calculation.pipSizeOverride)
 
         return rows
     }
@@ -166,7 +169,6 @@ struct ForexCalculationDetailView: View {
         let rows: [DetailRowValue] = switch calculation.calculator {
         case .pipValue:
             [
-                .init(title: "Derived Units", detail: format(calculation.derivedUnits)),
                 .init(title: "Pip Value / Unit", detail: format(calculation.pipValuePerUnit)),
                 .init(title: "Total Pip Value", detail: format(calculation.totalPipValue))
             ]
@@ -191,6 +193,17 @@ struct ForexCalculationDetailView: View {
         }
 
         return rows.filter { $0.detail != "N/A" }
+    }
+
+    private var quoteToAccountTitle: String {
+        let quote = calculation.quoteCurrency ?? "QUOTE"
+        return "Quote / Account Rate (\(quote) -> \(calculation.accountCurrency))"
+    }
+
+    private var marketRateTitle: String {
+        let base = calculation.baseCurrency ?? "BASE"
+        let quote = calculation.quoteCurrency ?? "QUOTE"
+        return "Market Rate (\(base)/\(quote))"
     }
 
     private func appendRow(_ rows: inout [DetailRowValue], title: String, value: Decimal?) {

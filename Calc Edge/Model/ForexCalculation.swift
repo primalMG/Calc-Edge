@@ -38,6 +38,7 @@ final class ForexCalculation {
     // Conversion & margin inputs
     var leverage: Decimal?
     var quoteToAccountRate: Decimal?
+    var marketPairRate: Decimal?
     var pipSizeOverride: Decimal?
 
     init(
@@ -59,6 +60,7 @@ final class ForexCalculation {
         units: Decimal? = nil,
         leverage: Decimal? = nil,
         quoteToAccountRate: Decimal? = nil,
+        marketPairRate: Decimal? = nil,
         pipSizeOverride: Decimal? = nil
     ) {
         self.id = id
@@ -79,6 +81,7 @@ final class ForexCalculation {
         self.units = units
         self.leverage = leverage
         self.quoteToAccountRate = quoteToAccountRate
+        self.marketPairRate = marketPairRate
         self.pipSizeOverride = pipSizeOverride
     }
 
@@ -143,11 +146,22 @@ final class ForexCalculation {
 
     var pipValuePerUnit: Decimal? {
         guard let conversionRate = effectiveQuoteToAccountRate else { return nil }
+        if calculator == .pipValue {
+            // Pip Value calculator treats pip size as "points", where 10 points = 1 pip.
+            return (pipSize * conversionRate) / Decimal(10)
+        }
         return pipSize * conversionRate
     }
 
     var totalPipValue: Decimal? {
-        guard let derivedUnits, let pipValuePerUnit else { return nil }
+        guard let pipValuePerUnit else { return nil }
+
+        if calculator == .pipValue {
+            guard let lotSize else { return nil }
+            return lotSize * pipValuePerUnit
+        }
+
+        guard let derivedUnits else { return nil }
         return derivedUnits * pipValuePerUnit
     }
 
@@ -183,12 +197,12 @@ final class ForexCalculation {
     }
 
     var effectiveQuoteToAccountRate: Decimal? {
-        if let quoteToAccountRate {
-            return quoteToAccountRate
-        }
-
         if quoteCurrency == accountCurrency {
             return Decimal(1)
+        }
+
+        if let quoteToAccountRate {
+            return quoteToAccountRate
         }
 
         return nil

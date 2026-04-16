@@ -60,11 +60,12 @@ struct AddEditForexCalcView: View {
                     .labelsHidden()
                 }
 
-                LabeledContent("Pair (Base is USD):") {
+                LabeledContent("Pair:") {
                     TextField("", text: $calculation.pair)
                         .autocorrectionDisabled()
-                    Text("/USD")
                 }
+
+                decimalField("Pip Size", $calculation.pipSizeOverride)
             }
             .padding(.top, 10)
 
@@ -102,10 +103,8 @@ struct AddEditForexCalcView: View {
         case .pipValue:
             Section("Pip Value Inputs") {
                 decimalField("Lot Size", $calculation.lotSize)
-                decimalField("Units", $calculation.units)
-                decimalField("Pip Size Override", $calculation.pipSizeOverride)
                 quoteRateFetchControls
-                decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
+                decimalField(conversionRateLabel, $calculation.quoteToAccountRate)
             }
         case .positionSize:
             Section("Position Size Inputs") {
@@ -115,7 +114,7 @@ struct AddEditForexCalcView: View {
                 decimalField("Stop Loss Price", $calculation.stopLossPrice)
                 decimalField("Stop Loss (Pips)", $calculation.stopLossPips)
                 quoteRateFetchControls
-                decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
+                decimalField(conversionRateLabel, $calculation.quoteToAccountRate)
             }
         case .margin:
             Section("Margin Inputs") {
@@ -124,7 +123,7 @@ struct AddEditForexCalcView: View {
                 decimalField("Units", $calculation.units)
                 decimalField("Lot Size", $calculation.lotSize)
                 quoteRateFetchControls
-                decimalField("Quote to Account Rate", $calculation.quoteToAccountRate)
+                decimalField(conversionRateLabel, $calculation.quoteToAccountRate)
             }
         case .riskReward:
             Section("Risk/Reward Inputs") {
@@ -142,9 +141,9 @@ struct AddEditForexCalcView: View {
         switch calculation.calculator {
         case .pipValue:
             Section("Live Results") {
-                resultRow("Derived Units", calculation.derivedUnits)
                 resultRow("Pip Size", calculation.pipSize)
-                resultRow("Quote to Account Rate", calculation.effectiveQuoteToAccountRate)
+                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
                 resultRow("Total Pip Value", calculation.totalPipValue)
             }
@@ -152,12 +151,16 @@ struct AddEditForexCalcView: View {
             Section("Live Results") {
                 resultRow("Derived Risk Amount", calculation.derivedRiskAmount)
                 resultRow("Derived Stop Loss (Pips)", calculation.derivedStopLossPips)
+                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
                 resultRow("Position Size Units", calculation.derivedPositionSizeUnits)
             }
         case .margin:
             Section("Live Results") {
                 resultRow("Derived Units", calculation.derivedUnits)
+                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Margin Required", calculation.derivedMarginRequired)
             }
         case .riskReward:
@@ -198,7 +201,7 @@ struct AddEditForexCalcView: View {
                 if isFetchingQuoteRate {
                     Label("Fetching latest rate...", systemImage: "hourglass")
                 } else {
-                    Label("Use Latest Pair Rate", systemImage: "arrow.clockwise")
+                    Label("Fetch Latest Rates", systemImage: "arrow.clockwise")
                 }
             }
             .disabled(!canFetchQuoteRate || isFetchingQuoteRate)
@@ -212,7 +215,21 @@ struct AddEditForexCalcView: View {
     }
 
     private var canFetchQuoteRate: Bool {
-        calculation.normalizedPair.count == 6
+        calculation.normalizedPair.count == 6 && calculation.accountCurrency.count == 3
+    }
+
+    private var quoteCurrencyCode: String {
+        calculation.quoteCurrency ?? "QUOTE"
+    }
+
+    private var conversionRateLabel: String {
+        "Quote to Account Rate (\(quoteCurrencyCode) -> \(calculation.accountCurrency.uppercased()))"
+    }
+
+    private var marketRateLabel: String {
+        let base = calculation.baseCurrency ?? "BASE"
+        let quote = calculation.quoteCurrency ?? "QUOTE"
+        return "Market Rate (\(base)/\(quote))"
     }
 
     private func format(_ value: Decimal?) -> String {
@@ -239,7 +256,7 @@ struct AddEditForexCalcView: View {
 
     private func fetchLatestQuoteRate() {
         guard canFetchQuoteRate else {
-            quoteRateErrorMessage = "Enter a valid pair first (e.g. GBPUSD)."
+            quoteRateErrorMessage = "Enter a valid pair (e.g. GBPUSD) and account currency first."
             return
         }
 
@@ -249,18 +266,21 @@ struct AddEditForexCalcView: View {
         }
 
         let pair = calculation.normalizedPair
+        let accountCurrency = calculation.accountCurrency
         quoteRateErrorMessage = nil
         isFetchingQuoteRate = true
 
         Task {
             do {
-                let rate = try await ratesClient.latestPairRate(
+                let snapshot = try await ratesClient.latestRatesSnapshot(
                     for: pair,
+                    accountCurrency: accountCurrency,
                     appID: appID
                 )
 
                 await MainActor.run {
-                    calculation.quoteToAccountRate = rate
+                    calculation.marketPairRate = snapshot.pairRate
+                    calculation.quoteToAccountRate = snapshot.quoteToAccountRate
                     isFetchingQuoteRate = false
                 }
             } catch {

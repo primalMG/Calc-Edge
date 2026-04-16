@@ -15,6 +15,11 @@ struct OpenExchangeRatesLatestResponse: Decodable {
     let rates: [String: Decimal]
 }
 
+struct OpenExchangeRatesSnapshot {
+    let pairRate: Decimal
+    let quoteToAccountRate: Decimal
+}
+
 enum OpenExchangeRatesError: LocalizedError {
     case invalidPair(String)
     case invalidCurrencyCode(String)
@@ -95,7 +100,7 @@ struct OpenExchangeRatesClient {
         return try decoder.decode(OpenExchangeRatesLatestResponse.self, from: data)
     }
 
-    func latestPairRate(for pair: String, appID: String) async throws -> Decimal {
+    func latestRatesSnapshot(for pair: String, accountCurrency: String, appID: String) async throws -> OpenExchangeRatesSnapshot {
         let normalizedPair = normalizePair(pair)
         guard normalizedPair.count == 6 else {
             throw OpenExchangeRatesError.invalidPair(pair)
@@ -103,10 +108,14 @@ struct OpenExchangeRatesClient {
 
         let baseCurrency = String(normalizedPair.prefix(3))
         let quoteCurrency = String(normalizedPair.suffix(3))
+        let normalizedAccountCurrency = normalizeCurrency(accountCurrency)
+        guard normalizedAccountCurrency.count == 3 else {
+            throw OpenExchangeRatesError.invalidCurrencyCode(accountCurrency)
+        }
 
         let response = try await latestRates(
             appID: appID,
-            symbols: [baseCurrency, quoteCurrency]
+            symbols: [baseCurrency, quoteCurrency, normalizedAccountCurrency]
         )
 
         guard let basePerUSD = response.rates[baseCurrency] else {
@@ -122,8 +131,22 @@ struct OpenExchangeRatesClient {
             throw OpenExchangeRatesError.invalidRate(symbol: quoteCurrency)
         }
 
-        // API values are "currency per USD", so quote/base = quotePerUSD / basePerUSD.
-        return quotePerUSD / basePerUSD
+        let pairRate = quotePerUSD / basePerUSD
+
+        if quoteCurrency == normalizedAccountCurrency {
+            return OpenExchangeRatesSnapshot(pairRate: pairRate, quoteToAccountRate: Decimal(1))
+        }
+
+        guard let accountPerUSD = response.rates[normalizedAccountCurrency] else {
+            throw OpenExchangeRatesError.missingRate(symbol: normalizedAccountCurrency)
+        }
+        guard accountPerUSD != 0 else {
+            throw OpenExchangeRatesError.invalidRate(symbol: normalizedAccountCurrency)
+        }
+
+        // API values are "currency per USD", so quote->account = accountPerUSD / quotePerUSD.
+        let quoteToAccountRate = accountPerUSD / quotePerUSD
+        return OpenExchangeRatesSnapshot(pairRate: pairRate, quoteToAccountRate: quoteToAccountRate)
     }
 
     private func normalizePair(_ pair: String) -> String {
