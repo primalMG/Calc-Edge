@@ -194,6 +194,12 @@ final class ForexCalculation {
         return (derivedUnits * marketRate * quoteToAccountRate) / leverage
     }
 
+    var derivedMarginRequiredInt: Int? {
+        guard let derivedMarginRequired else { return nil }
+        // Margin UI expects whole numbers; discard fractional precision.
+        return Int(NSDecimalNumber(decimal: derivedMarginRequired).doubleValue)
+    }
+
     var derivedRiskRewardRatio: Decimal? {
         guard let stopLossPips = derivedStopLossPips,
               let takeProfitPips = derivedTakeProfitPips,

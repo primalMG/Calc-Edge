@@ -123,7 +123,7 @@ struct ForexCalculationDetailView: View {
             ]
         case .margin:
             [
-                DetailCard(title: "Margin Required", value: format(calculation.derivedMarginRequired), accentColor: .orange),
+                DetailCard(title: "Margin Required", value: formatWholeNumber(calculation.derivedMarginRequiredInt), accentColor: .orange),
                 DetailCard(title: "Units", value: format(calculation.derivedUnits), accentColor: nil),
                 DetailCard(title: "Leverage Ratio", value: leverageRatioText, accentColor: nil),
                 DetailCard(title: marketRateTitle, value: format(calculation.effectiveMarketRate), accentColor: nil)
@@ -188,7 +188,7 @@ struct ForexCalculationDetailView: View {
                 .init(title: "Derived Units", detail: format(calculation.derivedUnits)),
                 .init(title: marketRateTitle, detail: format(calculation.effectiveMarketRate)),
                 .init(title: quoteToAccountTitle, detail: format(calculation.marginQuoteToAccountRate)),
-                .init(title: "Margin Required", detail: format(calculation.derivedMarginRequired))
+                .init(title: "Margin Required", detail: formatWholeNumber(calculation.derivedMarginRequiredInt))
             ]
         case .riskReward:
             [
@@ -225,6 +225,11 @@ struct ForexCalculationDetailView: View {
     private func format(_ value: Decimal?) -> String {
         guard let value else { return "N/A" }
         return NSDecimalNumber(decimal: value).stringValue
+    }
+
+    private func formatWholeNumber(_ value: Int?) -> String {
+        guard let value else { return "N/A" }
+        return String(value)
     }
 
     private func deleteCalculation() {

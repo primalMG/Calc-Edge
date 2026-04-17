@@ -184,7 +184,7 @@ private struct ForexCalcRow: View {
         case .positionSize:
             return calculation.derivedPositionSizeUnits.map { "Units \(formatDecimal($0))" }
         case .margin:
-            return calculation.derivedMarginRequired.map { "Margin \(formatDecimal($0))" }
+            return calculation.derivedMarginRequiredInt.map { "Margin \($0)" }
         case .riskReward:
             return calculation.derivedRiskRewardRatio.map { "R:R \(formatDecimal($0))" }
         }

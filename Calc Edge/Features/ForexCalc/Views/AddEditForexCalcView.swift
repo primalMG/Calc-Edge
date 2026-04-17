@@ -53,7 +53,7 @@ struct AddEditForexCalcView: View {
         Binding(
             get: {
                 guard let leverage = calculation.leverage else { return "" }
-                return "1:\(NSDecimalNumber(decimal: leverage).stringValue)"
+                return "1:\(leverage)"
             },
             set: { newValue in
                 calculation.leverage = parseLeverageRatio(newValue)

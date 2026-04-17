@@ -165,10 +165,9 @@ struct ForexLiveResultsSection: View {
             }
         case .margin:
             Section("Live Results") {
-                ForexResultRow(label: "Derived Units", valueText: format(calculation.derivedUnits), isMissing: calculation.derivedUnits == nil)
                 ForexResultRow(label: marketRateLabel, valueText: formattedMarketRate(calculation.effectiveMarketRate), isMissing: calculation.effectiveMarketRate == nil)
                 ForexResultRow(label: conversionRateLabel, valueText: format(calculation.marginQuoteToAccountRate), isMissing: calculation.marginQuoteToAccountRate == nil)
-                ForexResultRow(label: "Margin Required", valueText: format(calculation.derivedMarginRequired), isMissing: calculation.derivedMarginRequired == nil)
+                ForexResultRow(label: "Margin Required", valueText: formatMarginRequired(calculation.derivedMarginRequiredInt), isMissing: calculation.derivedMarginRequiredInt == nil)
             }
         case .riskReward:
             Section("Live Results") {
@@ -187,6 +186,11 @@ struct ForexLiveResultsSection: View {
     private func formattedMarketRate(_ value: Decimal?) -> String {
         guard let value else { return "Waiting for inputs" }
         return value.formatted()
+    }
+
+    private func formatMarginRequired(_ value: Int?) -> String {
+        guard let value else { return "Waiting for inputs" }
+        return String(value)
     }
 }
 
@@ -222,7 +226,7 @@ private struct ForexLeverageRatioField: View {
 
     var body: some View {
         LabeledContent("Leverage (Ratio):") {
-            TextField("e.g. 1:30", text: $text)
+            TextField("", text: $text)
                 .textFieldStyle(CustomTextFieldStyle())
         }
     }
