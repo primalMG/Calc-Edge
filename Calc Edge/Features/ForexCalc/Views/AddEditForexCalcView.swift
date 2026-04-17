@@ -20,6 +20,13 @@ struct AddEditForexCalcView: View {
     @State private var isFetchingQuoteRate = false
     @State private var quoteRateErrorMessage: String?
 
+    private let usdBaseCurrencies: [String] = [
+        "AED", "ARS", "AUD", "BHD", "BRL", "CAD", "CHF", "CLP", "CNY", "COP",
+        "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY",
+        "KRW", "KWD", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "QAR",
+        "RUB", "SAR", "SEK", "SGD", "THB", "TRY", "TWD", "ZAR"
+    ]
+
     private let ratesClient = OpenExchangeRatesClient()
 
     private var canFetchQuoteRate: Bool {
@@ -38,6 +45,19 @@ struct AddEditForexCalcView: View {
         let base = calculation.baseCurrency ?? "BASE"
         let quote = calculation.quoteCurrency ?? "QUOTE"
         return "Market Rate (\(base)/\(quote))"
+    }
+
+    private var usdPairOptions: [String] {
+        var pairs = usdBaseCurrencies.map { "\($0)USD" }
+        let currentPair = normalizedPair(calculation.pair)
+        if currentPair.count == 6, !pairs.contains(currentPair) {
+            pairs.append(currentPair)
+        }
+        return pairs
+    }
+
+    private var autoFetchPairs: Set<String> {
+        Set(usdBaseCurrencies.map { "\($0)USD" })
     }
 
     private var selectedAccount: Account? {
@@ -71,18 +91,20 @@ struct AddEditForexCalcView: View {
             )
             .padding(.top, 10)
 
-            ForexBasicsSection(calculation: calculation)
+            ForexBasicsSection(calculation: calculation,
+                               pairOptions: usdPairOptions,
+                               canFetchQuoteRate: canFetchQuoteRate,
+                               isFetchingQuoteRate: isFetchingQuoteRate,
+                               quoteRateErrorMessage: quoteRateErrorMessage,
+                               onFetchQuoteRate: fetchLatestQuoteRate
+            )
                 .padding(.top, 10)
 
             ForexCalculatorInputsSection(
                 calculation: calculation,
                 conversionRateLabel: conversionRateLabel,
                 marketRateLabel: marketRateLabel,
-                leverageRatioText: leverageBinding,
-                canFetchQuoteRate: canFetchQuoteRate,
-                isFetchingQuoteRate: isFetchingQuoteRate,
-                quoteRateErrorMessage: quoteRateErrorMessage,
-                onFetchQuoteRate: fetchLatestQuoteRate
+                leverageRatioText: leverageBinding
             )
 
             ForexLiveResultsSection(
@@ -97,15 +119,27 @@ struct AddEditForexCalcView: View {
             )
             .padding(.top, 8)
         }
+        #if os(macOS)
         .padding()
         .frame(minWidth: 520, idealWidth: 620, maxWidth: 800)
         .frame(minHeight: 520)
-        .onAppear(perform: configureInitialAccountSelection)
+        #endif
+        .onAppear {
+            configureInitialPairSelection()
+            configureInitialAccountSelection()
+        }
         .onChange(of: accountSelectionIDs) { _, _ in
             configureInitialAccountSelection()
         }
         .onChange(of: selectedAccountID) { _, _ in
             applySelectedAccount()
+        }
+        .onChange(of: calculation.pair) { oldValue, newValue in
+            guard !oldValue.isEmpty, oldValue != newValue else { return }
+            let normalized = normalizedPair(newValue)
+            if autoFetchPairs.contains(normalized), canFetchQuoteRate {
+                fetchLatestQuoteRate()
+            }
         }
         .onChange(of: calculation.accountBalance) { _, _ in
             calculation.riskAmount = calculation.derivedRiskAmount
@@ -236,6 +270,24 @@ struct AddEditForexCalcView: View {
 
     private func formatAccountSize(_ value: Double) -> String {
         String(format: "%.2f", value)
+    }
+
+    private func configureInitialPairSelection() {
+        let normalized = normalizedPair(calculation.pair)
+        if normalized != calculation.pair {
+            calculation.pair = normalized
+        }
+
+        if calculation.pair.isEmpty, let firstPair = usdPairOptions.first {
+            calculation.pair = firstPair
+        }
+    }
+
+    private func normalizedPair(_ value: String) -> String {
+        value
+            .uppercased()
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "/", with: "")
     }
 }
 
