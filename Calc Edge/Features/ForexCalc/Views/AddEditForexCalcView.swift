@@ -28,8 +28,12 @@ struct AddEditForexCalcView: View {
                     Text("Add an account in Accounts to reuse saved account sizes here.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
+                }
+
+                if !accounts.isEmpty {
                     Picker("Saved Account", selection: $selectedAccountID) {
+                        Text("Manual Entry")
+                            .tag(nil as Account.ID?)
                         ForEach(accounts) { account in
                             Text(account.accountName)
                                 .tag(account.id as Account.ID?)
@@ -37,14 +41,23 @@ struct AddEditForexCalcView: View {
                     }
                 }
 
-                LabeledContent("Account Currency:") {
-                    Text(displayAccountCurrency)
-                        .foregroundStyle(.secondary)
-                }
+                if let selectedAccount {
+                    LabeledContent("Account Currency:") {
+                        Text(selectedAccount.currency.uppercased())
+                            .foregroundStyle(.secondary)
+                    }
 
-                LabeledContent("Account Size:") {
-                    Text(displayAccountSize)
-                        .foregroundStyle(.secondary)
+                    LabeledContent("Account Size:") {
+                        Text(formatAccountSize(selectedAccount.accountSize))
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    decimalField("Account Balance", $calculation.accountBalance)
+                    LabeledContent("Account Currency:") {
+                        TextField("", text: $calculation.accountCurrency)
+                            .textFieldStyle(CustomTextFieldStyle())
+                            .autocorrectionDisabled()
+                    }
                 }
             }
             .padding(.top, 10)
@@ -89,8 +102,20 @@ struct AddEditForexCalcView: View {
         .frame(minWidth: 520, idealWidth: 620, maxWidth: 800)
         .frame(minHeight: 520)
         .onAppear(perform: configureInitialAccountSelection)
+        .onChange(of: accountSelectionIDs) { _, _ in
+            configureInitialAccountSelection()
+        }
         .onChange(of: selectedAccountID) { _, _ in
             applySelectedAccount()
+        }
+        .onChange(of: calculation.accountBalance) { _, _ in
+            calculation.riskAmount = calculation.derivedRiskAmount
+        }
+        .onChange(of: calculation.accountCurrency) { _, newValue in
+            let normalizedCurrency = newValue.uppercased()
+            if normalizedCurrency != newValue {
+                calculation.accountCurrency = normalizedCurrency
+            }
         }
         .onChange(of: calculation.riskPercent) { _, _ in
             calculation.riskAmount = calculation.derivedRiskAmount
@@ -109,7 +134,6 @@ struct AddEditForexCalcView: View {
         case .positionSize:
             Section("Position Size Inputs") {
                 decimalField("Risk Percent", $calculation.riskPercent)
-                calculatedRow("Risk Amount", calculation.derivedRiskAmount)
                 decimalField("Entry Price", $calculation.entryPrice)
                 decimalField("Stop Loss Price", $calculation.stopLossPrice)
                 decimalField("Stop Loss (Pips)", $calculation.stopLossPips)
@@ -142,7 +166,7 @@ struct AddEditForexCalcView: View {
         case .pipValue:
             Section("Live Results") {
                 resultRow("Pip Size", calculation.pipSize)
-                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultTextRow(marketRateLabel, formattedMarketRate(calculation.marketPairRate), isMissing: calculation.marketPairRate == nil)
                 resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
                 resultRow("Total Pip Value", calculation.totalPipValue)
@@ -151,7 +175,7 @@ struct AddEditForexCalcView: View {
             Section("Live Results") {
                 resultRow("Derived Risk Amount", calculation.derivedRiskAmount)
                 resultRow("Derived Stop Loss (Pips)", calculation.derivedStopLossPips)
-                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultTextRow(marketRateLabel, formattedMarketRate(calculation.marketPairRate), isMissing: calculation.marketPairRate == nil)
                 resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Pip Value Per Unit", calculation.pipValuePerUnit)
                 resultRow("Position Size Units", calculation.derivedPositionSizeUnits)
@@ -159,7 +183,7 @@ struct AddEditForexCalcView: View {
         case .margin:
             Section("Live Results") {
                 resultRow("Derived Units", calculation.derivedUnits)
-                resultRow(marketRateLabel, calculation.marketPairRate)
+                resultTextRow(marketRateLabel, formattedMarketRate(calculation.marketPairRate), isMissing: calculation.marketPairRate == nil)
                 resultRow(conversionRateLabel, calculation.effectiveQuoteToAccountRate)
                 resultRow("Margin Required", calculation.derivedMarginRequired)
             }
@@ -183,6 +207,13 @@ struct AddEditForexCalcView: View {
         LabeledContent(label + ":") {
             Text(format(value))
                 .foregroundStyle(value == nil ? .secondary : .primary)
+        }
+    }
+
+    private func resultTextRow(_ label: String, _ value: String, isMissing: Bool) -> some View {
+        LabeledContent(label + ":") {
+            Text(value)
+                .foregroundStyle(isMissing ? .secondary : .primary)
         }
     }
 
@@ -235,6 +266,11 @@ struct AddEditForexCalcView: View {
     private func format(_ value: Decimal?) -> String {
         guard let value else { return "Waiting for inputs" }
         return NSDecimalNumber(decimal: value).stringValue
+    }
+
+    private func formattedMarketRate(_ value: Decimal?) -> String {
+        guard let value else { return "Waiting for inputs" }
+        return value.formatted()
     }
 
     private func save() {
@@ -297,12 +333,25 @@ struct AddEditForexCalcView: View {
         return accounts.first(where: { $0.id == selectedAccountID })
     }
 
+    private var accountSelectionIDs: [Account.ID] {
+        accounts.map(\.id)
+    }
+
     private func configureInitialAccountSelection() {
-        if selectedAccountID == nil {
-            selectedAccountID = accounts.first?.id
+        if let selectedAccountID,
+           !accounts.contains(where: { $0.id == selectedAccountID }) {
+            self.selectedAccountID = nil
         }
 
-        if !accounts.isEmpty {
+        if selectedAccountID == nil {
+            if let matchingAccountIDForCurrentCalculation {
+                selectedAccountID = matchingAccountIDForCurrentCalculation
+            } else if calculation.accountBalance == nil {
+                selectedAccountID = accounts.first?.id
+            }
+        }
+
+        if !accounts.isEmpty, selectedAccountID != nil {
             applySelectedAccount()
         }
     }
@@ -315,32 +364,20 @@ struct AddEditForexCalcView: View {
         calculation.riskAmount = calculation.derivedRiskAmount
     }
 
+    private var matchingAccountIDForCurrentCalculation: Account.ID? {
+        guard let accountBalance = calculation.accountBalance else { return nil }
+
+        let targetBalance = NSDecimalNumber(decimal: accountBalance).doubleValue
+        let targetCurrency = calculation.accountCurrency.uppercased()
+
+        return accounts.first(where: { account in
+            abs(account.accountSize - targetBalance) < 0.0001 &&
+            account.currency.uppercased() == targetCurrency
+        })?.id
+    }
+
     private func formatAccountSize(_ value: Double) -> String {
         String(format: "%.2f", value)
-    }
-
-    private var displayAccountCurrency: String {
-        if let selectedAccount {
-            return selectedAccount.currency.uppercased()
-        }
-
-        if !calculation.accountCurrency.isEmpty {
-            return calculation.accountCurrency.uppercased()
-        }
-
-        return "No account selected"
-    }
-
-    private var displayAccountSize: String {
-        if let selectedAccount {
-            return formatAccountSize(selectedAccount.accountSize)
-        }
-
-        if let accountBalance = calculation.accountBalance {
-            return NSDecimalNumber(decimal: accountBalance).stringValue
-        }
-
-        return "No account selected"
     }
 }
 
