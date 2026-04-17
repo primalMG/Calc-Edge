@@ -110,6 +110,13 @@ final class ForexCalculation {
     }
 
     var derivedUnits: Decimal? {
+        if calculator == .margin {
+            if let lotSize {
+                return lotSize * Decimal(100000)
+            }
+            return units
+        }
+
         if let units {
             return units
         }
@@ -179,11 +186,12 @@ final class ForexCalculation {
     var derivedMarginRequired: Decimal? {
         guard let leverage, leverage != 0,
               let derivedUnits,
-              let entryPrice else {
+              let marketRate = effectiveMarketRate,
+              let quoteToAccountRate = marginQuoteToAccountRate else {
             return nil
         }
 
-        return (derivedUnits * entryPrice) / leverage
+        return (derivedUnits * marketRate * quoteToAccountRate) / leverage
     }
 
     var derivedRiskRewardRatio: Decimal? {
@@ -206,6 +214,32 @@ final class ForexCalculation {
         }
 
         return nil
+    }
+
+    var effectiveMarketRate: Decimal? {
+        if let marketPairRate {
+            return marketPairRate
+        }
+
+        if let entryPrice {
+            return entryPrice
+        }
+
+        return nil
+    }
+
+    var marginQuoteToAccountRate: Decimal? {
+        if let effectiveQuoteToAccountRate {
+            return effectiveQuoteToAccountRate
+        }
+
+        guard baseCurrency == accountCurrency,
+              let marketRate = effectiveMarketRate,
+              marketRate != 0 else {
+            return nil
+        }
+
+        return Decimal(1) / marketRate
     }
 
     static var emptyDraft: ForexCalculation {

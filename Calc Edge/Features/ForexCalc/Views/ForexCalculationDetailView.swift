@@ -125,8 +125,8 @@ struct ForexCalculationDetailView: View {
             [
                 DetailCard(title: "Margin Required", value: format(calculation.derivedMarginRequired), accentColor: .orange),
                 DetailCard(title: "Units", value: format(calculation.derivedUnits), accentColor: nil),
-                DetailCard(title: "Leverage", value: format(calculation.leverage), accentColor: nil),
-                DetailCard(title: "Entry Price", value: format(calculation.entryPrice), accentColor: nil)
+                DetailCard(title: "Leverage Ratio", value: leverageRatioText, accentColor: nil),
+                DetailCard(title: marketRateTitle, value: format(calculation.effectiveMarketRate), accentColor: nil)
             ]
         case .riskReward:
             [
@@ -157,7 +157,11 @@ struct ForexCalculationDetailView: View {
         if calculation.calculator != .pipValue {
             appendRow(&rows, title: "Units", value: calculation.units)
         }
-        appendRow(&rows, title: "Leverage", value: calculation.leverage)
+        if calculation.calculator == .margin {
+            rows.append(.init(title: "Leverage Ratio", detail: leverageRatioText))
+        } else {
+            appendRow(&rows, title: "Leverage", value: calculation.leverage)
+        }
         appendRow(&rows, title: marketRateTitle, value: calculation.marketPairRate)
         appendRow(&rows, title: quoteToAccountTitle, value: calculation.quoteToAccountRate)
         appendRow(&rows, title: "Pip Size", value: calculation.pipSizeOverride)
@@ -182,6 +186,8 @@ struct ForexCalculationDetailView: View {
         case .margin:
             [
                 .init(title: "Derived Units", detail: format(calculation.derivedUnits)),
+                .init(title: marketRateTitle, detail: format(calculation.effectiveMarketRate)),
+                .init(title: quoteToAccountTitle, detail: format(calculation.marginQuoteToAccountRate)),
                 .init(title: "Margin Required", detail: format(calculation.derivedMarginRequired))
             ]
         case .riskReward:
@@ -204,6 +210,11 @@ struct ForexCalculationDetailView: View {
         let base = calculation.baseCurrency ?? "BASE"
         let quote = calculation.quoteCurrency ?? "QUOTE"
         return "Market Rate (\(base)/\(quote))"
+    }
+
+    private var leverageRatioText: String {
+        guard let leverage = calculation.leverage else { return "N/A" }
+        return "1:\(NSDecimalNumber(decimal: leverage).stringValue)"
     }
 
     private func appendRow(_ rows: inout [DetailRowValue], title: String, value: Decimal?) {
