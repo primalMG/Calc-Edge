@@ -19,6 +19,8 @@ struct AddEditForexCalcView: View {
     @State private var selectedAccountID: Account.ID?
     @State private var isFetchingQuoteRate = false
     @State private var quoteRateErrorMessage: String?
+    @State private var toast: ToastConfiguration?
+    @State private var didInsertNewCalculation = false
 
     private let usdBaseCurrencies: [String] = [
         "AED", "ARS", "AUD", "BHD", "BRL", "CAD", "CHF", "CLP", "CNY", "COP",
@@ -153,23 +155,67 @@ struct AddEditForexCalcView: View {
         .onChange(of: calculation.riskPercent) { _, _ in
             calculation.riskAmount = calculation.derivedRiskAmount
         }
+        .toast($toast)
     }
 
     private func save() {
         calculation.pair = calculation.normalizedPair
+
+        guard calculation.pair.count == 6 else {
+            toast = ToastConfiguration(
+                title: "Pair Required",
+                message: "Enter a valid forex pair (for example GBPUSD).",
+                state: .warning
+            )
+            return
+        }
+
+        calculation.accountCurrency = calculation.accountCurrency
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        guard calculation.accountCurrency.count == 3 else {
+            toast = ToastConfiguration(
+                title: "Account Currency Required",
+                message: "Enter a 3-letter account currency code (for example USD).",
+                state: .warning
+            )
+            return
+        }
+
         if let selectedAccount {
             calculation.accountBalance = Decimal(selectedAccount.accountSize)
             calculation.accountCurrency = selectedAccount.currency.uppercased()
         }
         calculation.riskAmount = calculation.derivedRiskAmount
 
-        if isNew {
-            modelContext.insert(calculation)
-        } else {
-            calculation.updatedAt = .now
-        }
+        do {
+            if isNew {
+                if !didInsertNewCalculation {
+                    modelContext.insert(calculation)
+                    didInsertNewCalculation = true
+                } else {
+                    calculation.updatedAt = .now
+                }
+            } else {
+                calculation.updatedAt = .now
+            }
 
-        dismiss()
+            try modelContext.save()
+
+            toast = ToastConfiguration(
+                title: "Calculation Saved",
+                message: "Your forex calculation has been saved.",
+                state: .success
+            )
+        } catch {
+            toast = ToastConfiguration(
+                title: "Save Failed",
+                message: error.localizedDescription,
+                state: .error,
+                duration: 4
+            )
+        }
     }
 
     private func fetchLatestQuoteRate() {

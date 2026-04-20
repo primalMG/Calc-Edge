@@ -17,6 +17,8 @@ struct NewEditRiskCalc: View {
     let isNew: Bool
 
     @State private var selectedAccountID: Account.ID?
+    @State private var toast: ToastConfiguration?
+    @State private var didInsertNewStock = false
 
     private var selectedAccount: Account? {
         accounts.first(where: { $0.id == selectedAccountID }) ?? accounts.first
@@ -119,6 +121,7 @@ struct NewEditRiskCalc: View {
     var body: some View {
         content
             .onAppear(perform: configureInitialAccountSelection)
+            .toast($toast)
     }
 
     @ViewBuilder
@@ -267,9 +270,17 @@ struct NewEditRiskCalc: View {
 
     private func resultRow(_ label: String, _ value: Double?) -> some View {
         LabeledContent(label + ":") {
-            Text(ValueDisplayFormatter.double(value))
+            Text(formatResultValue(value))
                 .foregroundStyle(.secondary)
         }
+    }
+
+    private func formatResultValue(_ value: Double?) -> String {
+        guard let value else {
+            return "Waiting for inputs"
+        }
+
+        return value.formatted(.number.precision(.fractionLength(2)))
     }
 
     private func configureInitialAccountSelection() {
@@ -287,15 +298,48 @@ struct NewEditRiskCalc: View {
     }
 
     private func save() {
-        applyCalculatedStockSnapshot()
+        stock.ticker = stock.ticker
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
 
-        if isNew {
-            modelContext.insert(stock)
-        } else {
-            stock.updatedAt = .now
+        guard !stock.ticker.isEmpty else {
+            toast = ToastConfiguration(
+                title: "Ticker Required",
+                message: "Enter a ticker before saving this risk calculation.",
+                state: .warning
+            )
+            return
         }
 
-        dismiss()
+        applyCalculatedStockSnapshot()
+
+        do {
+            if isNew {
+                if !didInsertNewStock {
+                    modelContext.insert(stock)
+                    didInsertNewStock = true
+                } else {
+                    stock.updatedAt = .now
+                }
+            } else {
+                stock.updatedAt = .now
+            }
+
+            try modelContext.save()
+
+            toast = ToastConfiguration(
+                title: "Calculation Saved",
+                message: "Your risk calculation has been saved.",
+                state: .success
+            )
+        } catch {
+            toast = ToastConfiguration(
+                title: "Save Failed",
+                message: error.localizedDescription,
+                state: .error,
+                duration: 4
+            )
+        }
     }
 
     private func applyCalculatedStockSnapshot() {
