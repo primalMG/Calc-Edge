@@ -12,6 +12,7 @@ import SwiftData
 final class Account {
     var id: UUID = UUID()
     var accountName: String = ""
+    var accountBroker: String = ""
     var accountSize: Double = 0
     var currency: String = "USD"
     
@@ -19,12 +20,14 @@ final class Account {
     
     init(id: UUID = UUID(),
          accountName: String = "",
+         accountBroker: String = "",
          accountSize: Double = 0,
          currency: String = "USD",
          stocks: [Stock]? = []
     ) {
         self.id = id
         self.accountName = accountName
+        self.accountBroker = accountBroker
         self.accountSize = accountSize
         self.currency = currency
         self.stocks = stocks

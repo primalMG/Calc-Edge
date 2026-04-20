@@ -15,6 +15,7 @@ struct AccountsView: View {
     
     @State private var accountBalance: String = ""
     @State private var presentSheet: Bool = false
+    @State private var isNew: Bool = true
     
     @State private var selectedAccount = Account(id: UUID(),
                                                  accountName: "",
@@ -32,29 +33,34 @@ struct AccountsView: View {
                         AccountRow(account: account, onEdit: { accountToEdit in
                             selectedAccount = accountToEdit
                             presentSheet = true
+                            isNew = false
                         })
                     }
                 }
             }
             .toolbar {
-                ToolbarItemGroup(placement: .automatic) {
-                    Button {
-                        presentSheet.toggle()
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .help("New Account")
-                    
+                ToolbarItem(placement: .cancellationAction) {
                     Button(role: .cancel) {
                         dismiss()
                     } label: {
                         Label("Close", systemImage: "xmark.circle.fill")
                     }
+                }
+                
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        presentSheet.toggle()
+                        isNew = true
+                    } label: {
+                        Label("New Account", systemImage: "plus")
+                    }
+                    .help("New Account")
 
                 }
             }
             .sheet(isPresented: $presentSheet) {
-                NewEditAccountSheet(account: selectedAccount)
+                NewEditAccountSheet(account: selectedAccount, isNew: $isNew)
+                    .presentationDetents([.fraction(0.4)])
             }
             .navigationTitle("Accounts")
         }

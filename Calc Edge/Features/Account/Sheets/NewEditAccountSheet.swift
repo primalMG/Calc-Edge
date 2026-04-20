@@ -13,24 +13,31 @@ struct NewEditAccountSheet: View {
     
     @State private var text: String = ""
     @State private var currency = "USD"
-    @State private var isNew: Bool = false
+    @Binding var isNew: Bool
     
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        HStack {
-            Form {
+        NavigationStack {
+            VStack {
+                TextField("Account Name", text: $account.accountName)
                 
-                TextField("Account Name:", text: $account.accountName)
+                TextField("Account Broker", text: $account.accountBroker)
                 
-                Picker("Currency:", selection: $currency) {
-                    ForEach(currencies, id: \.self) { currency in
-                        Text(currency)
+                HStack(spacing: 0) {
+                    Text("Currnecy:")
+                    
+                    Picker("", selection: $currency) {
+                        ForEach(currencies, id: \.self) { currency in
+                            Text(currency)
+                        }
                     }
+                    .tint(.primary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 
-//              TODO: Fix behaviour of textfield
+                //              TODO: Fix behaviour of textfield
                 TextField("Account Size:", value: $account.accountSize, formatter: doubleFormatter)
                     .onAppear {
                         text = String(account.accountSize)
@@ -42,28 +49,58 @@ struct NewEditAccountSheet: View {
                         }
                     }
                 
-                HStack {
+                #if os(macOS)
+                HStack(spacing: 50) {
                     Button(isNew ? "Save" : "Update") {
                         update()
                     }
                     .tint(.green)
                     
-//                 TODO: Fix Cancel to return original values
+                    //                 TODO: Fix Cancel to return original values
                     Button {
                         dismiss()
                     } label: {
                         Label("Cancel", systemImage: "xmark")
+                            .tint(.red)
                     }
-                    .tint(.red)
                 }
-
+                #endif
             }
-        }
-        .padding()
-        .onAppear {
-            if account.accountName.isEmpty {
-                isNew = true
+            .navigationTitle("New Account")
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                if account.accountName.isEmpty {
+                    isNew = true
+                }
             }
+            .padding()
+            #if os(iOS)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Label("Cancel", systemImage: "xmark")
+                            .tint(.red)
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isNew ? "Save" : "Update") {
+                        update()
+                    }
+                    .tint(.green)
+                    
+                    //                 TODO: Fix Cancel to return original values
+                    Button {
+                        dismiss()
+                    } label: {
+                        Label("Cancel", systemImage: "xmark")
+                            .tint(.red)
+                    }
+                }
+            }
+            #endif
         }
     }
     
@@ -77,5 +114,5 @@ struct NewEditAccountSheet: View {
 }
 
 #Preview {
-    NewEditAccountSheet(account: Account(id: UUID(), accountName: "Webull", accountSize: 100000, currency: "USD", stocks: [Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2.8, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100)]))
+    NewEditAccountSheet(account: Account(id: UUID(), accountName: "Options Trading", accountBroker: "WeBull", accountSize: 100000, currency: "USD", stocks: [Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2.8, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100)]), isNew: .constant(false))
 }

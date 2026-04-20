@@ -210,6 +210,7 @@ private struct TradeJournalTable: View {
 private struct TradeJournalList: View {
     let trades: [Trade]
     let deleteItems: (IndexSet) -> Void
+    @State private var searchTxt: String = ""
 
     var body: some View {
         List {
@@ -222,6 +223,7 @@ private struct TradeJournalList: View {
             }
             .onDelete(perform: deleteItems)
         }
+        .searchable(text: $searchTxt)
     }
 }
 #endif
