@@ -49,8 +49,9 @@ struct AccountsView: View {
                 
                 ToolbarItem(placement: .automatic) {
                     Button {
-                        presentSheet.toggle()
+                        selectedAccount = Account(id: UUID(), accountName: "", accountBroker: "", accountSize: 0.0, currency: "", stocks: [])
                         isNew = true
+                        presentSheet = true
                     } label: {
                         Label("New Account", systemImage: "plus")
                     }
@@ -60,14 +61,11 @@ struct AccountsView: View {
             }
             .sheet(isPresented: $presentSheet) {
                 NewEditAccountSheet(account: selectedAccount, isNew: $isNew)
-                    .presentationDetents([.fraction(0.4)])
+                    .presentationDetents([.fraction(0.3)])
             }
             .navigationTitle("Accounts")
         }
     }
-///    TODO: finish creating buttons
-    ///    TODO: set up data values to convert data
-    ///    TODO: Usual CRUD 
     
     
     private func getAccount() {

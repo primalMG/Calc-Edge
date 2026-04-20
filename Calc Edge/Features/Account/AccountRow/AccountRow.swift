@@ -97,5 +97,5 @@ struct AccountRow: View {
 }
 
 #Preview {
-    AccountRow(account: Account(id: UUID(), accountName: "Options Account", accountBroker: "WeBull", accountSize: 100000, currency: "USD", stocks: [Stock(ticker: "DAL", entryPrice: 47.5, riskPercentage: 1, stopLoss: 45.5, shareCount: 2.8, targetPrice: 55.5, accountUsed: "WeBull", balanceAtTrade: 5000, amountRisked: 100)]), onEdit: { _ in})
+    AccountRow(account: Account(id: UUID(), accountName: "Options Account", accountBroker: "WeBull", accountSize: 100000, currency: "USD"), onEdit: { _ in})
 }

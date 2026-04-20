@@ -20,7 +20,7 @@ struct NewEditAccountSheet: View {
     
     var body: some View {
         NavigationStack {
-            VStack {
+            VStack(spacing: 15) {
                 TextField("Account Name", text: $account.accountName)
                 
                 TextField("Account Broker", text: $account.accountBroker)
@@ -37,18 +37,21 @@ struct NewEditAccountSheet: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
-                //              TODO: Fix behaviour of textfield
-                TextField("Account Size:", value: $account.accountSize, formatter: doubleFormatter)
-                    .onAppear {
-                        text = String(account.accountSize)
-                    }
-                    .onChange(of: text) {
-                        let normalized = text.replacingOccurrences(of: ",", with: ".")
-                        if let value = Double(normalized) {
-                            account.accountSize = value
+                HStack(spacing: 0) {
+                    Text("Account Balance: ")
+                    
+                    TextField("", value: $account.accountSize, formatter: doubleFormatter)
+                        .onAppear {
+                            text = String(account.accountSize)
                         }
-                    }
-                
+                        .onChange(of: text) {
+                            let normalized = text.replacingOccurrences(of: ",", with: ".")
+                            if let value = Double(normalized) {
+                                account.accountSize = value
+                            }
+                        }
+                }
+                    
                 #if os(macOS)
                 HStack(spacing: 50) {
                     Button(isNew ? "Save" : "Update") {
@@ -68,21 +71,15 @@ struct NewEditAccountSheet: View {
             }
             .navigationTitle("New Account")
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear {
-                if account.accountName.isEmpty {
-                    isNew = true
-                }
-            }
             .padding()
             #if os(iOS)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Label("Cancel", systemImage: "xmark")
-                            .tint(.red)
+//                 TODO: Fix Cancel to return original values
+                    Button("Cancel") {
+                            dismiss()
                     }
+                    .tint(.red)
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
@@ -91,13 +88,7 @@ struct NewEditAccountSheet: View {
                     }
                     .tint(.green)
                     
-                    //                 TODO: Fix Cancel to return original values
-                    Button {
-                        dismiss()
-                    } label: {
-                        Label("Cancel", systemImage: "xmark")
-                            .tint(.red)
-                    }
+                    
                 }
             }
             #endif
