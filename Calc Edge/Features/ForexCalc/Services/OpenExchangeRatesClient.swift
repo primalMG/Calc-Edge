@@ -28,6 +28,7 @@ enum OpenExchangeRatesError: LocalizedError {
     case requestFailed(statusCode: Int, message: String?)
     case missingRate(symbol: String)
     case invalidRate(symbol: String)
+    case rateLimited(retryAfter: TimeInterval)
 
     var errorDescription: String? {
         switch self {
@@ -48,13 +49,41 @@ enum OpenExchangeRatesError: LocalizedError {
             return "Missing rate for currency '\(symbol)'."
         case let .invalidRate(symbol):
             return "Invalid zero rate for currency '\(symbol)'."
+        case let .rateLimited(retryAfter):
+            let waitTime = max(0.1, retryAfter)
+            return "Too many rate refreshes. Try again in \(String(format: "%.1f", waitTime))s."
         }
+    }
+}
+
+actor OpenExchangeRatesRequestLimiter {
+    private let maxRequests: Int
+    private let windowSeconds: TimeInterval
+    private var requestTimestamps: [Date] = []
+
+    init(maxRequests: Int, windowSeconds: TimeInterval) {
+        self.maxRequests = maxRequests
+        self.windowSeconds = windowSeconds
+    }
+
+    func registerRequestOrThrow() throws {
+        let now = Date()
+        requestTimestamps.removeAll { now.timeIntervalSince($0) >= windowSeconds }
+
+        guard requestTimestamps.count < maxRequests else {
+            let oldestAllowed = requestTimestamps[0]
+            let retryAfter = windowSeconds - now.timeIntervalSince(oldestAllowed)
+            throw OpenExchangeRatesError.rateLimited(retryAfter: retryAfter)
+        }
+
+        requestTimestamps.append(now)
     }
 }
 
 struct OpenExchangeRatesClient {
     private let session: URLSession
     private let decoder: JSONDecoder
+    private static let requestLimiter = OpenExchangeRatesRequestLimiter(maxRequests: 4, windowSeconds: 2)
 
     init(session: URLSession = .shared, decoder: JSONDecoder = JSONDecoder()) {
         self.session = session
@@ -62,6 +91,8 @@ struct OpenExchangeRatesClient {
     }
 
     func latestRates(appID: String, symbols: [String] = []) async throws -> OpenExchangeRatesLatestResponse {
+        try await Self.requestLimiter.registerRequestOrThrow()
+
         let cleanedAppID = appID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanedAppID.isEmpty else {
             throw OpenExchangeRatesError.requestFailed(statusCode: 401, message: "Missing app_id.")

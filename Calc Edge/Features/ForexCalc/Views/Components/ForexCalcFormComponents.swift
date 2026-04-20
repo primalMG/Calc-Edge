@@ -170,8 +170,7 @@ struct ForexCalculatorInputsSection: View {
     }
 
     private func format(_ value: Decimal?) -> String {
-        guard let value else { return "Waiting for inputs" }
-        return NSDecimalNumber(decimal: value).stringValue
+        ValueDisplayFormatter.decimal(value)
     }
 }
 
@@ -215,8 +214,7 @@ struct ForexLiveResultsSection: View {
     }
 
     private func format(_ value: Decimal?) -> String {
-        guard let value else { return "Waiting for inputs" }
-        return NSDecimalNumber(decimal: value).stringValue
+        ValueDisplayFormatter.decimal(value)
     }
 
     private func formattedMarketRate(_ value: Decimal?) -> String {
@@ -225,8 +223,7 @@ struct ForexLiveResultsSection: View {
     }
 
     private func formatMarginRequired(_ value: Int?) -> String {
-        guard let value else { return "Waiting for inputs" }
-        return String(value)
+        ValueDisplayFormatter.wholeNumber(value)
     }
 }
 

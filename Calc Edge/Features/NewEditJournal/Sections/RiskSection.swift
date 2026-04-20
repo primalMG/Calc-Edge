@@ -54,6 +54,7 @@ struct RiskSection: View {
         }
     }
     
+    @ViewBuilder
     private func riskSectionLayout<Content: View>(
         @ViewBuilder content: () -> Content
     ) -> some View {
@@ -62,7 +63,13 @@ struct RiskSection: View {
             content()
         }
         #else
-        content()
+        if inEditMode {
+            content()
+        } else {
+            JournalSectionContainer("Risk") {
+                content()
+            }
+        }
         #endif
     }
 

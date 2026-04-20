@@ -16,6 +16,7 @@ struct NewJournalView: View {
     @Bindable var trade: Trade
 
     @State private var isNew: Bool = false
+    @State private var toast: ToastConfiguration?
 
     var body: some View {
         IdenticaftioSectionLayout {
@@ -48,11 +49,44 @@ struct NewJournalView: View {
                 isNew = true
             }
         }
+        .toast($toast)
     }
 
     private func save() {
-        trade.ticker = trade.ticker.uppercased()
-        modelContext.insert(trade)
+        trade.ticker = trade.ticker
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+
+        guard !trade.ticker.isEmpty else {
+            toast = ToastConfiguration(
+                title: "Ticker Required",
+                message: "Enter a ticker before saving this journal entry.",
+                state: .warning
+            )
+            return
+        }
+
+        do {
+            if isNew {
+                modelContext.insert(trade)
+                isNew = false
+            }
+
+            try modelContext.save()
+
+            toast = ToastConfiguration(
+                title: "Journal Saved",
+                message: "Your trade journal entry has been saved.",
+                state: .success
+            )
+        } catch {
+            toast = ToastConfiguration(
+                title: "Save Failed",
+                message: error.localizedDescription,
+                state: .error,
+                duration: 4
+            )
+        }
     }
     
     @ViewBuilder

@@ -223,13 +223,11 @@ struct ForexCalculationDetailView: View {
     }
 
     private func format(_ value: Decimal?) -> String {
-        guard let value else { return "N/A" }
-        return NSDecimalNumber(decimal: value).stringValue
+        ValueDisplayFormatter.decimal(value, placeholder: "N/A")
     }
 
     private func formatWholeNumber(_ value: Int?) -> String {
-        guard let value else { return "N/A" }
-        return String(value)
+        ValueDisplayFormatter.wholeNumber(value, placeholder: "N/A")
     }
 
     private func deleteCalculation() {

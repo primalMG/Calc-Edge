@@ -191,7 +191,7 @@ private struct ForexCalcRow: View {
     }
 
     private func formatDecimal(_ value: Decimal) -> String {
-        NSDecimalNumber(decimal: value).stringValue
+        ValueDisplayFormatter.decimal(value)
     }
 }
 

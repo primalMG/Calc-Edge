@@ -58,6 +58,64 @@ struct NewEditRiskCalc: View {
         lossTotal == 0 ? 0 : profitTotal / lossTotal
     }
 
+    private var displayRiskAmount: Double? {
+        guard selectedAccount != nil, selectedAccountSize > 0, stock.riskPercentage > 0 else {
+            return nil
+        }
+
+        return calcRiskAmount
+    }
+
+    private var displayShareCount: Double? {
+        guard let riskAmount = displayRiskAmount, stock.entryPrice > 0 else {
+            return nil
+        }
+
+        return riskAmount / stock.entryPrice
+    }
+
+    private var displayLossDifference: Double? {
+        guard stock.entryPrice > 0, stock.stopLoss > 0 else {
+            return nil
+        }
+
+        return stock.entryPrice - stock.stopLoss
+    }
+
+    private var displayLossTotal: Double? {
+        guard let lossDifference = displayLossDifference, let shareCount = displayShareCount else {
+            return nil
+        }
+
+        return lossDifference * shareCount
+    }
+
+    private var displayProfitDifference: Double? {
+        guard stock.entryPrice > 0, stock.targetPrice > 0 else {
+            return nil
+        }
+
+        return stock.targetPrice - stock.entryPrice
+    }
+
+    private var displayProfitTotal: Double? {
+        guard let profitDifference = displayProfitDifference, let shareCount = displayShareCount else {
+            return nil
+        }
+
+        return profitDifference * shareCount
+    }
+
+    private var displayRiskRewardRatio: Double? {
+        guard let lossTotal = displayLossTotal,
+              let profitTotal = displayProfitTotal,
+              lossTotal != 0 else {
+            return nil
+        }
+
+        return profitTotal / lossTotal
+    }
+
     var body: some View {
         content
             .onAppear(perform: configureInitialAccountSelection)
@@ -181,13 +239,13 @@ struct NewEditRiskCalc: View {
 
     private var resultsSection: some View {
         Section("Live Results") {
-            resultRow("Amount at Risk", calcRiskAmount)
-            resultRow("Shares Bought", shareCount)
-            resultRow("Loss Difference", lossDifference)
-            resultRow("Loss Total", lossTotal)
-            resultRow("Gain Per Share", profitDifference)
-            resultRow("Profit", profitTotal)
-            resultRow("Risk / Reward", riskRewardRatio)
+            resultRow("Amount at Risk", displayRiskAmount)
+            resultRow("Shares Bought", displayShareCount)
+            resultRow("Loss Difference", displayLossDifference)
+            resultRow("Loss Total", displayLossTotal)
+            resultRow("Gain Per Share", displayProfitDifference)
+            resultRow("Profit", displayProfitTotal)
+            resultRow("Risk / Reward", displayRiskRewardRatio)
         }
     }
 
@@ -207,15 +265,11 @@ struct NewEditRiskCalc: View {
         #endif
     }
 
-    private func resultRow(_ label: String, _ value: Double) -> some View {
+    private func resultRow(_ label: String, _ value: Double?) -> some View {
         LabeledContent(label + ":") {
-            Text(format(value))
+            Text(ValueDisplayFormatter.double(value))
                 .foregroundStyle(.secondary)
         }
-    }
-
-    private func format(_ value: Double) -> String {
-        value.formatted(.number.precision(.fractionLength(2)))
     }
 
     private func configureInitialAccountSelection() {
@@ -229,7 +283,7 @@ struct NewEditRiskCalc: View {
             return "No account selected"
         }
 
-        return "\(selectedAccount.currency.uppercased()), \(format(selectedAccount.accountSize))"
+        return "\(selectedAccount.currency.uppercased()), \(ValueDisplayFormatter.double(selectedAccount.accountSize))"
     }
 
     private func save() {
