@@ -9,35 +9,28 @@ import SwiftUI
 import SwiftData
 
 struct AccountsView: View {
-    @Environment(\.modelContext) private var modelContext
     @Query private var accounts: [Account]
     @Environment(\.dismiss) private var dismiss
-    
-    @State private var accountBalance: String = ""
-    @State private var presentSheet: Bool = false
-    @State private var isNew: Bool = true
-    
-    @State private var selectedAccount = Account(id: UUID(),
-                                                 accountName: "",
-                                                 accountSize: 0.0,
-                                                 currency: "USD",
-                                                 stocks: [])
-    
+
+    @State private var presentSheet = false
+    @State private var isNew = true
+    @State private var toast: ToastConfiguration?
+    @State private var selectedAccount = Account(
+        id: UUID(),
+        accountName: "",
+        accountBroker: "",
+        accountSize: 0.0,
+        currency: "USD",
+        stocks: []
+    )
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack {
-                    ForEach(accounts) { account in
-                        @Bindable var account = account
-                        
-                        AccountRow(account: account, onEdit: { accountToEdit in
-                            selectedAccount = accountToEdit
-                            presentSheet = true
-                            isNew = false
-                        })
-                    }
-                }
-            }
+            AccountsList(
+                accounts: accounts,
+                onEdit: presentEditAccountSheet,
+                onDelete: handleAccountDeleted
+            )
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(role: .cancel) {
@@ -48,36 +41,88 @@ struct AccountsView: View {
                 }
                 
                 ToolbarItem(placement: .automatic) {
-                    Button {
-                        selectedAccount = Account(id: UUID(), accountName: "", accountBroker: "", accountSize: 0.0, currency: "", stocks: [])
-                        isNew = true
-                        presentSheet = true
-                    } label: {
+                    Button(action: presentNewAccountSheet) {
                         Label("New Account", systemImage: "plus")
                     }
                     .help("New Account")
-
                 }
             }
             .sheet(isPresented: $presentSheet) {
-                NewEditAccountSheet(account: selectedAccount, isNew: $isNew)
+                NewEditAccountSheet(
+                    account: selectedAccount,
+                    isNew: isNew,
+                    onSaved: handleSaveOutcome
+                )
                     .presentationDetents([.fraction(0.3)])
             }
+            .toast($toast)
             .navigationTitle("Accounts")
         }
     }
-    
-    
-    private func getAccount() {
-        if let account = accounts.first {
-            accountBalance =  String(account.accountSize)
-        } else {
-            accountBalance = ""
+
+    private func presentNewAccountSheet() {
+        selectedAccount = Account(
+            id: UUID(),
+            accountName: "",
+            accountBroker: "",
+            accountSize: 0.0,
+            currency: "USD",
+            stocks: []
+        )
+        isNew = true
+        presentSheet = true
+    }
+
+    private func presentEditAccountSheet(_ account: Account) {
+        selectedAccount = account
+        isNew = false
+        presentSheet = true
+    }
+
+    private func handleSaveOutcome(_ outcome: NewEditAccountSheet.SaveOutcome) {
+        switch outcome {
+        case .created(let accountName):
+            toast = ToastConfiguration(
+                title: "Account Created",
+                message: "\(accountName) was added successfully.",
+                state: .success
+            )
+        case .updated(let accountName):
+            toast = ToastConfiguration(
+                title: "Account Updated",
+                message: "\(accountName) was updated successfully.",
+                state: .success
+            )
         }
     }
-    
-    private func save() {
-        
+
+    private func handleAccountDeleted(_ accountName: String) {
+        toast = ToastConfiguration(
+            title: "Account Deleted",
+            message: "\(accountName) was deleted.",
+            state: .info
+        )
+    }
+}
+
+private struct AccountsList: View {
+    let accounts: [Account]
+    let onEdit: (Account) -> Void
+    let onDelete: (String) -> Void
+
+    var body: some View {
+        ScrollView {
+            LazyVStack {
+                ForEach(accounts) { account in
+                    @Bindable var account = account
+                    AccountRow(
+                        account: account,
+                        onEdit: onEdit,
+                        onDelete: onDelete
+                    )
+                }
+            }
+        }
     }
 }
 
