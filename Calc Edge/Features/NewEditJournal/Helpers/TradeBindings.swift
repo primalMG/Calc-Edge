@@ -42,3 +42,19 @@ func decimalBinding(_ binding: Binding<Decimal>) -> Binding<String> {
         }
     )
 }
+
+func doubleBinding(_ binding: Binding<Double>) -> Binding<String> {
+    Binding(
+        get: {
+            NSDecimalNumber(value: binding.wrappedValue).stringValue
+        },
+        set: { newValue in
+            let cleaned = newValue.replacingOccurrences(of: ",", with: ".")
+            if cleaned.isEmpty {
+                binding.wrappedValue = 0
+            } else if let value = Double(cleaned) {
+                binding.wrappedValue = value
+            }
+        }
+    )
+}

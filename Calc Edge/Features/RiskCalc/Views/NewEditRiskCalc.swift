@@ -198,7 +198,7 @@ struct NewEditRiskCalc: View {
             }
 
             LabeledContent("Risk Percentage (%):") {
-                TextField("", value: $stock.riskPercentage, formatter: doubleFormatter)
+                TextField("", text: doubleBinding($stock.riskPercentage))
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -216,7 +216,7 @@ struct NewEditRiskCalc: View {
             }
 
             LabeledContent("Entry Price:") {
-                TextField("", value: $stock.entryPrice, formatter: doubleFormatter)
+                TextField("", text: doubleBinding($stock.entryPrice))
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -225,7 +225,7 @@ struct NewEditRiskCalc: View {
     private var riskSetupSection: some View {
         Section("Loss Inputs") {
             LabeledContent("Stop Loss:") {
-                TextField("", value: $stock.stopLoss, formatter: doubleFormatter)
+                TextField("", text: doubleBinding($stock.stopLoss))
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -234,7 +234,7 @@ struct NewEditRiskCalc: View {
     private var targetSetupSection: some View {
         Section("Profit Inputs") {
             LabeledContent("Technical Target:") {
-                TextField("", value: $stock.targetPrice, formatter: doubleFormatter)
+                TextField("", text: doubleBinding($stock.targetPrice))
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }

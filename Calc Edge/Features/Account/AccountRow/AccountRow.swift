@@ -32,7 +32,7 @@ struct AccountRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.gray.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .padding()
+        .padding(.horizontal)
         #if os(macOS)
         .frame(minWidth: 700, idealWidth: 700)
         #endif

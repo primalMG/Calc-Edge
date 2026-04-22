@@ -173,7 +173,7 @@ private struct AccountBalanceSection: View {
     var body: some View {
         HStack(spacing: 8) {
             Text("Account Balance:")
-            TextField("", value: $balance, formatter: doubleFormatter)
+            TextField("", text: doubleBinding($balance))
         }
     }
 }
