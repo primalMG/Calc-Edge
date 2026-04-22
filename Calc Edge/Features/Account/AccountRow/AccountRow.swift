@@ -33,9 +33,6 @@ struct AccountRow: View {
         .background(.gray.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .padding(.horizontal)
-        #if os(macOS)
-        .frame(minWidth: 700, idealWidth: 700)
-        #endif
         .alert("Delete Account", isPresented: $deleteAction) {
             Button(role: .cancel) { }
 

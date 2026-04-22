@@ -13,6 +13,7 @@ struct TradeJournalView: View {
     @Query private var trades: [Trade]
     @State private var selectedTradeID: Trade.ID?
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
+    @State private var filters = TradeJournalFilters()
     #if os(iOS)
     @State private var presentSheet = false
     #elseif os(macOS)
@@ -25,15 +26,22 @@ struct TradeJournalView: View {
         trades.sorted(using: sortOrder)
     }
 
+    private var visibleTrades: [Trade] {
+        sortedTrades.filter(filters.matches)
+    }
+
+    #if os(macOS)
+    private var selectionSyncToken: [Trade.ID] {
+        visibleTrades.map(\.id)
+    }
+    #endif
+
     var body: some View {
         journalContent
             .navigationTitle("Trade Journal")
+            .searchable(text: $filters.tickerQuery, placement: .toolbarPrincipal)
             .toolbar {
-                ToolbarItem {
-                    Button(action: presentNewTrade) {
-                        Image(systemName: "plus")
-                    }
-                }
+                toolbarItems
             }
             #if os(macOS)
             .inspector(isPresented: inspectorIsPresented) {
@@ -45,8 +53,7 @@ struct TradeJournalView: View {
                         .inspectorColumnWidth(min: 420, ideal: 520, max: 760)
                 }
             }
-            .onAppear(perform: syncInitialSelection)
-            .onChange(of: trades.count) { _, _ in
+            .task(id: selectionSyncToken) {
                 keepSelectionInSync()
             }
             #endif
@@ -55,6 +62,63 @@ struct TradeJournalView: View {
                 NewJournalView(trade: Trade(ticker: ""))
             }
             #endif
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarItems: some ToolbarContent {
+        #if os(macOS)
+        ToolbarItemGroup(placement: .principal) {
+            toolbarControls
+        }
+        #else
+        ToolbarItemGroup {
+            toolbarControls
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private var toolbarControls: some View {
+        Button(action: presentNewTrade) {
+            Image(systemName: "plus")
+        }
+        #if os(macOS)
+        .keyboardShortcut("N")
+        #endif
+
+        Menu {
+            filterMenuContent
+        } label: {
+            Image(systemName: filters.hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+        }
+    }
+
+    @ViewBuilder
+    private var filterMenuContent: some View {
+        Picker("Date", selection: $filters.date) {
+            ForEach(TradeDateFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+
+        Picker("Direction", selection: $filters.direction) {
+            ForEach(DirectionFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+
+        Picker("Instrument", selection: $filters.instrument) {
+            ForEach(InstrumentFilter.allCases) { filter in
+                Text(filter.title).tag(filter)
+            }
+        }
+
+        if filters.hasActiveFilters {
+            Divider()
+            Button("Reset Filters") {
+                resetFilters()
+            }
+        }
     }
 
     private var selectedTrade: Trade? {
@@ -70,6 +134,20 @@ struct TradeJournalView: View {
                 systemImage: "book.closed",
                 description: Text("Add a trade to review execution, exits, and process notes.")
             )
+        } else if visibleTrades.isEmpty {
+            if !filters.normalizedTickerQuery.isEmpty {
+                ContentUnavailableView(
+                    "Ticker \(filters.normalizedTickerQuery.uppercased()) was not found",
+                    systemImage: "magnifyingglass",
+                    description: Text("Try another ticker or adjust the current filters.")
+                )
+            } else {
+                ContentUnavailableView(
+                    "No Matching Trades",
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    description: Text("No trades match the selected filters.")
+                )
+            }
         } else {
             platformJournalContent
         }
@@ -79,14 +157,14 @@ struct TradeJournalView: View {
     private var platformJournalContent: some View {
         #if os(macOS)
         TradeJournalTable(
-            trades: sortedTrades,
+            trades: visibleTrades,
             selectedTradeID: $selectedTradeID,
             sortOrder: $sortOrder,
             deleteTrade: delete
         )
         #else
         TradeJournalList(
-            trades: sortedTrades,
+            trades: visibleTrades,
             deleteItems: deleteItems
         )
         #endif
@@ -128,27 +206,25 @@ struct TradeJournalView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                delete(tradeId: sortedTrades[index].id)
+                delete(tradeId: visibleTrades[index].id)
             }
         }
     }
 
     #if os(macOS)
-    private func syncInitialSelection() {
-        if selectedTradeID == nil {
-            selectedTradeID = sortedTrades.first?.id
-        }
-    }
-
     private func keepSelectionInSync() {
         if let selectedTradeID,
-           sortedTrades.contains(where: { $0.id == selectedTradeID }) {
+           visibleTrades.contains(where: { $0.id == selectedTradeID }) {
             return
         }
 
-        selectedTradeID = sortedTrades.first?.id
+        selectedTradeID = visibleTrades.first?.id
     }
     #endif
+
+    private func resetFilters() {
+        filters.resetSelections()
+    }
 }
 
 #if os(macOS)
@@ -210,7 +286,6 @@ private struct TradeJournalTable: View {
 private struct TradeJournalList: View {
     let trades: [Trade]
     let deleteItems: (IndexSet) -> Void
-    @State private var searchTxt: String = ""
 
     var body: some View {
         List {
@@ -223,7 +298,6 @@ private struct TradeJournalList: View {
             }
             .onDelete(perform: deleteItems)
         }
-        .searchable(text: $searchTxt)
     }
 }
 #endif
@@ -311,6 +385,188 @@ private enum TradeJournalFormatting {
             options: .regularExpression
         )
         return separatedWords.capitalized
+    }
+}
+
+private struct TradeJournalFilters {
+    var tickerQuery = ""
+    var date: TradeDateFilter = .all
+    var direction: DirectionFilter = .all
+    var instrument: InstrumentFilter = .all
+
+    var normalizedTickerQuery: String {
+        tickerQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var hasActiveFilters: Bool {
+        date != .all || direction != .all || instrument != .all
+    }
+
+    func matches(_ trade: Trade) -> Bool {
+        if !normalizedTickerQuery.isEmpty &&
+            !trade.ticker.localizedCaseInsensitiveContains(normalizedTickerQuery) {
+            return false
+        }
+
+        guard date.matches(trade.openedAt) else {
+            return false
+        }
+
+        guard direction.matches(trade.direction) else {
+            return false
+        }
+
+        return instrument.matches(trade.instrument)
+    }
+
+    mutating func resetSelections() {
+        date = .all
+        direction = .all
+        instrument = .all
+    }
+}
+
+private enum TradeDateFilter: String, CaseIterable, Identifiable {
+    case all
+    case today
+    case last7Days
+    case last30Days
+    case thisMonth
+    case thisYear
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            return "All Dates"
+        case .today:
+            return "Today"
+        case .last7Days:
+            return "Last 7 Days"
+        case .last30Days:
+            return "Last 30 Days"
+        case .thisMonth:
+            return "This Month"
+        case .thisYear:
+            return "This Year"
+        }
+    }
+
+    func matches(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        let now = Date.now
+
+        switch self {
+        case .all:
+            return true
+        case .today:
+            return calendar.isDateInToday(date)
+        case .last7Days:
+            guard let cutoff = calendar.date(byAdding: .day, value: -7, to: now) else {
+                return true
+            }
+            return date >= cutoff
+        case .last30Days:
+            guard let cutoff = calendar.date(byAdding: .day, value: -30, to: now) else {
+                return true
+            }
+            return date >= cutoff
+        case .thisMonth:
+            return calendar.isDate(date, equalTo: now, toGranularity: .month)
+        case .thisYear:
+            return calendar.isDate(date, equalTo: now, toGranularity: .year)
+        }
+    }
+}
+
+private enum DirectionFilter: String, CaseIterable, Identifiable {
+    case all
+    case long
+    case short
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            return "All Directions"
+        case .long:
+            return "Long"
+        case .short:
+            return "Short"
+        }
+    }
+
+    func matches(_ direction: TradeDirection) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .long:
+            return direction == .long
+        case .short:
+            return direction == .short
+        }
+    }
+}
+
+private enum InstrumentFilter: String, CaseIterable, Identifiable {
+    case all
+    case stock
+    case etf
+    case option
+    case future
+    case forex
+    case crypto
+    case cfd
+    case other
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .all:
+            return "All Instruments"
+        case .stock:
+            return "Stock"
+        case .etf:
+            return "ETF"
+        case .option:
+            return "Option"
+        case .future:
+            return "Future"
+        case .forex:
+            return "Forex"
+        case .crypto:
+            return "Crypto"
+        case .cfd:
+            return "CFD"
+        case .other:
+            return "Other"
+        }
+    }
+
+    func matches(_ instrument: InstrumentType) -> Bool {
+        switch self {
+        case .all:
+            return true
+        case .stock:
+            return instrument == .stock
+        case .etf:
+            return instrument == .etf
+        case .option:
+            return instrument == .option
+        case .future:
+            return instrument == .future
+        case .forex:
+            return instrument == .forex
+        case .crypto:
+            return instrument == .crypto
+        case .cfd:
+            return instrument == .cfd
+        case .other:
+            return instrument == .other
+        }
     }
 }
 
