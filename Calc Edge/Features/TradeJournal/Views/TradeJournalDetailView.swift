@@ -55,6 +55,7 @@ struct TradeJournalDetailView: View {
                 } label: {
                     Image(systemName: "trash.fill")
                 }
+                .tint(.red)
                 .alert("Delete Journal Entry?", isPresented: $toggleDelete) {
                     Button(role: .cancel) { } label: {
                         Text("Cancel")
