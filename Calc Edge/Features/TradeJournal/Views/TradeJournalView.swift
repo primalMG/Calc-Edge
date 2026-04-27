@@ -246,6 +246,7 @@ private struct TradeJournalTable: View {
 
             TableColumn("Direction") { trade in
                 Text(TradeJournalFormatting.displayText(trade.direction.rawValue))
+                    .foregroundStyle(trade.direction.rawValue == "long" ? Color.green : Color.red)
             }
 
             TableColumn("Instrument") { trade in
@@ -323,17 +324,19 @@ private struct TradeJournalRow: View {
                     TradeJournalFormatting.displayText(trade.direction.rawValue),
                     systemImage: trade.direction == .long ? "arrow.up.forward" : "arrow.down.forward"
                 )
+                .foregroundStyle(trade.direction.rawValue == "long" ? Color.green : Color.red)
+                
                 Label(
                     TradeJournalFormatting.displayText(trade.instrument.rawValue),
                     systemImage: "chart.line.uptrend.xyaxis"
                 )
-
-                if let account = trade.account,
-                   !account.isEmpty {
-                    Label(account, systemImage: "person.crop.circle")
-                }
             }
             .font(.subheadline)
+            
+            if let account = trade.account,
+               !account.isEmpty {
+                Label(account, systemImage: "person.crop.circle")
+            }
 
             HStack(spacing: 12) {
                 Text("Entry \(TradeJournalFormatting.decimal(trade.entryPrice))")
@@ -342,6 +345,12 @@ private struct TradeJournalRow: View {
             }
             .font(.caption)
             .foregroundStyle(.secondary)
+            
+            if trade.closedAt != nil && trade.exitPrice != nil {
+                Text("Exit \(TradeJournalFormatting.decimal(trade.exitPrice))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.vertical, 4)
     }

@@ -11,7 +11,13 @@ struct MarketContextSection: View {
                 }
             } else {
                 Button("Add Market Context") {
+                    #if os(iOS)
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        trade.context = TradeContext()
+                    }
+                    #else
                     trade.context = TradeContext()
+                    #endif
                 }
             }
         }

@@ -11,7 +11,13 @@ struct ReviewSection: View {
                 }
             } else {
                 Button("Add Review") {
+                    #if os(iOS)
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        trade.review = TradeReview()
+                    }
+                    #else
                     trade.review = TradeReview()
+                    #endif
                 }
             }
         }

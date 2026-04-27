@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-srgb:0.00000,0.53333,1.00000,1.00000"
+    "automatic-gradient" : "display-p3:1.00000,1.00000,1.00000,1.00000"
   },
   "groups" : [
     {
@@ -40,44 +40,6 @@
         {
           "image-name" : "2 – Layer.png",
           "name" : "2 – Layer"
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "blend-mode" : "normal",
-          "fill-specializations" : [
-            {
-              "value" : "automatic"
-            },
-            {
-              "appearance" : "dark",
-              "value" : {
-                "automatic-gradient" : "display-p3:0.00000,0.00000,0.00000,1.00000",
-                "orientation" : {
-                  "start" : {
-                    "x" : 0.5,
-                    "y" : 0
-                  },
-                  "stop" : {
-                    "x" : 0.5,
-                    "y" : 0.7
-                  }
-                }
-              }
-            }
-          ],
-          "image-name" : "1 – Layer.png",
-          "name" : "1 – Layer"
         }
       ],
       "shadow" : {

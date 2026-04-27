@@ -89,6 +89,13 @@ struct TradeJournalDetailView: View {
             }
             .presentationDetents(detents(for: sheet))
         }
+        .onChange(of: unavailableOptionalSheets) { _, sheets in
+            guard let activeSheet, sheets.contains(activeSheet) else {
+                return
+            }
+
+            self.activeSheet = nil
+        }
         #endif
     }
 
@@ -133,19 +140,30 @@ struct TradeJournalDetailView: View {
             activeSheet = .strategy
         }
 
-        SheetLauncherCard(
-            title: "Review",
-            summary: TradeJournalDetailSummary.review(for: trade)
-        ) {
-            activeSheet = .review
+        if trade.review != nil {
+            SheetLauncherCard(
+                title: "Review",
+                summary: TradeJournalDetailSummary.review(for: trade)
+            ) {
+                activeSheet = .review
+            }
+            .transition(.move(edge: .top).combined(with: .opacity))
+        } else {
+            ReviewSection(trade: trade)
         }
         
-        SheetLauncherCard(
-            title: "Market Context",
-            summary: TradeJournalDetailSummary.context(for: trade)
-        ) {
-            activeSheet = .context
+        if trade.context != nil {
+            SheetLauncherCard(
+                title: "Market Context",
+                summary: TradeJournalDetailSummary.context(for: trade)
+            ) {
+                activeSheet = .context
+            }
+            .transition(.move(edge: .top).combined(with: .opacity))
+        } else {
+            MarketContextSection(trade: trade)
         }
+        
         #else
         RiskSection(trade: trade, inEditMode: .constant(true))
         StrategySection(trade: trade)
@@ -180,6 +198,22 @@ struct TradeJournalDetailView: View {
             return [.large]
         }
     }
+
+    #if os(iOS)
+    private var unavailableOptionalSheets: Set<ActiveTradeJournalSheet> {
+        var sheets: Set<ActiveTradeJournalSheet> = []
+
+        if trade.review == nil {
+            sheets.insert(.review)
+        }
+
+        if trade.context == nil {
+            sheets.insert(.context)
+        }
+
+        return sheets
+    }
+    #endif
 
     private var currentSuggestionValues: [TradeSuggestionField: String] {
         TradeJournalDetailSuggestionValues.currentValues(for: trade)
