@@ -13,12 +13,18 @@ struct NewJournalView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Bindable var trade: Trade
-
-    @State private var isNew: Bool = false
+    @State private var trade: Trade
+    @State private var isNew: Bool
     @State private var toast: ToastConfiguration?
 
+    init(trade: Trade, isNew: Bool? = nil) {
+        _trade = State(initialValue: trade)
+        _isNew = State(initialValue: isNew ?? trade.ticker.isEmpty)
+    }
+
     var body: some View {
+        @Bindable var trade = trade
+
         IdenticaftioSectionLayout {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
@@ -44,11 +50,6 @@ struct NewJournalView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .onAppear {
-            if trade.ticker.isEmpty {
-                isNew = true
-            }
-        }
         .toast($toast)
     }
 
@@ -67,12 +68,18 @@ struct NewJournalView: View {
         }
 
         do {
+            let shouldClearForm = isNew
+
             if isNew {
                 modelContext.insert(trade)
                 isNew = false
             }
 
             try modelContext.save()
+
+            if shouldClearForm {
+                resetForm()
+            }
 
             toast = ToastConfiguration(
                 title: "Journal Saved",
@@ -87,6 +94,11 @@ struct NewJournalView: View {
                 duration: 4
             )
         }
+    }
+
+    private func resetForm() {
+        trade = Trade(ticker: "")
+        isNew = true
     }
     
     @ViewBuilder

@@ -8,15 +8,17 @@
 import Foundation
 import SwiftData
 import SwiftUI
+internal import UniformTypeIdentifiers
 
 struct TradeJournalView: View {
     @Query private var trades: [Trade]
     @State private var selectedTradeID: Trade.ID?
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var filters = TradeJournalFilters()
-    #if os(iOS)
-    @State private var presentSheet = false
-    #elseif os(macOS)
+    @State private var showFileImporter = false
+    @State private var presentedDraft: JournalDraftPresentation?
+    @State private var importAlert: ImportAlert?
+    #if os(macOS)
     @Environment(\.openWindow) private var openWindow
     #endif
 
@@ -57,11 +59,16 @@ struct TradeJournalView: View {
                 keepSelectionInSync()
             }
             #endif
-            #if os(iOS)
-            .sheet(isPresented: $presentSheet) {
-                NewJournalView(trade: Trade(ticker: ""))
+            .sheet(item: $presentedDraft) { draft in
+                NewJournalView(trade: draft.trade, isNew: true)
             }
-            #endif
+            .alert(item: $importAlert) { alert in
+                Alert(
+                    title: Text(alert.title),
+                    message: Text(alert.message),
+                    dismissButton: .default(Text("OK"))
+                )
+            }
     }
 
     @ToolbarContentBuilder
@@ -88,11 +95,27 @@ struct TradeJournalView: View {
         .help("New Journal Entry")
         
         Button {
-            
+            showFileImporter = true
         } label: {
             Image(systemName: "square.and.arrow.down")
         }
         .help("Import CSV")
+        .fileImporter(isPresented: $showFileImporter,
+                      allowedContentTypes: [.commaSeparatedText, .plainText],
+                      allowsMultipleSelection: false) { result in
+            switch result {
+            case .success(let files):
+                guard let file = files.first else {
+                    return
+                }
+                importJournalCSV(from: file)
+            case .failure(let error):
+                importAlert = ImportAlert(
+                    title: "Import Failed",
+                    message: error.localizedDescription
+                )
+            }
+        }
 
 
         Menu {
@@ -197,8 +220,29 @@ struct TradeJournalView: View {
         #if os(macOS)
         openWindow(id: "new-journal")
         #else
-        presentSheet = true
+        presentedDraft = JournalDraftPresentation(trade: Trade(ticker: ""))
         #endif
+    }
+
+    private func importJournalCSV(from file: URL) {
+        let gotAccess = file.startAccessingSecurityScopedResource()
+        defer {
+            if gotAccess {
+                file.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        do {
+            let trades = try JournalCSVImporter().importTrades(from: file)
+            if let trade = trades.first {
+                presentedDraft = JournalDraftPresentation(trade: trade)
+            }
+        } catch {
+            importAlert = ImportAlert(
+                title: "Import Failed",
+                message: error.localizedDescription
+            )
+        }
     }
 
     private func delete(tradeId: Trade.ID) {
@@ -235,6 +279,17 @@ struct TradeJournalView: View {
     private func resetFilters() {
         filters.resetSelections()
     }
+}
+
+private struct JournalDraftPresentation: Identifiable {
+    let id = UUID()
+    let trade: Trade
+}
+
+private struct ImportAlert: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
 }
 
 #if os(macOS)
