@@ -44,7 +44,7 @@ struct PricesSection: View {
     ]
     #else
     private let columns = [
-        GridItem(.adaptive(minimum: 150), spacing: 5)
+        GridItem(.adaptive(minimum: 150), spacing: 15)
     ]
     #endif
 }

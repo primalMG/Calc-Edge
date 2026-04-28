@@ -85,12 +85,22 @@ struct TradeJournalView: View {
         #if os(macOS)
         .keyboardShortcut("N")
         #endif
+        .help("New Journal Entry")
+        
+        Button {
+            
+        } label: {
+            Image(systemName: "square.and.arrow.down")
+        }
+        .help("Import CSV")
+
 
         Menu {
             filterMenuContent
         } label: {
             Image(systemName: filters.hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
+        .help("Filters Menu")
     }
 
     @ViewBuilder

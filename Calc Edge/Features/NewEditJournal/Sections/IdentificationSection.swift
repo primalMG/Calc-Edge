@@ -170,8 +170,8 @@ struct IdentificationSection: View {
     ]
     #else
     private let columns = [
-        GridItem(.adaptive(minimum: 200), spacing: 5),
-        GridItem(.adaptive(minimum: 200), spacing: 5)
+        GridItem(.adaptive(minimum: 200), spacing: 15),
+        GridItem(.adaptive(minimum: 200), spacing: 15)
     ]
     #endif
 }

@@ -68,7 +68,7 @@ private let columns = [
 ]
 #else
 private let columns = [
-    GridItem(.adaptive(minimum: 150), spacing: 5)
+    GridItem(.adaptive(minimum: 150), spacing: 15, alignment: .topLeading)
 ]
 #endif
 }

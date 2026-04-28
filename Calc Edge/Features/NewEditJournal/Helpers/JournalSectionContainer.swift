@@ -26,6 +26,9 @@ struct JournalSectionContainer<Content: View>: View {
 struct JournalField<Content: View>: View {
     let label: String
     let content: Content
+    #if os(iOS)
+    @State private var suggestionsVisible = false
+    #endif
 
     init(_ label: String, @ViewBuilder content: () -> Content) {
         self.label = label
@@ -41,5 +44,21 @@ struct JournalField<Content: View>: View {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        #if os(iOS)
+        .animation(.easeInOut(duration: 0.18), value: suggestionsVisible)
+        .onPreferenceChange(JournalFieldSuggestionsVisibleKey.self) { isVisible in
+            withAnimation(.easeInOut(duration: 0.18)) {
+                suggestionsVisible = isVisible
+            }
+        }
+        #endif
+    }
+}
+
+struct JournalFieldSuggestionsVisibleKey: PreferenceKey {
+    static let defaultValue = false
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
     }
 }

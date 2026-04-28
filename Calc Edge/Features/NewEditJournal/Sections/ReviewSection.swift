@@ -123,7 +123,7 @@ private struct TradeReviewEditor: View {
     ]
 #else
     private let columns = [
-        GridItem(.adaptive(minimum: 150), spacing: 10)
+        GridItem(.adaptive(minimum: 150), spacing: 15)
     ]
 #endif
 }
