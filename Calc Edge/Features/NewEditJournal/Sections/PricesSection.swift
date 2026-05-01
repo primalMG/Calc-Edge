@@ -6,6 +6,13 @@ struct PricesSection: View {
     var body: some View {
         JournalSectionContainer("Prices") {
             LazyVGrid(columns: columns, spacing: 12) {
+                JournalField("Share Count") {
+                    TextField("", text: decimalBinding($trade.shareCount))
+                    #if os(iOS)
+                        .textFieldStyle(CustomTextFieldStyle())
+                    #endif
+                }
+
                 JournalField("Entry Price") {
                     TextField("", text: optionalDecimalBinding($trade.entryPrice))
                     #if os(iOS)
@@ -39,6 +46,7 @@ struct PricesSection: View {
     
     #if os(macOS)
     private let columns = [
+        GridItem(.flexible(minimum: 140), spacing: 12),
         GridItem(.flexible(minimum: 140), spacing: 12),
         GridItem(.flexible(minimum: 140), spacing: 12)
     ]

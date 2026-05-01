@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A3D57E9B4C2F6A8012345678 /* SwiftCSV in Frameworks */ = {isa = PBXBuildFile; productRef = B3D57E9B4C2F6A8012345678 /* SwiftCSV */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		FBD935042F13F9A600FFFE73 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -22,10 +26,6 @@
 			remoteInfo = "Calc Edge";
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXBuildFile section */
-		A3D57E9B4C2F6A8012345678 /* SwiftCSV in Frameworks */ = {isa = PBXBuildFile; productRef = B3D57E9B4C2F6A8012345678 /* SwiftCSV */; };
-/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		FBD934F42F13F9A400FFFE73 /* Calc Edge.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Calc Edge.app"; sourceTree = BUILT_PRODUCTS_DIR; };

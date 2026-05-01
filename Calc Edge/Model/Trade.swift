@@ -24,6 +24,7 @@ final class Trade {
     var isAPlusSetup: Bool = false
 
     // Entry/Exit (for simple single-leg trades)
+    var shareCount: Decimal = 0
     var entryPrice: Decimal?
     var exitPrice: Decimal?
 
@@ -53,6 +54,7 @@ final class Trade {
     @Relationship(deleteRule: .cascade, inverse: \TradeContext.trade) var context: TradeContext?
     @Relationship(deleteRule: .cascade, inverse: \TradeReview.trade) var review: TradeReview?
     @Relationship(deleteRule: .cascade, inverse: \TradeAttachment.trade) var attachments: [TradeAttachment]? = []
+    @Relationship(deleteRule: .cascade, inverse: \TradeTransaction.trade) var transactions: [TradeTransaction]? = []
 
     init(
         tradeId: UUID = UUID(),
@@ -70,6 +72,7 @@ final class Trade {
         catalyst: String? = nil,
         confidenceScore: Int = 3,
         isAPlusSetup: Bool = false,
+        shareCount: Decimal = 0,
         entryPrice: Decimal? = nil,
         exitPrice: Decimal? = nil,
         stopPrice: Decimal? = nil,
@@ -100,6 +103,7 @@ final class Trade {
         self.confidenceScore = max(1, min(5, confidenceScore))
         self.isAPlusSetup = isAPlusSetup
 
+        self.shareCount = shareCount
         self.entryPrice = entryPrice
         self.exitPrice = exitPrice
         self.stopPrice = stopPrice

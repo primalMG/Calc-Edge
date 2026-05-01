@@ -25,6 +25,7 @@ struct TradeJournalDetailView: View {
             }
 
             PricesSection(trade: trade)
+            TransactionsSection(trade: trade)
 
             riskStrategyReviewLayout
 

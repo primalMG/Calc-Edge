@@ -16,6 +16,7 @@ struct Calc_EdgeApp: App {
             ForexCalculation.self,
             Stock.self,
             Trade.self,
+            TradeTransaction.self,
             TradeFieldSuggestion.self,
             TradeAttachment.self,
             TradeContext.self,

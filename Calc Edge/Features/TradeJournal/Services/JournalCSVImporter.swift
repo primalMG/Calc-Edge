@@ -65,6 +65,7 @@ struct JournalCSVImporter {
             market: row.value(for: Column.market),
             instrument: instrument,
             direction: direction,
+            shareCount: quantity ?? 0,
             entryPrice: direction == .long ? price : nil,
             exitPrice: direction == .short ? price : nil,
             commissions: fee
@@ -80,11 +81,47 @@ struct JournalCSVImporter {
             )
         ]
 
+        trade.transactions = [
+            TradeTransaction(
+                date: openedAt,
+                action: TradeTransactionAction(csvAction: action, direction: direction),
+                quantity: quantity ?? 0,
+                price: price ?? 0,
+                fees: fee
+            )
+        ]
+
         if let total, fee == nil {
             trade.plannedRiskAmount = total
         }
 
         return trade
+    }
+}
+
+private extension TradeTransactionAction {
+    init(csvAction: String?, direction: TradeDirection) {
+        let normalized = csvAction?
+            .lowercased()
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .joined() ?? ""
+
+        switch normalized {
+        case let value where value.contains("dividend"):
+            self = .dividend
+        case let value where value.contains("fee") || value.contains("charge") || value.contains("commission"):
+            self = .fee
+        case let value where value.contains("trim"):
+            self = .trim
+        case let value where value.contains("add"):
+            self = .add
+        case let value where value.contains("sell"):
+            self = .sell
+        case let value where value.contains("buy"):
+            self = .buy
+        default:
+            self = direction == .long ? .buy : .sell
+        }
     }
 }
 
@@ -139,7 +176,7 @@ private enum Column {
     static let ticker = ["Ticker", "Symbol", "Instrument", "Market"]
     static let market = ["Market", "Exchange", "Venue", "Currency (Price / share)"]
     static let instrument = ["Instrument Type", "Asset Type", "Type", "Product Type"]
-    static let openedAt = ["Time", "Date", "Opened At", "Open Time", "Execution Time", "Trade Date", "Created At"]
+    static let openedAt = ["Time", "Date", "Opened At", "Open Time", "Execution Time", "Trade Date", "Created At", "Settle Date"]
     static let quantity = ["No. of shares", "Quantity", "Qty", "Shares", "Units", "Size"]
     static let entryPrice = ["Price / share", "Price", "Entry Price", "Open Price", "Average Price"]
     static let total = ["Total", "Value", "Amount", "Gross Amount", "Net Amount"]

@@ -30,6 +30,7 @@ struct NewJournalView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     IdentificationSection(trade: trade, inEditMode: .constant(false))
                     PricesSection(trade: trade)
+                    TransactionsSection(trade: trade)
                     RiskSection(trade: trade, inEditMode: .constant(false))
                     
 #if os(macOS)
@@ -134,5 +135,5 @@ struct NewJournalView: View {
 
 #Preview {
     NewJournalView(trade: Trade(ticker: "AAPL"))
-        .modelContainer(for: [Trade.self, TradeLeg.self, TradeContext.self, TradeReview.self, TradeAttachment.self], inMemory: true)
+        .modelContainer(for: [Trade.self, TradeTransaction.self, TradeLeg.self, TradeContext.self, TradeReview.self, TradeAttachment.self], inMemory: true)
 }
