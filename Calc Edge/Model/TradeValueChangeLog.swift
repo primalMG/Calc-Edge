@@ -45,15 +45,16 @@ extension Trade {
             valueChangeLogs = []
         }
 
-        valueChangeLogs?.append(
-            TradeValueChangeLog(
-                summary: summary,
-                detail: detail,
-                previousShareCount: previous.currentShareCount,
-                newShareCount: current.currentShareCount,
-                previousAveragePrice: previous.averagePrice,
-                newAveragePrice: current.averagePrice
-            )
+        let log = TradeValueChangeLog(
+            summary: summary,
+            detail: detail,
+            previousShareCount: previous.currentShareCount,
+            newShareCount: current.currentShareCount,
+            previousAveragePrice: previous.averagePrice,
+            newAveragePrice: current.averagePrice
         )
+
+        log.trade = self
+        valueChangeLogs?.append(log)
     }
 }

@@ -10,9 +10,11 @@ struct TradeJournalDetailView: View {
     @State private var persistedSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var pendingSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var suggestionSaveTask: Task<Void, Never>?
+    @State private var trackedSuggestionTradeID: UUID?
     @State private var persistedChangeSnapshot: TradeJournalChangeSnapshot?
     @State private var pendingChangeSnapshot: TradeJournalChangeSnapshot?
     @State private var changeLogTask: Task<Void, Never>?
+    @State private var trackedChangeLogTradeID: UUID?
     #if os(iOS)
     @State private var activeSheet: ActiveTradeJournalSheet?
     #endif
@@ -51,9 +53,9 @@ struct TradeJournalDetailView: View {
             queueChangeLog(with: newSnapshot)
         }
         .onChange(of: trade.tradeId) { _, _ in
-            flushPendingSuggestionSave()
+            suggestionSaveTask?.cancel()
             configureSuggestionTracking()
-            flushPendingChangeLog()
+            changeLogTask?.cancel()
             configureChangeLogTracking()
         }
         .onDisappear {
@@ -238,6 +240,7 @@ struct TradeJournalDetailView: View {
 
     private func configureSuggestionTracking() {
         let values = currentSuggestionValues
+        trackedSuggestionTradeID = trade.tradeId
         persistedSuggestionValues = values
         pendingSuggestionValues = values
     }
@@ -264,7 +267,8 @@ struct TradeJournalDetailView: View {
     }
 
     private func persistPendingSuggestionValuesIfNeeded() {
-        guard pendingSuggestionValues != persistedSuggestionValues else {
+        guard trackedSuggestionTradeID == trade.tradeId,
+              pendingSuggestionValues != persistedSuggestionValues else {
             return
         }
 
@@ -286,6 +290,7 @@ struct TradeJournalDetailView: View {
 
     private func configureChangeLogTracking() {
         let snapshot = currentChangeSnapshot
+        trackedChangeLogTradeID = trade.tradeId
         persistedChangeSnapshot = snapshot
         pendingChangeSnapshot = snapshot
     }
@@ -312,7 +317,8 @@ struct TradeJournalDetailView: View {
     }
 
     private func persistPendingChangeLogIfNeeded() {
-        guard let previous = persistedChangeSnapshot,
+        guard trackedChangeLogTradeID == trade.tradeId,
+              let previous = persistedChangeSnapshot,
               let pending = pendingChangeSnapshot,
               pending != previous else {
             return
