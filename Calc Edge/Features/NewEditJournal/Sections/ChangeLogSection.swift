@@ -2,24 +2,34 @@ import SwiftUI
 
 struct ChangeLogSection: View {
     @Bindable var trade: Trade
+    var includesContainer = true
 
     private var changeLogs: [TradeValueChangeLog] {
         (trade.valueChangeLogs ?? []).sorted { $0.changedAt > $1.changedAt }
     }
 
     var body: some View {
-        JournalSectionContainer("Change Log") {
-            if changeLogs.isEmpty {
-                Text("No changes recorded yet.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.vertical, 8)
-            } else {
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(changeLogs) { log in
-                        TradeValueChangeLogRow(log: log)
-                    }
+        if includesContainer {
+            JournalSectionContainer("Change Log") {
+                changeLogContent
+            }
+        } else {
+            changeLogContent
+        }
+    }
+
+    @ViewBuilder
+    private var changeLogContent: some View {
+        if changeLogs.isEmpty {
+            Text("No changes recorded yet.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 8)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(changeLogs) { log in
+                    TradeValueChangeLogRow(log: log)
                 }
             }
         }

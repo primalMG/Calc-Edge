@@ -5,6 +5,7 @@ enum ActiveTradeJournalSheet: String, Identifiable {
     case strategy
     case review
     case context
+    case changeLog
 
     var id: String { rawValue }
 
@@ -18,6 +19,8 @@ enum ActiveTradeJournalSheet: String, Identifiable {
             return "Review"
         case .context:
             return "Context"
+        case .changeLog:
+            return "Change Log"
         }
     }
 }

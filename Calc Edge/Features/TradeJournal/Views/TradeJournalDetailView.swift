@@ -17,6 +17,8 @@ struct TradeJournalDetailView: View {
     @State private var trackedChangeLogTradeID: UUID?
     #if os(iOS)
     @State private var activeSheet: ActiveTradeJournalSheet?
+    #else
+    @State private var isChangeLogExpanded = false
     #endif
 
     @Bindable var trade: Trade
@@ -39,7 +41,7 @@ struct TradeJournalDetailView: View {
             }
 
             AttachmentsSection(trade: trade)
-            ChangeLogSection(trade: trade)
+            changeLogAccess
         }
         .navigationTitle(trade.ticker)
         .onAppear {
@@ -139,6 +141,41 @@ struct TradeJournalDetailView: View {
     }
 
     @ViewBuilder
+    private var changeLogAccess: some View {
+        #if os(iOS)
+        SheetLauncherCard(
+            title: "Change Log",
+            summary: changeLogSummary
+        ) {
+            activeSheet = .changeLog
+        }
+        #else
+        DisclosureGroup(isExpanded: $isChangeLogExpanded) {
+            ChangeLogSection(trade: trade, includesContainer: false)
+                .padding(.top, 8)
+        } label: {
+            Text("Change Log")
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation {
+                        isChangeLogExpanded.toggle()
+                    }
+                }
+        }
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        #endif
+    }
+
+    private var changeLogSummary: String {
+        let count = trade.valueChangeLogs?.count ?? 0
+        return count == 1 ? "1 recorded change" : "\(count) recorded changes"
+    }
+
+    @ViewBuilder
     private var riskStrategyReviewLayout: some View {
         #if os(iOS)
         SheetLauncherCard(
@@ -198,6 +235,8 @@ struct TradeJournalDetailView: View {
             ReviewSection(trade: trade)
         case .context:
             MarketContextSection(trade: trade)
+        case .changeLog:
+            ChangeLogSection(trade: trade)
         }
     }
 
@@ -210,6 +249,8 @@ struct TradeJournalDetailView: View {
         case .strategy:
             return [.fraction(0.47)]
         case .review:
+            return [.large]
+        case .changeLog:
             return [.large]
         }
     }
