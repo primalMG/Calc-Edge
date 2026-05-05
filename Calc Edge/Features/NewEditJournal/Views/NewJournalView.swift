@@ -135,5 +135,5 @@ struct NewJournalView: View {
 
 #Preview {
     NewJournalView(trade: Trade(ticker: "AAPL"))
-        .modelContainer(for: [Trade.self, TradeTransaction.self, TradeLeg.self, TradeContext.self, TradeReview.self, TradeAttachment.self], inMemory: true)
+        .modelContainer(for: [Trade.self, TradeAttachment.self, TradeContext.self, TradeLeg.self, TradeReview.self, TradeTransaction.self, TradeValueChangeLog.self], inMemory: true)
 }

@@ -16,12 +16,13 @@ struct Calc_EdgeApp: App {
             ForexCalculation.self,
             Stock.self,
             Trade.self,
-            TradeTransaction.self,
-            TradeFieldSuggestion.self,
             TradeAttachment.self,
             TradeContext.self,
+            TradeFieldSuggestion.self,
             TradeLeg.self,
-            TradeReview.self
+            TradeReview.self,
+            TradeTransaction.self,
+            TradeValueChangeLog.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

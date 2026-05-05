@@ -3,14 +3,30 @@ import SwiftUI
 struct PricesSection: View {
     @Bindable var trade: Trade
 
+    private var positionSummary: TradePositionSummary {
+        trade.positionSummary
+    }
+
     var body: some View {
         JournalSectionContainer("Prices") {
             LazyVGrid(columns: columns, spacing: 12) {
-                JournalField("Share Count") {
+                JournalField("Planned Share Count") {
                     TextField("", text: decimalBinding($trade.shareCount))
                     #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                     #endif
+                }
+
+                JournalField("Current Share Count") {
+                    Text(ValueDisplayFormatter.decimal(positionSummary.currentShareCount))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(.primary)
+                }
+
+                JournalField("Average Price") {
+                    Text(ValueDisplayFormatter.decimal(positionSummary.averagePrice, placeholder: "No open position"))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(positionSummary.averagePrice == nil ? .secondary : .primary)
                 }
 
                 JournalField("Entry Price") {
@@ -22,6 +38,13 @@ struct PricesSection: View {
                 
                 JournalField("Exit Price") {
                     TextField("", text: optionalDecimalBinding($trade.exitPrice))
+                        #if os(iOS)
+                        .textFieldStyle(CustomTextFieldStyle())
+                        #endif
+                }
+
+                JournalField("Exchange Rate") {
+                    TextField("", text: optionalDecimalBinding($trade.exchangeRate))
                         #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                         #endif

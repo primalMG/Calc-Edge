@@ -58,6 +58,7 @@ struct JournalCSVImporter {
         let total = row.decimal(for: Column.total)
         let quantity = row.decimal(for: Column.quantity)
         let fee = row.decimal(for: Column.commissions)
+        let exchangeRate = row.decimal(for: Column.exchangeRate)
 
         let trade = Trade(
             openedAt: openedAt,
@@ -68,6 +69,7 @@ struct JournalCSVImporter {
             shareCount: quantity ?? 0,
             entryPrice: direction == .long ? price : nil,
             exitPrice: direction == .short ? price : nil,
+            exchangeRate: exchangeRate,
             commissions: fee
         )
 
@@ -87,6 +89,7 @@ struct JournalCSVImporter {
                 action: TradeTransactionAction(csvAction: action, direction: direction),
                 quantity: quantity ?? 0,
                 price: price ?? 0,
+                exchangeRate: exchangeRate,
                 fees: fee
             )
         ]
@@ -179,6 +182,7 @@ private enum Column {
     static let openedAt = ["Time", "Date", "Opened At", "Open Time", "Execution Time", "Trade Date", "Created At", "Settle Date"]
     static let quantity = ["No. of shares", "Quantity", "Qty", "Shares", "Units", "Size"]
     static let entryPrice = ["Price / share", "Price", "Entry Price", "Open Price", "Average Price"]
+    static let exchangeRate = ["Exchange rate", "Exchange Rate", "FX Rate", "Currency Exchange Rate", "Conversion Rate"]
     static let total = ["Total", "Value", "Amount", "Gross Amount", "Net Amount"]
     static let commissions = ["Commissions", "Commission", "Fees", "Fee", "Currency conversion fee", "Charges"]
 }

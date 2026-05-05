@@ -68,11 +68,15 @@ struct TransactionsSection: View {
     }
 
     private func save(_ draft: TradeTransactionDraft, for transaction: TradeTransaction?) {
+        let previousSummary = trade.positionSummary
+        let wasNew = transaction == nil
+        let previousTransactionSummary = transaction.map(transactionSummary(for:))
         let transaction = transaction ?? TradeTransaction(
             date: draft.date,
             action: draft.action,
             quantity: draft.quantity,
             price: draft.price,
+            exchangeRate: draft.exchangeRate,
             fees: draft.fees,
             note: draft.note
         )
@@ -81,6 +85,7 @@ struct TransactionsSection: View {
         transaction.action = draft.action
         transaction.quantity = draft.quantity
         transaction.price = draft.price
+        transaction.exchangeRate = draft.exchangeRate
         transaction.fees = draft.fees
         transaction.note = draft.note
 
@@ -91,14 +96,52 @@ struct TransactionsSection: View {
 
             trade.transactions?.append(transaction)
         }
+
+        trade.appendValueChangeLog(
+            summary: wasNew ? "Added \(draft.action.displayName) transaction" : "Edited \(draft.action.displayName) transaction",
+            detail: changeLogDetail(
+                previous: previousTransactionSummary,
+                current: transactionSummary(for: transaction)
+            ),
+            previous: previousSummary,
+            current: trade.positionSummary
+        )
     }
 
     private func remove(_ transaction: TradeTransaction) {
+        let previousSummary = trade.positionSummary
+        let removedTransactionSummary = transactionSummary(for: transaction)
+
         if let index = trade.transactions?.firstIndex(where: { $0 === transaction }) {
             trade.transactions?.remove(at: index)
         }
 
         modelContext.delete(transaction)
+
+        trade.appendValueChangeLog(
+            summary: "Deleted \(transaction.action.displayName) transaction",
+            detail: removedTransactionSummary,
+            previous: previousSummary,
+            current: trade.positionSummary
+        )
+    }
+
+    private func transactionSummary(for transaction: TradeTransaction) -> String {
+        var summary = "\(transaction.action.displayName) \(ValueDisplayFormatter.decimal(transaction.quantity)) @ \(ValueDisplayFormatter.decimal(transaction.price))"
+
+        if let exchangeRate = transaction.exchangeRate {
+            summary += " FX \(ValueDisplayFormatter.decimal(exchangeRate))"
+        }
+
+        return summary
+    }
+
+    private func changeLogDetail(previous: String?, current: String) -> String {
+        guard let previous, previous != current else {
+            return current
+        }
+
+        return "\(previous) -> \(current)"
     }
 }
 
@@ -167,11 +210,17 @@ private struct TradeTransactionRow: View {
         let price = ValueDisplayFormatter.decimal(transaction.price)
         let base = "\(quantity) @ \(price)"
 
-        guard let fees = transaction.fees else {
-            return base
+        var details = [base]
+
+        if let exchangeRate = transaction.exchangeRate {
+            details.append("FX \(ValueDisplayFormatter.decimal(exchangeRate))")
         }
 
-        return "\(base) | Fees \(ValueDisplayFormatter.decimal(fees))"
+        if let fees = transaction.fees {
+            details.append("Fees \(ValueDisplayFormatter.decimal(fees))")
+        }
+
+        return details.joined(separator: " | ")
     }
 }
 
@@ -200,6 +249,7 @@ struct TradeTransactionDraft {
     var action: TradeTransactionAction = .buy
     var quantity: Decimal = 0
     var price: Decimal = 0
+    var exchangeRate: Decimal?
     var fees: Decimal?
     var note: String?
 
@@ -210,6 +260,7 @@ struct TradeTransactionDraft {
         action = transaction.action
         quantity = transaction.quantity
         price = transaction.price
+        exchangeRate = transaction.exchangeRate
         fees = transaction.fees
         note = transaction.note
     }
@@ -250,6 +301,7 @@ private struct TradeTransactionEditorSheet: View {
                 Section {
                     TextField("Quantity", text: decimalBinding($draft.quantity))
                     TextField("Price", text: decimalBinding($draft.price))
+                    TextField("Exchange Rate", text: optionalDecimalBinding($draft.exchangeRate))
                     TextField("Fees", text: optionalDecimalBinding($draft.fees))
                 }
 
@@ -284,7 +336,7 @@ private struct TradeTransactionEditorSheet: View {
     }
 
     private var canSave: Bool {
-        draft.quantity >= 0 && draft.price >= 0 && (draft.fees ?? 0) >= 0
+        draft.quantity >= 0 && draft.price >= 0 && (draft.exchangeRate ?? 0) >= 0 && (draft.fees ?? 0) >= 0
     }
 
     private var normalizedDraft: TradeTransactionDraft {

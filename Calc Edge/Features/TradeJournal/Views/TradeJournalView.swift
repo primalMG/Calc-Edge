@@ -16,7 +16,7 @@ struct TradeJournalView: View {
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var filters = TradeJournalFilters()
     @State private var showFileImporter = false
-    @State private var presentedDraft: JournalDraftPresentation?
+    @State private var presentedSheet: JournalPresentation?
     @State private var importAlert: ImportAlert?
     #if os(macOS)
     @Environment(\.openWindow) private var openWindow
@@ -59,8 +59,13 @@ struct TradeJournalView: View {
                 keepSelectionInSync()
             }
             #endif
-            .sheet(item: $presentedDraft) { draft in
-                NewJournalView(trade: draft.trade, isNew: true)
+            .sheet(item: $presentedSheet) { presentation in
+                switch presentation {
+                case .draft(let draft):
+                    NewJournalView(trade: draft.trade, isNew: true)
+                case .importReview(let importReview):
+                    JournalImportReviewView(trades: importReview.trades)
+                }
             }
             .alert(item: $importAlert) { alert in
                 Alert(
@@ -220,7 +225,7 @@ struct TradeJournalView: View {
         #if os(macOS)
         openWindow(id: "new-journal")
         #else
-        presentedDraft = JournalDraftPresentation(trade: Trade(ticker: ""))
+        presentedSheet = .draft(JournalDraftPresentation(trade: Trade(ticker: "")))
         #endif
     }
 
@@ -234,8 +239,10 @@ struct TradeJournalView: View {
 
         do {
             let trades = try JournalCSVImporter().importTrades(from: file)
-            if let trade = trades.first {
-                presentedDraft = JournalDraftPresentation(trade: trade)
+            if trades.count == 1, let trade = trades.first {
+                presentedSheet = .draft(JournalDraftPresentation(trade: trade))
+            } else {
+                presentedSheet = .importReview(JournalImportReviewPresentation(trades: trades))
             }
         } catch {
             importAlert = ImportAlert(
@@ -281,9 +288,28 @@ struct TradeJournalView: View {
     }
 }
 
+private enum JournalPresentation: Identifiable {
+    case draft(JournalDraftPresentation)
+    case importReview(JournalImportReviewPresentation)
+
+    var id: UUID {
+        switch self {
+        case .draft(let draft):
+            draft.id
+        case .importReview(let importReview):
+            importReview.id
+        }
+    }
+}
+
 private struct JournalDraftPresentation: Identifiable {
     let id = UUID()
     let trade: Trade
+}
+
+private struct JournalImportReviewPresentation: Identifiable {
+    let id = UUID()
+    let trades: [Trade]
 }
 
 private struct ImportAlert: Identifiable {

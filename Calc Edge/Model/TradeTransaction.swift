@@ -8,6 +8,7 @@ final class TradeTransaction {
     var action: TradeTransactionAction = TradeTransactionAction.buy
     var quantity: Decimal = 0
     var price: Decimal = 0
+    var exchangeRate: Decimal?
     var fees: Decimal?
     var note: String?
 
@@ -18,6 +19,7 @@ final class TradeTransaction {
         action: TradeTransactionAction = .buy,
         quantity: Decimal,
         price: Decimal,
+        exchangeRate: Decimal? = nil,
         fees: Decimal? = nil,
         note: String? = nil
     ) {
@@ -25,6 +27,7 @@ final class TradeTransaction {
         self.action = action
         self.quantity = quantity
         self.price = price
+        self.exchangeRate = exchangeRate
         self.fees = fees
         self.note = note
     }

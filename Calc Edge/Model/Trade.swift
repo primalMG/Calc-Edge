@@ -27,6 +27,7 @@ final class Trade {
     var shareCount: Decimal = 0
     var entryPrice: Decimal?
     var exitPrice: Decimal?
+    var exchangeRate: Decimal?
 
     // Risk definition (works for stocks/options; legs can override if needed)
     var stopPrice: Decimal?
@@ -55,6 +56,7 @@ final class Trade {
     @Relationship(deleteRule: .cascade, inverse: \TradeReview.trade) var review: TradeReview?
     @Relationship(deleteRule: .cascade, inverse: \TradeAttachment.trade) var attachments: [TradeAttachment]? = []
     @Relationship(deleteRule: .cascade, inverse: \TradeTransaction.trade) var transactions: [TradeTransaction]? = []
+    @Relationship(deleteRule: .cascade, inverse: \TradeValueChangeLog.trade) var valueChangeLogs: [TradeValueChangeLog]? = []
 
     init(
         tradeId: UUID = UUID(),
@@ -75,6 +77,7 @@ final class Trade {
         shareCount: Decimal = 0,
         entryPrice: Decimal? = nil,
         exitPrice: Decimal? = nil,
+        exchangeRate: Decimal? = nil,
         stopPrice: Decimal? = nil,
         targetPrice: Decimal? = nil,
         plannedRiskAmount: Decimal? = nil,
@@ -106,6 +109,7 @@ final class Trade {
         self.shareCount = shareCount
         self.entryPrice = entryPrice
         self.exitPrice = exitPrice
+        self.exchangeRate = exchangeRate
         self.stopPrice = stopPrice
         self.targetPrice = targetPrice
 

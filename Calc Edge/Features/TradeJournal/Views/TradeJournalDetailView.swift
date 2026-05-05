@@ -10,6 +10,9 @@ struct TradeJournalDetailView: View {
     @State private var persistedSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var pendingSuggestionValues: [TradeSuggestionField: String] = [:]
     @State private var suggestionSaveTask: Task<Void, Never>?
+    @State private var persistedChangeSnapshot: TradeJournalChangeSnapshot?
+    @State private var pendingChangeSnapshot: TradeJournalChangeSnapshot?
+    @State private var changeLogTask: Task<Void, Never>?
     #if os(iOS)
     @State private var activeSheet: ActiveTradeJournalSheet?
     #endif
@@ -34,20 +37,28 @@ struct TradeJournalDetailView: View {
             }
 
             AttachmentsSection(trade: trade)
+            ChangeLogSection(trade: trade)
         }
         .navigationTitle(trade.ticker)
         .onAppear {
             configureSuggestionTracking()
+            configureChangeLogTracking()
         }
         .onChange(of: currentSuggestionValues) { _, newValues in
             queueSuggestionSave(with: newValues)
         }
+        .onChange(of: currentChangeSnapshot) { _, newSnapshot in
+            queueChangeLog(with: newSnapshot)
+        }
         .onChange(of: trade.tradeId) { _, _ in
             flushPendingSuggestionSave()
             configureSuggestionTracking()
+            flushPendingChangeLog()
+            configureChangeLogTracking()
         }
         .onDisappear {
             flushPendingSuggestionSave()
+            flushPendingChangeLog()
         }
         .toolbar {
             ToolbarItem {
@@ -221,6 +232,10 @@ struct TradeJournalDetailView: View {
         TradeJournalDetailSuggestionValues.currentValues(for: trade)
     }
 
+    private var currentChangeSnapshot: TradeJournalChangeSnapshot {
+        TradeJournalChangeSnapshot(trade: trade)
+    }
+
     private func configureSuggestionTracking() {
         let values = currentSuggestionValues
         persistedSuggestionValues = values
@@ -267,6 +282,57 @@ struct TradeJournalDetailView: View {
         if didPersistSuggestions {
             try? modelContext.save()
         }
+    }
+
+    private func configureChangeLogTracking() {
+        let snapshot = currentChangeSnapshot
+        persistedChangeSnapshot = snapshot
+        pendingChangeSnapshot = snapshot
+    }
+
+    private func queueChangeLog(with snapshot: TradeJournalChangeSnapshot) {
+        pendingChangeSnapshot = snapshot
+        changeLogTask?.cancel()
+        changeLogTask = Task {
+            try? await Task.sleep(for: .seconds(2))
+
+            guard !Task.isCancelled else {
+                return
+            }
+
+            await MainActor.run {
+                persistPendingChangeLogIfNeeded()
+            }
+        }
+    }
+
+    private func flushPendingChangeLog() {
+        changeLogTask?.cancel()
+        persistPendingChangeLogIfNeeded()
+    }
+
+    private func persistPendingChangeLogIfNeeded() {
+        guard let previous = persistedChangeSnapshot,
+              let pending = pendingChangeSnapshot,
+              pending != previous else {
+            return
+        }
+
+        let details = pending.changeDetails(from: previous)
+        guard !details.isEmpty else {
+            persistedChangeSnapshot = pending
+            return
+        }
+
+        let position = trade.positionSummary
+        trade.appendValueChangeLog(
+            summary: "Updated journal entry",
+            detail: details.joined(separator: "\n"),
+            previous: position,
+            current: position
+        )
+        persistedChangeSnapshot = pending
+        try? modelContext.save()
     }
 }
 
