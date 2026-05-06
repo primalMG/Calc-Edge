@@ -15,15 +15,7 @@ struct DashboardView: View {
     ]
     @Query(sort: \Stock.createdAt, order: .reverse) private var recentStockCalcs: [Stock]
     @Query(sort: \Trade.openedAt, order: .reverse) private var recentTrades: [Trade]
-    @State private var selectedStock = Stock(ticker: "",
-                                             entryPrice: 0.0,
-                                             riskPercentage: 0.0,
-                                             stopLoss: 0.0,
-                                             shareCount: 0.0,
-                                             targetPrice: 0.0,
-                                             accountUsed: "",
-                                             balanceAtTrade: 0.0,
-                                             amountRisked: 0.0)
+    @State private var selectedStock = Stock.emptyDraft
 
     var body: some View {
         ScrollView {

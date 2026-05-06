@@ -24,7 +24,12 @@ struct Calc_EdgeApp: App {
             TradeTransaction.self,
             TradeValueChangeLog.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            allowsSave: true,
+            cloudKitDatabase: .private("iCloud.com.marcusgardner.Calc-Edge")
+        )
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

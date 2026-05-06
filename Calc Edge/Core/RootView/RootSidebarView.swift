@@ -1,41 +1,10 @@
 import SwiftUI
 
 struct RootSidebarView: View {
-    @State private var presentSheet: Bool = false
-    @State private var selectedStock = Stock(ticker: "",
-                                             entryPrice: 0.0,
-                                             riskPercentage: 0.0,
-                                             stopLoss: 0.0,
-                                             shareCount: 0.0,
-                                             targetPrice: 0.0,
-                                             accountUsed: "",
-                                             balanceAtTrade: 0.0,
-                                             amountRisked: 0.0)
+    @State private var selectedStock = Stock.emptyDraft
 
     var body: some View {
         List {
-            #if os(macOS)
-            NavigationLink {
-                DashboardView()
-            } label: {
-                Label("Dashboard", systemImage: "house")
-            }
-            #endif
-            
-            Section("Journals") {
-                NavigationLink {
-                    TradeJournalView()
-                } label: {
-                    Label("Trade Journal", systemImage: "book")
-                }
-
-                NavigationLink {
-                    JournalInsightsView()
-                } label: {
-                    Label("Journal Insights", systemImage: "sparkles")
-                }
-            }
-
             Section("Calculators") {
                 NavigationLink {
                     RiskCalcListView(selectedStock: $selectedStock)
@@ -49,29 +18,8 @@ struct RootSidebarView: View {
                     Label("Forex Calc", systemImage: "dollarsign.circle")
                 }
             }
-            
-            Section("Suggestions") {
-                NavigationLink {
-                    SuggestionsView()
-                } label: {
-                    Label("Suggestions", systemImage: "text.badge.star")
-                }
-            }
         }
-        .navigationSplitViewColumnWidth(min: 250, ideal: 300)
-        .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    presentSheet.toggle()
-                } label: {
-                    Image(systemName: "person.circle.fill")
-                }
-                .help("Accounts")
-            }
-        }
-        .sheet(isPresented: $presentSheet) {
-            AccountsView()
-        }
+        .navigationTitle("Calculators")
     }
 }
 
