@@ -1,59 +1,5 @@
 import Foundation
 
-struct TradeInsights {
-    struct SegmentPerformance: Identifiable {
-        let id: String
-        let category: String
-        let label: String
-        let trades: Int
-        let wins: Int
-        let winRate: Double?
-        let expectancy: Double?
-        let averageWinner: Double?
-        let averageLoser: Double?
-        let profitFactor: Double?
-    }
-
-    struct CountedItem: Identifiable {
-        let id: String
-        let label: String
-        let count: Int
-        let percentage: Double?
-    }
-
-    let totalTrades: Int
-    let closedTrades: Int
-    let pricedTrades: Int
-    let riskDefinedTrades: Int
-    let winRate: Double?
-    let averageWinner: Double?
-    let averageLoser: Double?
-    let expectancy: Double?
-    let profitFactor: Double?
-    let averageHoldTime: TimeInterval?
-    let aPlusWinRate: Double?
-    let nonAPlusWinRate: Double?
-
-    let followedPlanRate: Double?
-    let wouldRetakeRate: Double?
-    let entryQualityAverage: Double?
-    let exitQualityAverage: Double?
-
-    let bestSetup: SegmentPerformance?
-    let worstSetup: SegmentPerformance?
-    let performanceByInstrument: [SegmentPerformance]
-    let performanceByDirection: [SegmentPerformance]
-    let performanceByAccount: [SegmentPerformance]
-    let strengths: [SegmentPerformance]
-    let weaknesses: [SegmentPerformance]
-    let topMistakes: [CountedItem]
-    let exitReasons: [CountedItem]
-
-    let reviewCoverage: Double?
-    let stopCoverage: Double?
-    let exitReasonCoverage: Double?
-}
-
 struct TradeInsightsCalculator {
     let trades: [Trade]
     let minSampleSize: Int
@@ -85,18 +31,43 @@ struct TradeInsightsCalculator {
 
         let aPlusWinRate = rate(wins(in: aPlusTrades), aPlusTrades.count)
         let nonAPlusWinRate = rate(wins(in: nonAPlusTrades), nonAPlusTrades.count)
+        let aPlusExpectancy = average(aPlusTrades.compactMap { rMultiple(for: $0) })
+        let nonAPlusExpectancy = average(nonAPlusTrades.compactMap { rMultiple(for: $0) })
 
         let reviews = reviewTrades.compactMap { $0.review }
         let followedPlanRate = rate(reviews.filter { $0.followedPlan }.count, reviews.count)
         let wouldRetakeRate = rate(reviews.filter { $0.wouldRetake }.count, reviews.count)
         let entryQualityAverage = average(reviews.map { Double($0.entryQuality) })
         let exitQualityAverage = average(reviews.map { Double($0.exitQuality) })
+        let followedPlanExpectancy = average(
+            riskDefinedTrades
+                .filter { $0.review?.followedPlan == true }
+                .compactMap { rMultiple(for: $0) }
+        )
+        let brokePlanExpectancy = average(
+            riskDefinedTrades
+                .filter { $0.review?.followedPlan == false }
+                .compactMap { rMultiple(for: $0) }
+        )
+
+        let targetHitRate = rate(closedTrades.filter { $0.exitReason == .targetHit }.count, closedTrades.count)
+        let averagePlannedR = average(riskDefinedTrades.compactMap { plannedR(for: $0) })
+        let averageMAE = average(trades.compactMap { decimalToDouble($0.mae) })
+        let averageMFE = average(trades.compactMap { decimalToDouble($0.mfe) })
+        let averageCostDrag = average(closedTrades.compactMap { costDrag(for: $0) })
+        let highConfidenceLosers = riskDefinedTrades.filter {
+            $0.confidenceScore >= 4 && (rMultiple(for: $0) ?? 0) < 0
+        }.count
+        let lowConfidenceWinners = riskDefinedTrades.filter {
+            $0.confidenceScore <= 2 && (rMultiple(for: $0) ?? 0) > 0
+        }.count
 
         let segments = buildSegments(from: pricedTrades)
         let filteredSegments = segments.filter { $0.trades >= minSampleSize && $0.label != "Unspecified" }
         let setupSegments = filteredSegments.filter { $0.category == "Setup" }
         let bestSetup = setupSegments.sorted(by: sortStrengths).first
         let worstSetup = setupSegments.sorted(by: sortWeaknesses).first
+        let edgeMapSegments = filteredSegments.sorted(by: sortStrengths)
         let performanceByInstrument = segmentsForCategory("Instrument", in: segments)
         let performanceByDirection = segmentsForCategory("Direction", in: segments)
         let performanceByAccount = segmentsForCategory("Account", in: segments)
@@ -110,6 +81,25 @@ struct TradeInsightsCalculator {
         let reviewCoverage = rate(reviewTrades.count, totalTrades)
         let stopCoverage = rate(pricedTrades.filter { $0.stopPrice != nil }.count, pricedTrades.count)
         let exitReasonCoverage = rate(closedTrades.filter { $0.exitReason != nil }.count, closedTrades.count)
+        let highlights = buildHighlights(
+            totalTrades: totalTrades,
+            expectancy: expectancy,
+            profitFactor: profitFactor,
+            bestSetup: bestSetup,
+            worstSetup: worstSetup,
+            followedPlanExpectancy: followedPlanExpectancy,
+            brokePlanExpectancy: brokePlanExpectancy,
+            topMistakes: topMistakes,
+            averageCostDrag: averageCostDrag
+        )
+        let nextReviewFocus = buildNextReviewFocus(
+            reviewCoverage: reviewCoverage,
+            stopCoverage: stopCoverage,
+            exitReasonCoverage: exitReasonCoverage,
+            followedPlanRate: followedPlanRate,
+            worstSetup: worstSetup,
+            topMistakes: topMistakes
+        )
 
         return TradeInsights(
             totalTrades: totalTrades,
@@ -124,12 +114,26 @@ struct TradeInsightsCalculator {
             averageHoldTime: averageHoldTime,
             aPlusWinRate: aPlusWinRate,
             nonAPlusWinRate: nonAPlusWinRate,
+            aPlusExpectancy: aPlusExpectancy,
+            nonAPlusExpectancy: nonAPlusExpectancy,
+            followedPlanExpectancy: followedPlanExpectancy,
+            brokePlanExpectancy: brokePlanExpectancy,
             followedPlanRate: followedPlanRate,
             wouldRetakeRate: wouldRetakeRate,
             entryQualityAverage: entryQualityAverage,
             exitQualityAverage: exitQualityAverage,
+            targetHitRate: targetHitRate,
+            averagePlannedR: averagePlannedR,
+            averageMAE: averageMAE,
+            averageMFE: averageMFE,
+            averageCostDrag: averageCostDrag,
+            highConfidenceLosers: highConfidenceLosers,
+            lowConfidenceWinners: lowConfidenceWinners,
+            highlights: highlights,
+            nextReviewFocus: nextReviewFocus,
             bestSetup: bestSetup,
             worstSetup: worstSetup,
+            edgeMapSegments: edgeMapSegments,
             performanceByInstrument: performanceByInstrument,
             performanceByDirection: performanceByDirection,
             performanceByAccount: performanceByAccount,
@@ -156,6 +160,17 @@ struct TradeInsightsCalculator {
         let emotionalTrades = trades.filter { $0.review != nil }
         segments += segmentPerformance(for: emotionalTrades, category: "Emotion") {
             $0.review?.emotionalState.rawValue.capitalized
+        }
+
+        let contextTrades = trades.filter { $0.context != nil }
+        segments += segmentPerformance(for: contextTrades, category: "Market Regime") {
+            $0.context?.marketRegime.rawValue.capitalized
+        }
+        segments += segmentPerformance(for: contextTrades, category: "Time of Day") {
+            $0.context?.timeOfDayTag
+        }
+        segments += segmentPerformance(for: trades, category: "Confidence") {
+            "Score \($0.confidenceScore)"
         }
 
         return segments
@@ -286,6 +301,36 @@ struct TradeInsightsCalculator {
         return reward / risk
     }
 
+    private func plannedR(for trade: Trade) -> Double? {
+        guard let entry = decimalToDouble(trade.entryPrice),
+              let target = decimalToDouble(trade.targetPrice),
+              let stop = decimalToDouble(trade.stopPrice) else {
+            return nil
+        }
+
+        let risk: Double
+        let reward: Double
+
+        switch trade.direction {
+        case .long:
+            risk = entry - stop
+            reward = target - entry
+        case .short:
+            risk = stop - entry
+            reward = entry - target
+        }
+
+        guard risk > 0 else { return nil }
+        return reward / risk
+    }
+
+    private func costDrag(for trade: Trade) -> Double? {
+        let commission = decimalToDouble(trade.commissions) ?? 0
+        let slippage = decimalToDouble(trade.slippage) ?? 0
+        let total = commission + slippage
+        return total > 0 ? total : nil
+    }
+
     private func averageHoldDuration(in trades: [Trade]) -> TimeInterval? {
         let durations = trades.compactMap { trade -> TimeInterval? in
             guard let closedAt = trade.closedAt else { return nil }
@@ -318,6 +363,185 @@ struct TradeInsightsCalculator {
     private func decimalToDouble(_ value: Decimal?) -> Double? {
         guard let value else { return nil }
         return NSDecimalNumber(decimal: value).doubleValue
+    }
+
+    private func buildHighlights(
+        totalTrades: Int,
+        expectancy: Double?,
+        profitFactor: Double?,
+        bestSetup: TradeInsights.SegmentPerformance?,
+        worstSetup: TradeInsights.SegmentPerformance?,
+        followedPlanExpectancy: Double?,
+        brokePlanExpectancy: Double?,
+        topMistakes: [TradeInsights.CountedItem],
+        averageCostDrag: Double?
+    ) -> [TradeInsights.Highlight] {
+        var highlights: [TradeInsights.Highlight] = []
+
+        if let expectancy {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "expectancy",
+                    title: "Current Edge",
+                    value: formatR(expectancy),
+                    detail: "Average result per risk-defined trade.",
+                    tone: expectancy >= 0 ? .positive : .caution
+                )
+            )
+        }
+
+        if let bestSetup {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "best-setup",
+                    title: "Best Setup",
+                    value: bestSetup.label,
+                    detail: "\(bestSetup.trades) trades, \(formatR(bestSetup.expectancy)) expectancy.",
+                    tone: .positive
+                )
+            )
+        }
+
+        if let worstSetup, (worstSetup.expectancy ?? 0) < 0 {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "worst-setup",
+                    title: "Drag",
+                    value: worstSetup.label,
+                    detail: "\(worstSetup.trades) trades, \(formatR(worstSetup.expectancy)) expectancy.",
+                    tone: .caution
+                )
+            )
+        }
+
+        if let followedPlanExpectancy, let brokePlanExpectancy {
+            let delta = followedPlanExpectancy - brokePlanExpectancy
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "plan-delta",
+                    title: "Plan Delta",
+                    value: formatR(delta),
+                    detail: "Followed-plan trades versus broken-plan trades.",
+                    tone: delta >= 0 ? .positive : .caution
+                )
+            )
+        }
+
+        if let topMistake = topMistakes.first {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "top-mistake",
+                    title: "Main Mistake",
+                    value: topMistake.label,
+                    detail: "\(topMistake.count) tagged reviews.",
+                    tone: .caution
+                )
+            )
+        } else if let profitFactor {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "profit-factor",
+                    title: "Profit Factor",
+                    value: formatProfitFactor(profitFactor),
+                    detail: "Gross R winners divided by gross R losers.",
+                    tone: profitFactor >= 1 ? .positive : .caution
+                )
+            )
+        }
+
+        if let averageCostDrag {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "cost-drag",
+                    title: "Avg Cost Drag",
+                    value: formatNumber(averageCostDrag),
+                    detail: "Average commissions plus slippage on closed trades.",
+                    tone: .neutral
+                )
+            )
+        }
+
+        if highlights.isEmpty && totalTrades > 0 {
+            highlights.append(
+                TradeInsights.Highlight(
+                    id: "data-needed",
+                    title: "Insight Readiness",
+                    value: "\(totalTrades) trades",
+                    detail: "Close trades and add prices, stops, and reviews to unlock stronger readouts.",
+                    tone: .neutral
+                )
+            )
+        }
+
+        return Array(highlights.prefix(5))
+    }
+
+    private func buildNextReviewFocus(
+        reviewCoverage: Double?,
+        stopCoverage: Double?,
+        exitReasonCoverage: Double?,
+        followedPlanRate: Double?,
+        worstSetup: TradeInsights.SegmentPerformance?,
+        topMistakes: [TradeInsights.CountedItem]
+    ) -> TradeInsights.ReviewFocus? {
+        if (reviewCoverage ?? 1) < 0.7 {
+            return TradeInsights.ReviewFocus(
+                title: "Raise review coverage",
+                detail: "The insights are limited until most closed trades have a review. Start by reviewing your latest unreviewed trades."
+            )
+        }
+
+        if (stopCoverage ?? 1) < 0.8 {
+            return TradeInsights.ReviewFocus(
+                title: "Define risk more consistently",
+                detail: "Add stop prices to closed trades so expectancy, R multiple, and setup quality are reliable."
+            )
+        }
+
+        if (exitReasonCoverage ?? 1) < 0.8 {
+            return TradeInsights.ReviewFocus(
+                title: "Tag exit reasons",
+                detail: "Exit reason coverage is thin. Tag exits to separate good profit-taking from avoidable exits."
+            )
+        }
+
+        if let followedPlanRate, followedPlanRate < 0.8 {
+            return TradeInsights.ReviewFocus(
+                title: "Tighten plan adherence",
+                detail: "Followed-plan rate is below 80%. Review the last broken-plan trades and turn the repeated cause into one rule."
+            )
+        }
+
+        if let topMistake = topMistakes.first {
+            return TradeInsights.ReviewFocus(
+                title: "Attack \(topMistake.label)",
+                detail: "This is your most common mistake tag. Make it the next review theme and write one prevention rule."
+            )
+        }
+
+        if let worstSetup, (worstSetup.expectancy ?? 0) < 0 {
+            return TradeInsights.ReviewFocus(
+                title: "Reduce \(worstSetup.label) exposure",
+                detail: "This setup is negative expectancy in the current sample. Pause it or add a stricter entry filter before taking the next one."
+            )
+        }
+
+        return nil
+    }
+
+    private func formatR(_ value: Double?) -> String {
+        guard let value else { return "N/A" }
+        return String(format: "%.2fR", value)
+    }
+
+    private func formatProfitFactor(_ value: Double?) -> String {
+        guard let value else { return "N/A" }
+        guard value.isFinite else { return "Inf" }
+        return String(format: "%.2f", value)
+    }
+
+    private func formatNumber(_ value: Double) -> String {
+        String(format: "%.2f", value)
     }
 
     private func sortStrengths(

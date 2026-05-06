@@ -65,7 +65,7 @@ struct TradeJournalDetailView: View {
             flushPendingChangeLog()
         }
         .toolbar {
-            ToolbarItem {
+            ToolbarItem(placement: .automatic) {
                 Button {
                     toggleDelete.toggle()
                 } label: {
