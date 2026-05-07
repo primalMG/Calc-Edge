@@ -5,6 +5,10 @@ struct NotesListView: View {
     @Binding var selectedNoteID: UUID?
     let deleteItems: (IndexSet) -> Void
     let deleteNote: (Note) -> Void
+    
+    #if os(iOS)
+    @State private var note: Note?
+    #endif
 
     var body: some View {
         List(selection: $selectedNoteID) {
@@ -13,19 +17,25 @@ struct NotesListView: View {
                 NoteRow(note: note)
                     .tag(note.noteId)
                 #else
-                NavigationLink {
-                    NoteEditorView(note: note) {
-                        deleteNote(note)
-                    }
+                Button {
+                    self.note = note
                 } label: {
                     NoteRow(note: note)
                 }
+                .buttonStyle(.plain)
                 #endif
             }
             .onDelete(perform: deleteItems)
         }
         #if os(macOS)
         .listStyle(.sidebar)
+        #elseif os(iOS)
+        .sheet(item: $note) { note in
+            NoteEditorView(note: note) {
+                deleteNote(note)
+            }
+            .presentationDetents([.fraction(0.25), .fraction(0.3)])
+        }
         #endif
     }
 }
