@@ -29,6 +29,8 @@ struct RootTabScene: View {
             RiskCalcListView(selectedStock: $selectedStock)
         case .forexCalc:
             ForexCalcView()
+        case .notes:
+            NotesView()
         case .suggestions:
             SuggestionsView()
         }

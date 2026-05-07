@@ -44,6 +44,10 @@ struct RootView: View {
                 Tab(RootTab.insights.title, systemImage: RootTab.insights.systemImage) {
                     rootTab(.insights)
                 }
+
+                Tab(RootTab.notes.title, systemImage: RootTab.notes.systemImage) {
+                    rootTab(.notes)
+                }
             }
 
             TabSection("Calculators") {

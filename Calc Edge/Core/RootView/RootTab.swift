@@ -7,15 +7,16 @@ enum RootTab: String, Identifiable {
     case calculators
     case stockCalc
     case forexCalc
+    case notes
     case suggestions
 
     var id: String { rawValue }
 
     static var availableTabs: [RootTab] {
         #if os(macOS)
-        [.dashboard, .journal, .insights, .stockCalc, .forexCalc, .suggestions]
+        [.dashboard, .journal, .insights, .notes, .stockCalc, .forexCalc, .suggestions]
         #else
-        [.journal, .insights, .calculators, .suggestions]
+        [.journal, .insights, .calculators, .notes, .suggestions]
         #endif
     }
 
@@ -33,6 +34,8 @@ enum RootTab: String, Identifiable {
             "Stock Calc"
         case .forexCalc:
             "Forex Calc"
+        case .notes:
+            "Notes"
         case .suggestions:
             "Suggestions"
         }
@@ -52,6 +55,8 @@ enum RootTab: String, Identifiable {
             "chart.line.uptrend.xyaxis"
         case .forexCalc:
             "dollarsign.circle"
+        case .notes:
+            "note.text"
         case .suggestions:
             "text.badge.star"
         }

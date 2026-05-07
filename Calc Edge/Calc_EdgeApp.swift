@@ -14,6 +14,7 @@ struct Calc_EdgeApp: App {
         let schema = Schema([
             Account.self,
             ForexCalculation.self,
+            Note.self,
             Stock.self,
             Trade.self,
             TradeAttachment.self,
