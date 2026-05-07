@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct EdgeMapRow: View {
-    let segment: TradeInsights.SegmentPerformance
+    let segment: TradeInsightSegmentPerformance
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -29,17 +29,13 @@ struct EdgeMapRow: View {
                 }
             }
 
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(.quaternary)
-
-                    Capsule()
-                        .fill(accentColor)
-                        .frame(width: proxy.size.width * CGFloat(barScale))
+            ProgressView(value: barScale, total: 1)
+                .progressViewStyle(.linear)
+                .tint(accentColor)
+                .transaction { transaction in
+                    transaction.animation = nil
                 }
-            }
-            .frame(height: 6)
+                .frame(height: 6)
         }
         .padding(12)
         .background(.regularMaterial)

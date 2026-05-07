@@ -29,6 +29,8 @@ struct TransactionsSection: View {
                     }
                     #if os(iOS)
                     .buttonStyle(.borderedProminent)
+                    .tint(Color.gray.gradient)
+                    .foregroundStyle(.primary)
                     #endif
                 }
 

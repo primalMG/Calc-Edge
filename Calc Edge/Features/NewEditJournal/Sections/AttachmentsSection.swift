@@ -26,6 +26,12 @@ struct AttachmentsSection: View {
                 }
                 trade.attachments?.append(TradeAttachment(kind: ""))
             }
+            #if os(iOS)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.gray.gradient)
+            .foregroundStyle(.primary)
+            .padding(.top, 10)
+            #endif
         }
     }
 
@@ -60,7 +66,12 @@ private struct TradeAttachmentEditor: View {
                 Button("Remove Attachment") {
                     onRemove()
                 }
-                .tint(.red)
+                .buttonStyle(.plain)
+                .foregroundStyle(.red)
+                #if os(iOS)
+                .tint(Color.gray.gradient)
+                .buttonStyle(.borderedProminent)
+                #endif
             }
             .padding(.top, 8)
         }

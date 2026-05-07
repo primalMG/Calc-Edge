@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct InsightHighlightCard: View {
-    let highlight: TradeInsights.Highlight
+    let highlight: TradeInsightHighlight
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

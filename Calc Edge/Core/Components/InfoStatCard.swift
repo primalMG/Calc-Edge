@@ -39,7 +39,11 @@ struct InfoStatCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
+        #if os(iOS)
+        .background(.gray.secondary.opacity(0.5))
+        #else
         .background(.regularMaterial)
+        #endif
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

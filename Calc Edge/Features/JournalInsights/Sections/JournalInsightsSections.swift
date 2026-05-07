@@ -35,7 +35,7 @@ struct JournalInsightsEdgeMapSection: View {
         return categories.isEmpty ? ["All"] : ["All"] + categories
     }
 
-    private var selectedSegments: [TradeInsights.SegmentPerformance] {
+    private var selectedSegments: [TradeInsightSegmentPerformance] {
         if selectedCategory == "All" {
             return insights.edgeMapSegments
         }
@@ -53,6 +53,7 @@ struct JournalInsightsEdgeMapSection: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .tint(.primary)
                 }
 
                 if selectedSegments.isEmpty {
@@ -202,7 +203,7 @@ struct JournalInsightsDataQualitySection: View {
 struct JournalInsightsCountedItemsSection: View {
     let title: String
     let emptyText: String
-    let items: [TradeInsights.CountedItem]
+    let items: [TradeInsightCountedItem]
 
     var body: some View {
         InfoSection(title: title) {

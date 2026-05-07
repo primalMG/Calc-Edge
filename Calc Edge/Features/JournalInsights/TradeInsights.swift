@@ -1,45 +1,45 @@
 import Foundation
 
+enum TradeInsightHighlightTone {
+    case positive
+    case caution
+    case neutral
+}
+
+struct TradeInsightHighlight: Identifiable {
+    let id: String
+    let title: String
+    let value: String
+    let detail: String
+    let tone: TradeInsightHighlightTone
+}
+
+struct TradeInsightSegmentPerformance: Identifiable {
+    let id: String
+    let category: String
+    let label: String
+    let trades: Int
+    let wins: Int
+    let winRate: Double?
+    let expectancy: Double?
+    let averageWinner: Double?
+    let averageLoser: Double?
+    let profitFactor: Double?
+}
+
+struct TradeInsightCountedItem: Identifiable {
+    let id: String
+    let label: String
+    let count: Int
+    let percentage: Double?
+}
+
+struct TradeInsightReviewFocus {
+    let title: String
+    let detail: String
+}
+
 struct TradeInsights {
-    enum HighlightTone {
-        case positive
-        case caution
-        case neutral
-    }
-
-    struct Highlight: Identifiable {
-        let id: String
-        let title: String
-        let value: String
-        let detail: String
-        let tone: HighlightTone
-    }
-
-    struct SegmentPerformance: Identifiable {
-        let id: String
-        let category: String
-        let label: String
-        let trades: Int
-        let wins: Int
-        let winRate: Double?
-        let expectancy: Double?
-        let averageWinner: Double?
-        let averageLoser: Double?
-        let profitFactor: Double?
-    }
-
-    struct CountedItem: Identifiable {
-        let id: String
-        let label: String
-        let count: Int
-        let percentage: Double?
-    }
-
-    struct ReviewFocus {
-        let title: String
-        let detail: String
-    }
-
     let totalTrades: Int
     let closedTrades: Int
     let pricedTrades: Int
@@ -69,18 +69,18 @@ struct TradeInsights {
     let highConfidenceLosers: Int
     let lowConfidenceWinners: Int
 
-    let highlights: [Highlight]
-    let nextReviewFocus: ReviewFocus?
-    let bestSetup: SegmentPerformance?
-    let worstSetup: SegmentPerformance?
-    let edgeMapSegments: [SegmentPerformance]
-    let performanceByInstrument: [SegmentPerformance]
-    let performanceByDirection: [SegmentPerformance]
-    let performanceByAccount: [SegmentPerformance]
-    let strengths: [SegmentPerformance]
-    let weaknesses: [SegmentPerformance]
-    let topMistakes: [CountedItem]
-    let exitReasons: [CountedItem]
+    let highlights: [TradeInsightHighlight]
+    let nextReviewFocus: TradeInsightReviewFocus?
+    let bestSetup: TradeInsightSegmentPerformance?
+    let worstSetup: TradeInsightSegmentPerformance?
+    let edgeMapSegments: [TradeInsightSegmentPerformance]
+    let performanceByInstrument: [TradeInsightSegmentPerformance]
+    let performanceByDirection: [TradeInsightSegmentPerformance]
+    let performanceByAccount: [TradeInsightSegmentPerformance]
+    let strengths: [TradeInsightSegmentPerformance]
+    let weaknesses: [TradeInsightSegmentPerformance]
+    let topMistakes: [TradeInsightCountedItem]
+    let exitReasons: [TradeInsightCountedItem]
 
     let reviewCoverage: Double?
     let stopCoverage: Double?

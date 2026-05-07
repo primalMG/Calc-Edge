@@ -19,6 +19,11 @@ struct MarketContextSection: View {
                     trade.context = TradeContext()
                     #endif
                 }
+                #if os(iOS)
+                .buttonStyle(.borderedProminent)
+                .tint(Color.gray.gradient)
+                .foregroundStyle(.primary)
+                #endif
             }
         }
     }

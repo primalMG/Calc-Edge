@@ -25,7 +25,7 @@ struct RootView: View {
             .tabViewStyle(.sidebarAdaptable)
         #else
         iOSTabs
-            .tabViewStyle(.sidebarAdaptable)
+        
         #endif
     }
 

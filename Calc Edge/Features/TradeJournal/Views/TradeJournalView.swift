@@ -12,7 +12,7 @@ internal import UniformTypeIdentifiers
 
 struct TradeJournalView: View {
     @Query private var trades: [Trade]
-    @State private var selectedTradeID: Trade.ID?
+    @State private var selectedTradeIDs = Set<Trade.ID>()
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var filters = TradeJournalFilters()
     @State private var showFileImporter = false
@@ -161,8 +161,7 @@ struct TradeJournalView: View {
     }
 
     private var selectedTrade: Trade? {
-        guard let selectedTradeID else { return nil }
-        return trades.first(where: { $0.id == selectedTradeID })
+        visibleTrades.first(where: { selectedTradeIDs.contains($0.id) })
     }
 
     @ViewBuilder
@@ -197,9 +196,9 @@ struct TradeJournalView: View {
         #if os(macOS)
         TradeJournalTable(
             trades: visibleTrades,
-            selectedTradeID: $selectedTradeID,
+            selectedTradeIDs: $selectedTradeIDs,
             sortOrder: $sortOrder,
-            deleteTrade: delete
+            deleteTrades: delete
         )
         #else
         TradeJournalList(
@@ -212,10 +211,10 @@ struct TradeJournalView: View {
     #if os(macOS)
     private var inspectorIsPresented: Binding<Bool> {
         Binding(
-            get: { selectedTradeID != nil },
+            get: { !selectedTradeIDs.isEmpty },
             set: { isPresented in
                 if !isPresented {
-                    selectedTradeID = nil
+                    selectedTradeIDs.removeAll()
                 }
             }
         )
@@ -258,12 +257,18 @@ struct TradeJournalView: View {
             return
         }
 
-        if selectedTradeID == tradeId {
-            selectedTradeID = nil
-        }
+        selectedTradeIDs.remove(tradeId)
 
         modelContext.delete(trade)
     }
+
+    #if os(macOS)
+    private func delete(tradeIds: Set<Trade.ID>) {
+        for tradeId in tradeIds {
+            delete(tradeId: tradeId)
+        }
+    }
+    #endif
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
@@ -275,12 +280,16 @@ struct TradeJournalView: View {
 
     #if os(macOS)
     private func keepSelectionInSync() {
-        if let selectedTradeID,
-           visibleTrades.contains(where: { $0.id == selectedTradeID }) {
+        let visibleTradeIDs = Set(visibleTrades.map(\.id))
+        selectedTradeIDs.formIntersection(visibleTradeIDs)
+
+        if !selectedTradeIDs.isEmpty {
             return
         }
 
-        selectedTradeID = visibleTrades.first?.id
+        if let firstVisibleTradeID = visibleTrades.first?.id {
+            selectedTradeIDs = [firstVisibleTradeID]
+        }
     }
     #endif
 

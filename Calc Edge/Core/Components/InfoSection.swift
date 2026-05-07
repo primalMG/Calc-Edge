@@ -21,7 +21,11 @@ struct InfoSection<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
+        #if os(iOS)
+        .background(.gray.tertiary.opacity(0.8))
+        #else
         .background(.thinMaterial)
+        #endif
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

@@ -19,6 +19,11 @@ struct ReviewSection: View {
                     trade.review = TradeReview()
                     #endif
                 }
+                #if os(iOS)
+                .buttonStyle(.borderedProminent)
+                .tint(Color.gray.gradient)
+                .foregroundStyle(.primary)
+                #endif
             }
         }
     }

@@ -10,12 +10,12 @@ import SwiftUI
 
 struct TradeJournalTable: View {
     let trades: [Trade]
-    @Binding var selectedTradeID: Trade.ID?
+    @Binding var selectedTradeIDs: Set<Trade.ID>
     @Binding var sortOrder: [KeyPathComparator<Trade>]
-    let deleteTrade: (Trade.ID) -> Void
+    let deleteTrades: (Set<Trade.ID>) -> Void
 
     var body: some View {
-        Table(trades, selection: $selectedTradeID, sortOrder: $sortOrder) {
+        Table(trades, selection: $selectedTradeIDs, sortOrder: $sortOrder) {
             TableColumn("Opened At") { trade in
                 Text(TradeJournalFormatting.date(trade.openedAt))
             }
@@ -53,9 +53,9 @@ struct TradeJournalTable: View {
             }
         }
         .contextMenu(forSelectionType: Trade.ID.self) { items in
-            if let tradeID = items.first {
-                Button("Delete Trade", role: .destructive) {
-                    deleteTrade(tradeID)
+            if !items.isEmpty {
+                Button(items.count == 1 ? "Delete Trade" : "Delete \(items.count) Trades", role: .destructive) {
+                    deleteTrades(items)
                 }
             }
         }

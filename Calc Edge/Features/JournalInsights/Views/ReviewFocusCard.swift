@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ReviewFocusCard: View {
-    let focus: TradeInsights.ReviewFocus
+    let focus: TradeInsightReviewFocus
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {

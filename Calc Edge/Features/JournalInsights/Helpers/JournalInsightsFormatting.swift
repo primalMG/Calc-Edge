@@ -36,7 +36,7 @@ enum JournalInsightsFormatting {
         return formatter.string(from: value) ?? "N/A"
     }
 
-    static func segmentDetail(_ segment: TradeInsights.SegmentPerformance) -> String {
+    static func segmentDetail(_ segment: TradeInsightSegmentPerformance) -> String {
         var parts = ["\(segment.trades) trades"]
 
         if segment.winRate != nil {
