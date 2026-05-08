@@ -30,22 +30,17 @@ struct NotesView: View {
             NotesEmptyStateView(createNote: createNote)
         } else {
             #if os(macOS)
-            NavigationSplitView {
+            HSplitView {
                 NotesListView(
                     notes: notes,
                     selectedNoteID: $selectedNoteID,
                     deleteItems: deleteItems,
                     deleteNote: delete
                 )
-                .navigationTitle("Notes")
-            } detail: {
-                if let selectedNote {
-                    NoteEditorView(note: selectedNote) {
-                        delete(selectedNote)
-                    }
-                } else {
-                    ContentUnavailableView("Select a Note", systemImage: "note.text")
-                }
+                .frame(minWidth: 260, idealWidth: 320, maxWidth: 420)
+
+                noteDetail
+                    .frame(minWidth: 420)
             }
             #else
             NotesListView(
@@ -55,6 +50,17 @@ struct NotesView: View {
                 deleteNote: delete
             )
             #endif
+        }
+    }
+
+    @ViewBuilder
+    private var noteDetail: some View {
+        if let selectedNote {
+            NoteEditorView(note: selectedNote) {
+                delete(selectedNote)
+            }
+        } else {
+            ContentUnavailableView("Select a Note", systemImage: "note.text")
         }
     }
 
