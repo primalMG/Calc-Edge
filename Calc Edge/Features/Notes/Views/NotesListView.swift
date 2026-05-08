@@ -34,7 +34,7 @@ struct NotesListView: View {
             NoteEditorView(note: note) {
                 deleteNote(note)
             }
-            .presentationDetents([.fraction(0.25), .fraction(0.3)])
+            .presentationDetents([.fraction(0.26), .fraction(0.5)])
         }
         #endif
     }

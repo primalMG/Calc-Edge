@@ -76,6 +76,7 @@ struct RootView: View {
                     }
             }
         }
+        .tint(.primary)
     }
 
     private func rootTab(_ tab: RootTab) -> some View {
