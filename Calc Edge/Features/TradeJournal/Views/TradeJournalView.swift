@@ -196,9 +196,7 @@ struct TradeJournalView: View {
 
             tradeDetail
                 .frame(minWidth: 320, idealWidth: 420, maxWidth: 960)
-                .frame(maxHeight: .infinity)
         }
-        .frame(maxHeight: .infinity)
         #else
         TradeJournalList(
             trades: visibleTrades,
@@ -210,13 +208,14 @@ struct TradeJournalView: View {
     #if os(macOS)
     @ViewBuilder
     private var tradeDetail: some View {
-        if let selectedTrade {
-            TradeJournalDetailView(trade: selectedTrade)
-                .frame(maxHeight: .infinity)
-        } else {
-            ContentUnavailableView("Select a Trade", systemImage: "book")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ZStack {
+            if let selectedTrade {
+                TradeJournalDetailView(trade: selectedTrade)
+            } else {
+                ContentUnavailableView("Select a Trade", systemImage: "book")
+            }
         }
+        .frame(maxHeight: .infinity)
     }
     #endif
 
