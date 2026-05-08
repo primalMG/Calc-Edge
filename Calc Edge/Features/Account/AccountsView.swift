@@ -9,8 +9,19 @@ import SwiftUI
 import SwiftData
 
 struct AccountsView: View {
+    var showsCloseButton = true
+
+    var body: some View {
+        NavigationStack {
+            AccountsContent(showsCloseButton: showsCloseButton)
+        }
+    }
+}
+
+struct AccountsContent: View {
     @Query private var accounts: [Account]
     @Environment(\.dismiss) private var dismiss
+    let showsCloseButton: Bool
 
     @State private var presentSheet = false
     @State private var isNew = true
@@ -25,13 +36,13 @@ struct AccountsView: View {
     )
 
     var body: some View {
-        NavigationStack {
-            AccountsList(
-                accounts: accounts,
-                onEdit: presentEditAccountSheet,
-                onDelete: handleAccountDeleted
-            )
-            .toolbar {
+        AccountsList(
+            accounts: accounts,
+            onEdit: presentEditAccountSheet,
+            onDelete: handleAccountDeleted
+        )
+        .toolbar {
+            if showsCloseButton {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(role: .cancel) {
                         dismiss()
@@ -39,25 +50,25 @@ struct AccountsView: View {
                         Label("Close", systemImage: "xmark.circle.fill")
                     }
                 }
-                
-                ToolbarItem(placement: .automatic) {
-                    Button(action: presentNewAccountSheet) {
-                        Label("New Account", systemImage: "plus")
-                    }
-                    .help("New Account")
+            }
+
+            ToolbarItem(placement: .automatic) {
+                Button(action: presentNewAccountSheet) {
+                    Label("New Account", systemImage: "plus")
                 }
+                .help("New Account")
             }
-            .sheet(isPresented: $presentSheet) {
-                NewEditAccountSheet(
-                    account: selectedAccount,
-                    isNew: isNew,
-                    onSaved: handleSaveOutcome
-                )
-                    .presentationDetents([.fraction(0.3)])
-            }
-            .toast($toast)
-            .navigationTitle("Accounts")
         }
+        .sheet(isPresented: $presentSheet) {
+            NewEditAccountSheet(
+                account: selectedAccount,
+                isNew: isNew,
+                onSaved: handleSaveOutcome
+            )
+                .presentationDetents([.fraction(0.3)])
+        }
+        .toast($toast)
+        .navigationTitle("Accounts")
     }
 
     private func presentNewAccountSheet() {

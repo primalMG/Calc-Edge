@@ -8,14 +8,10 @@
 import SwiftUI
 
 struct RootView: View {
-    @State private var presentAccounts = false
     @State private var selectedStock = Stock.emptyDraft
     
     var body: some View {
         rootTabs
-            .sheet(isPresented: $presentAccounts) {
-                AccountsView()
-            }
     }
 
     @ViewBuilder
@@ -60,8 +56,14 @@ struct RootView: View {
                 }
             }
 
-            Tab(RootTab.suggestions.title, systemImage: RootTab.suggestions.systemImage) {
-                rootTab(.suggestions)
+            TabSection("Manage") {
+                Tab(RootTab.accounts.title, systemImage: RootTab.accounts.systemImage) {
+                    rootTab(.accounts)
+                }
+
+                Tab(RootTab.suggestions.title, systemImage: RootTab.suggestions.systemImage) {
+                    rootTab(.suggestions)
+                }
             }
         }
     }
@@ -82,13 +84,8 @@ struct RootView: View {
     private func rootTab(_ tab: RootTab) -> some View {
         RootTabScene(
             tab: tab,
-            selectedStock: $selectedStock,
-            presentAccounts: showAccounts
+            selectedStock: $selectedStock
         )
-    }
-
-    private func showAccounts() {
-        presentAccounts = true
     }
 }
 

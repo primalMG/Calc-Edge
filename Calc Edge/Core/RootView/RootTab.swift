@@ -8,15 +8,17 @@ enum RootTab: String, Identifiable {
     case stockCalc
     case forexCalc
     case notes
+    case accounts
     case suggestions
+    case more
 
     var id: String { rawValue }
 
     static var availableTabs: [RootTab] {
         #if os(macOS)
-        [.dashboard, .journal, .insights, .notes, .stockCalc, .forexCalc, .suggestions]
+        [.dashboard, .journal, .insights, .notes, .stockCalc, .forexCalc, .accounts, .suggestions]
         #else
-        [.journal, .insights, .calculators, .notes, .suggestions]
+        [.journal, .insights, .calculators, .notes, .more]
         #endif
     }
 
@@ -36,8 +38,12 @@ enum RootTab: String, Identifiable {
             "Forex Calc"
         case .notes:
             "Notes"
+        case .accounts:
+            "Accounts"
         case .suggestions:
             "Suggestions"
+        case .more:
+            "More"
         }
     }
 
@@ -57,8 +63,12 @@ enum RootTab: String, Identifiable {
             "dollarsign.circle"
         case .notes:
             "note.text"
+        case .accounts:
+            "person.crop.circle"
         case .suggestions:
             "text.badge.star"
+        case .more:
+            "ellipsis.circle"
         }
     }
 }

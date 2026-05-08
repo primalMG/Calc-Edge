@@ -3,14 +3,10 @@ import SwiftUI
 struct RootTabScene: View {
     let tab: RootTab
     @Binding var selectedStock: Stock
-    let presentAccounts: () -> Void
 
     var body: some View {
         NavigationStack {
             content
-                .toolbar {
-                    AccountToolbarButton(action: presentAccounts)
-                }
         }
     }
 
@@ -31,8 +27,12 @@ struct RootTabScene: View {
             ForexCalcView()
         case .notes:
             NotesView()
+        case .accounts:
+            AccountsContent(showsCloseButton: false)
         case .suggestions:
             SuggestionsView()
+        case .more:
+            MoreView()
         }
     }
 }

@@ -46,15 +46,6 @@ struct TradeJournalView: View {
                 toolbarItems
             }
             #if os(macOS)
-            .inspector(isPresented: inspectorIsPresented) {
-                if let selectedTrade {
-                    TradeJournalDetailView(trade: selectedTrade)
-                        .inspectorColumnWidth(min: 420, ideal: 520, max: 760)
-                } else {
-                    ContentUnavailableView("Select a Trade", systemImage: "book")
-                        .inspectorColumnWidth(min: 420, ideal: 520, max: 760)
-                }
-            }
             .task(id: selectionSyncToken) {
                 keepSelectionInSync()
             }
@@ -194,12 +185,20 @@ struct TradeJournalView: View {
     @ViewBuilder
     private var platformJournalContent: some View {
         #if os(macOS)
-        TradeJournalTable(
-            trades: visibleTrades,
-            selectedTradeIDs: $selectedTradeIDs,
-            sortOrder: $sortOrder,
-            deleteTrades: delete
-        )
+        HSplitView {
+            TradeJournalTable(
+                trades: visibleTrades,
+                selectedTradeIDs: $selectedTradeIDs,
+                sortOrder: $sortOrder,
+                deleteTrades: delete
+            )
+            .frame(minWidth: 720)
+
+            tradeDetail
+                .frame(minWidth: 320, idealWidth: 420, maxWidth: 960)
+                .frame(maxHeight: .infinity)
+        }
+        .frame(maxHeight: .infinity)
         #else
         TradeJournalList(
             trades: visibleTrades,
@@ -209,15 +208,15 @@ struct TradeJournalView: View {
     }
 
     #if os(macOS)
-    private var inspectorIsPresented: Binding<Bool> {
-        Binding(
-            get: { !selectedTradeIDs.isEmpty },
-            set: { isPresented in
-                if !isPresented {
-                    selectedTradeIDs.removeAll()
-                }
-            }
-        )
+    @ViewBuilder
+    private var tradeDetail: some View {
+        if let selectedTrade {
+            TradeJournalDetailView(trade: selectedTrade)
+                .frame(maxHeight: .infinity)
+        } else {
+            ContentUnavailableView("Select a Trade", systemImage: "book")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
     }
     #endif
 
