@@ -1,7 +1,6 @@
 import Foundation
 
 enum RootTab: String, Identifiable {
-    case dashboard
     case journal
     case insights
     case calculators
@@ -16,7 +15,7 @@ enum RootTab: String, Identifiable {
 
     static var availableTabs: [RootTab] {
         #if os(macOS)
-        [.dashboard, .journal, .insights, .notes, .stockCalc, .forexCalc, .accounts, .suggestions]
+        [.journal, .insights, .notes, .stockCalc, .forexCalc, .accounts, .suggestions]
         #else
         [.journal, .insights, .calculators, .notes, .more]
         #endif
@@ -24,8 +23,6 @@ enum RootTab: String, Identifiable {
 
     var title: String {
         switch self {
-        case .dashboard:
-            "Dashboard"
         case .journal:
             "Journal"
         case .insights:
@@ -49,8 +46,6 @@ enum RootTab: String, Identifiable {
 
     var systemImage: String {
         switch self {
-        case .dashboard:
-            "house"
         case .journal:
             "book"
         case .insights:

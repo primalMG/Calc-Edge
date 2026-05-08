@@ -28,10 +28,6 @@ struct RootView: View {
     #if os(macOS)
     private var macOSTabs: some View {
         TabView {
-            Tab(RootTab.dashboard.title, systemImage: RootTab.dashboard.systemImage) {
-                rootTab(.dashboard)
-            }
-
             TabSection("Journals") {
                 Tab(RootTab.journal.title, systemImage: RootTab.journal.systemImage) {
                     rootTab(.journal)

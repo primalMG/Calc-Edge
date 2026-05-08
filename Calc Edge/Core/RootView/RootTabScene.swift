@@ -13,8 +13,6 @@ struct RootTabScene: View {
     @ViewBuilder
     private var content: some View {
         switch tab {
-        case .dashboard:
-            DashboardView()
         case .journal:
             TradeJournalView()
         case .insights:

@@ -41,7 +41,7 @@ struct TradeJournalView: View {
     var body: some View {
         journalContent
             .navigationTitle("Trade Journal")
-            .searchable(text: $filters.tickerQuery, placement: .automatic)
+            .searchable(text: $filters.tickerQuery, placement: .toolbarPrincipal)
             .toolbar {
                 toolbarItems
             }
