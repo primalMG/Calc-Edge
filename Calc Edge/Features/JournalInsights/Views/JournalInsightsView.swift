@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct JournalInsightsView: View {
-    @State private var trades: [Trade] = []
+    @Query private var trades: [Trade]
 
     private let usesMockInsights = false
 

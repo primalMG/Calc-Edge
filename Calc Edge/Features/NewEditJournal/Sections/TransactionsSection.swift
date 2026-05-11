@@ -333,6 +333,7 @@ private struct TradeTransactionEditorSheet: View {
             }
         }
         #if os(macOS)
+        .padding()
         .frame(minWidth: 420, minHeight: 360)
         #endif
     }
