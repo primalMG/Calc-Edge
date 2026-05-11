@@ -81,6 +81,7 @@ struct IdentificationSection: View {
                         JournalField("Closed Trade") {
                             Toggle("", isOn: closedTradeBinding)
                                 .labelsHidden()
+                                .tint(.green)
                         }
                     }
                 }

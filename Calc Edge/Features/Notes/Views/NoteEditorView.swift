@@ -8,6 +8,9 @@ struct NoteEditorView: View {
     @Bindable var note: Note
     let deleteNote: (() -> Void)?
 
+    @State private var bodyText = AttributedString()
+    @State private var bodySelection = AttributedTextSelection()
+
     @ViewBuilder
     var body: some View {
         #if os(iOS)
@@ -32,17 +35,24 @@ struct NoteEditorView: View {
 
             Divider()
 
-            TextEditor(text: bodyBinding)
+            TextEditor(text: bodyTextBinding, selection: $bodySelection)
                 .padding(.vertical, 4)
                 .padding(.horizontal, 8)
-                .background(.gray.secondary.opacity(0.5))
-                .clipShape(RoundedRectangle(cornerRadius: 25))
                 .font(.body)
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
         }
         .navigationTitle(NoteFormatting.title(for: note))
+        .onAppear(perform: loadBodyText)
+        .onChange(of: note.noteId) { _, _ in
+            loadBodyText()
+        }
+        .onChange(of: note.body) { _, newValue in
+            guard bodyText.plainText != newValue else { return }
+            bodyText = NoteLinkFormatter.attributedString(from: newValue)
+            bodySelection = AttributedTextSelection()
+        }
         .toolbar {
             if deleteNote != nil {
                 ToolbarItem(placement: .destructiveAction) {
@@ -53,12 +63,13 @@ struct NoteEditorView: View {
                     .tint(.red)
                 }
 
+                #if os(iOS)
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         dismiss()
                     }
-                    .help("Close Note Editor")
                 }
+                #endif
             }
         }
     }
@@ -74,15 +85,24 @@ struct NoteEditorView: View {
         )
     }
 
-    private var bodyBinding: Binding<String> {
+    private var bodyTextBinding: Binding<AttributedString> {
         Binding(
-            get: { note.body },
+            get: { bodyText },
             set: { newValue in
-                guard note.body != newValue else { return }
-                note.body = newValue
+                let linkedText = NoteLinkFormatter.attributedString(from: newValue)
+                bodyText = linkedText
+
+                let plainText = linkedText.plainText
+                guard note.body != plainText else { return }
+                note.body = plainText
                 touchNote()
             }
         )
+    }
+
+    private func loadBodyText() {
+        bodyText = NoteLinkFormatter.attributedString(from: note.body)
+        bodySelection = AttributedTextSelection()
     }
 
     private func touchNote() {
@@ -91,6 +111,49 @@ struct NoteEditorView: View {
 
     private func delete() {
         deleteNote?()
+        #if os(iOS)
         dismiss()
+        #endif
+    }
+}
+
+private enum NoteLinkFormatter {
+    private static let urlPattern = #/((?:https?:\/\/|www\.)[^\s<>()"]+[^\s<>().,!?;:'"])/#
+
+    static func attributedString(from plainText: String) -> AttributedString {
+        attributedString(from: AttributedString(plainText))
+    }
+
+    static func attributedString(from source: AttributedString) -> AttributedString {
+        let plainText = source.plainText
+        var linkedText = source
+        linkedText.link = nil
+
+        for match in plainText.matches(of: urlPattern) {
+            let matchedText = String(match.output.1)
+            guard let url = url(from: matchedText),
+                  let lowerBound = AttributedString.Index(match.range.lowerBound, within: linkedText),
+                  let upperBound = AttributedString.Index(match.range.upperBound, within: linkedText) else {
+                continue
+            }
+
+            linkedText[lowerBound..<upperBound].link = url
+        }
+
+        return linkedText
+    }
+
+    private static func url(from matchedText: String) -> URL? {
+        if matchedText.hasPrefix("www.") {
+            return URL(string: "https://\(matchedText)")
+        }
+
+        return URL(string: matchedText)
+    }
+}
+
+private extension AttributedString {
+    var plainText: String {
+        String(characters)
     }
 }

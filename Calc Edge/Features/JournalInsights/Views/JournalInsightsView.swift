@@ -11,7 +11,7 @@ import SwiftData
 struct JournalInsightsView: View {
     @State private var trades: [Trade] = []
 
-    private let usesMockInsights = true
+    private let usesMockInsights = false
 
     @State private var selectedTimeRange: InsightTimeRange = .all
     @State private var selectedEdgeCategory = "All"
