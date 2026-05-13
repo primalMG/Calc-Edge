@@ -3,10 +3,13 @@ import Foundation
 enum RootTab: String, Identifiable {
     case journal
     case insights
+    case reviewCalendar
     case calculators
     case stockCalc
     case forexCalc
     case notes
+    case rulebook
+    case playbook
     case accounts
     case suggestions
     case more
@@ -15,7 +18,7 @@ enum RootTab: String, Identifiable {
 
     static var availableTabs: [RootTab] {
         #if os(macOS)
-        [.journal, .insights, .notes, .stockCalc, .forexCalc, .accounts, .suggestions]
+        [.journal, .insights, .reviewCalendar, .notes, .rulebook, .playbook, .stockCalc, .forexCalc, .accounts, .suggestions]
         #else
         [.journal, .insights, .calculators, .notes, .more]
         #endif
@@ -27,6 +30,8 @@ enum RootTab: String, Identifiable {
             "Journal"
         case .insights:
             "Insights"
+        case .reviewCalendar:
+            "Review"
         case .calculators:
             "Calculators"
         case .stockCalc:
@@ -35,6 +40,10 @@ enum RootTab: String, Identifiable {
             "Forex Calc"
         case .notes:
             "Notes"
+        case .rulebook:
+            "Rulebook"
+        case .playbook:
+            "Playbook"
         case .accounts:
             "Accounts"
         case .suggestions:
@@ -50,6 +59,8 @@ enum RootTab: String, Identifiable {
             "book"
         case .insights:
             "sparkles"
+        case .reviewCalendar:
+            "calendar"
         case .calculators:
             "plus.forwardslash.minus"
         case .stockCalc:
@@ -58,6 +69,10 @@ enum RootTab: String, Identifiable {
             "dollarsign.circle"
         case .notes:
             "note.text"
+        case .rulebook:
+            "checklist.checked"
+        case .playbook:
+            "rectangle.stack"
         case .accounts:
             "person.crop.circle"
         case .suggestions:

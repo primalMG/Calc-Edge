@@ -17,6 +17,8 @@ struct RootTabScene: View {
             TradeJournalView()
         case .insights:
             JournalInsightsView()
+        case .reviewCalendar:
+            TradingReviewCalendarView()
         case .calculators:
             RootSidebarView()
         case .stockCalc:
@@ -25,6 +27,10 @@ struct RootTabScene: View {
             ForexCalcView()
         case .notes:
             NotesView()
+        case .rulebook:
+            RulebookContent()
+        case .playbook:
+            SetupPlaybookContent()
         case .accounts:
             AccountsContent(showsCloseButton: false)
         case .suggestions:

@@ -16,6 +16,7 @@ final class TradeReview {
     var oneImprovement: String?
     var ruleCreatedOrUpdated: String?
     var trade: Trade?
+    @Relationship(deleteRule: .cascade, inverse: \TradeRuleCheck.review) var ruleChecks: [TradeRuleCheck]? = []
 
     init(
         followedPlan: Bool = true,

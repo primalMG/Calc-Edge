@@ -7,6 +7,10 @@ enum JournalInsightsFormatting {
         return value.formatted(.percent.precision(.fractionLength(0)))
     }
 
+    static func percentage(_ value: Double?) -> String {
+        percent(value)
+    }
+
     static func rMultiple(_ value: Double?) -> String {
         guard let value else { return "N/A" }
         return String(format: "%.2fR", value)
