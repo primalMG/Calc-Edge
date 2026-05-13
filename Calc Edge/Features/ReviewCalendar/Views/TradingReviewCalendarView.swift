@@ -6,6 +6,7 @@ struct TradingReviewCalendarView: View {
     @Query(sort: \Trade.openedAt, order: .reverse) private var trades: [Trade]
 
     @State private var visibleMonth = Date.now
+    @State private var calendarMode: ReviewCalendarDateMode = .reviewDate
     @State private var selectedDay: ReviewCalendarDaySummary?
     @State private var toast: ToastConfiguration?
 
@@ -17,7 +18,7 @@ struct TradingReviewCalendarView: View {
     #endif
 
     private var days: [ReviewCalendarDaySummary] {
-        ReviewCalendarSummaryBuilder.monthDays(containing: visibleMonth, trades: trades)
+        ReviewCalendarSummaryBuilder.monthDays(containing: visibleMonth, trades: trades, mode: calendarMode)
     }
 
     private var selectedSummary: ReviewCalendarDaySummary {
@@ -39,6 +40,10 @@ struct TradingReviewCalendarView: View {
         }
         .onChange(of: visibleMonth) { _, _ in
             selectedDay = days.first(where: { !$0.trades.isEmpty })
+        }
+        .onChange(of: calendarMode) { _, _ in
+            selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: selectedSummary.date) })
+                ?? days.first(where: { !$0.trades.isEmpty })
         }
         .toolbar {
             #if DEBUG
@@ -85,6 +90,15 @@ struct TradingReviewCalendarView: View {
             }
 
             Spacer()
+
+            Picker("Calendar Mode", selection: $calendarMode) {
+                ForEach(ReviewCalendarDateMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .frame(maxWidth: 260)
+            .help("Calendar Mode")
 
             Button("Today") {
                 visibleMonth = Date.now
@@ -145,7 +159,7 @@ struct TradingReviewCalendarView: View {
                 }
 
                 if summary.trades.isEmpty {
-                    Text("No trades logged for this day.")
+                    Text(emptyMessage)
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(summary.trades.sorted { calendarDate(for: $0) > calendarDate(for: $1) }) { trade in
@@ -155,9 +169,19 @@ struct TradingReviewCalendarView: View {
                             ReviewCalendarTradeRow(trade: trade)
                         }
                         .buttonStyle(.plain)
+                        .contentShape(Rectangle())
                     }
                 }
             }
+        }
+    }
+
+    private var emptyMessage: String {
+        switch calendarMode {
+        case .reviewDate:
+            return "No trades to review for this day."
+        case .openedDate:
+            return "No trades opened on this day."
         }
     }
 
@@ -168,7 +192,7 @@ struct TradingReviewCalendarView: View {
     }
 
     private func calendarDate(for trade: Trade) -> Date {
-        ReviewCalendarSummaryBuilder.calendarDate(for: trade)
+        ReviewCalendarSummaryBuilder.calendarDate(for: trade, mode: calendarMode)
     }
 
     #if DEBUG
@@ -369,14 +393,23 @@ private struct ReviewCalendarTradeRow: View {
     let trade: Trade
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            TradeJournalRow(trade: trade)
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                TradeJournalRow(trade: trade)
 
-            if trade.closedAt != nil {
-                Label("Opened \(TradeJournalFormatting.date(trade.openedAt))", systemImage: "calendar.badge.clock")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if trade.closedAt != nil {
+                    Label("Opened \(TradeJournalFormatting.date(trade.openedAt))", systemImage: "calendar.badge.clock")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.tertiary)
         }
         .padding(.vertical, 2)
     }

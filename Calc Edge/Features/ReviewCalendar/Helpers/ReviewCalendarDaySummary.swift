@@ -1,5 +1,21 @@
 import Foundation
 
+enum ReviewCalendarDateMode: String, CaseIterable, Identifiable {
+    case reviewDate
+    case openedDate
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .reviewDate:
+            return "Review Date"
+        case .openedDate:
+            return "Opened Date"
+        }
+    }
+}
+
 struct ReviewCalendarDaySummary: Identifiable {
     let date: Date
     let trades: [Trade]
@@ -42,7 +58,7 @@ struct ReviewCalendarDaySummary: Identifiable {
 }
 
 enum ReviewCalendarSummaryBuilder {
-    static func monthDays(containing date: Date, trades: [Trade]) -> [ReviewCalendarDaySummary] {
+    static func monthDays(containing date: Date, trades: [Trade], mode: ReviewCalendarDateMode) -> [ReviewCalendarDaySummary] {
         let calendar = Calendar.current
         guard let monthInterval = calendar.dateInterval(of: .month, for: date),
               let visibleStart = calendar.dateInterval(of: .weekOfYear, for: monthInterval.start)?.start,
@@ -52,7 +68,7 @@ enum ReviewCalendarSummaryBuilder {
         }
 
         let groupedTrades = Dictionary(grouping: trades) { trade in
-            calendar.startOfDay(for: calendarDate(for: trade))
+            calendar.startOfDay(for: calendarDate(for: trade, mode: mode))
         }
 
         var days: [ReviewCalendarDaySummary] = []
@@ -71,7 +87,12 @@ enum ReviewCalendarSummaryBuilder {
         return days
     }
 
-    static func calendarDate(for trade: Trade) -> Date {
-        trade.closedAt ?? trade.openedAt
+    static func calendarDate(for trade: Trade, mode: ReviewCalendarDateMode) -> Date {
+        switch mode {
+        case .reviewDate:
+            return trade.closedAt ?? trade.openedAt
+        case .openedDate:
+            return trade.openedAt
+        }
     }
 }
