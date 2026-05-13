@@ -215,7 +215,7 @@ struct TradeJournalView: View {
                 ContentUnavailableView("Select a Trade", systemImage: "book")
             }
         }
-        .frame(maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     #endif
 
