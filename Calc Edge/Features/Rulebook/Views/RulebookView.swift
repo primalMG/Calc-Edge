@@ -27,6 +27,7 @@ struct RulebookContent: View {
                 }
             }
             .toast($toast)
+<<<<<<< HEAD
             .navigationDestination(for: RulebookRoute.self) { route in
                 switch route {
                 case .rule(let ruleID):
@@ -37,6 +38,8 @@ struct RulebookContent: View {
                     }
                 }
             }
+=======
+>>>>>>> first-branch
     }
 
     @ViewBuilder
@@ -53,6 +56,7 @@ struct RulebookContent: View {
                     NavigationLink {
                         RuleDetailView(rule: rule)
                     } label: {
+<<<<<<< HEAD
                         RuleRow(rule: rule) {
                             deleteRule(rule)
                         }
@@ -61,6 +65,12 @@ struct RulebookContent: View {
                 #if os(iOS)
                 .onDelete(perform: deleteRules)
                 #endif
+=======
+                        RuleRow(rule: rule)
+                    }
+                }
+                .onDelete(perform: deleteRules)
+>>>>>>> first-branch
             }
         }
     }
@@ -73,6 +83,7 @@ struct RulebookContent: View {
 
     private func deleteRules(at offsets: IndexSet) {
         for index in offsets {
+<<<<<<< HEAD
             deleteRule(rules[index])
         }
     }
@@ -88,10 +99,16 @@ struct RulebookContent: View {
 
 private enum RulebookRoute: Hashable {
     case rule(UUID)
+=======
+            modelContext.delete(rules[index])
+        }
+    }
+>>>>>>> first-branch
 }
 
 private struct RuleRow: View {
     let rule: TradingRule
+<<<<<<< HEAD
     let onDelete: () -> Void
 
     var body: some View {
@@ -130,6 +147,34 @@ private struct RuleRow: View {
             .buttonStyle(.borderless)
             .help("Delete Rule")
             #endif
+=======
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(rule.title.isEmpty ? "Untitled Rule" : rule.title)
+                    .font(.headline)
+
+                Spacer()
+
+                if !rule.isActive {
+                    Text("Paused")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text(rule.category.isEmpty ? "Uncategorised" : rule.category)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if let prompt = rule.checklistPrompt, !prompt.isEmpty {
+                Text(prompt)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+>>>>>>> first-branch
         }
         .padding(.vertical, 4)
     }
@@ -142,22 +187,35 @@ private struct RuleDetailView: View {
 
     var body: some View {
         Form {
+<<<<<<< HEAD
             RulebookFormSection("Rule") {
+=======
+            Section("Rule") {
+>>>>>>> first-branch
                 TextField("Title", text: $rule.title)
                 TextField("Category", text: $rule.category)
                 Toggle("Active", isOn: $rule.isActive)
             }
 
+<<<<<<< HEAD
             RulebookFormSection("Checklist") {
+=======
+            Section("Checklist") {
+>>>>>>> first-branch
                 TextField("Prompt shown during trade review", text: optionalTextBinding($rule.checklistPrompt), axis: .vertical)
                     .lineLimit(2...4)
             }
 
+<<<<<<< HEAD
             RulebookFormSection("Description") {
+=======
+            Section("Description") {
+>>>>>>> first-branch
                 TextField("Why this rule matters", text: optionalTextBinding($rule.ruleDescription), axis: .vertical)
                     .lineLimit(3...8)
             }
 
+<<<<<<< HEAD
             RulebookFormSection("Performance") {
                 RulePerformanceSummary(rule: rule, trades: trades)
             }
@@ -166,6 +224,18 @@ private struct RuleDetailView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(rule.title.isEmpty ? "Rule" : rule.title)
         .onTradingRuleChange(rule, perform: markUpdated)
+=======
+            Section("Performance") {
+                RulePerformanceSummary(rule: rule, trades: trades)
+            }
+        }
+        .navigationTitle(rule.title.isEmpty ? "Rule" : rule.title)
+        .onChange(of: rule.title) { _, _ in markUpdated() }
+        .onChange(of: rule.category) { _, _ in markUpdated() }
+        .onChange(of: rule.ruleDescription) { _, _ in markUpdated() }
+        .onChange(of: rule.checklistPrompt) { _, _ in markUpdated() }
+        .onChange(of: rule.isActive) { _, _ in markUpdated() }
+>>>>>>> first-branch
     }
 
     private func markUpdated() {
@@ -174,6 +244,7 @@ private struct RuleDetailView: View {
     }
 }
 
+<<<<<<< HEAD
 private struct RulebookFormSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
@@ -206,6 +277,8 @@ private extension View {
     }
 }
 
+=======
+>>>>>>> first-branch
 private struct RulePerformanceSummary: View {
     let rule: TradingRule
     let trades: [Trade]

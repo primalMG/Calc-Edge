@@ -27,6 +27,7 @@ struct SetupPlaybookContent: View {
                 }
             }
             .toast($toast)
+<<<<<<< HEAD
             .navigationDestination(for: SetupPlaybookRoute.self) { route in
                 switch route {
                 case .setup(let setupID):
@@ -37,6 +38,8 @@ struct SetupPlaybookContent: View {
                     }
                 }
             }
+=======
+>>>>>>> first-branch
     }
 
     @ViewBuilder
@@ -53,6 +56,7 @@ struct SetupPlaybookContent: View {
                     NavigationLink {
                         SetupDetailView(setup: setup)
                     } label: {
+<<<<<<< HEAD
                         SetupRow(setup: setup){
                             deleteSetup(setup)
                         }
@@ -61,6 +65,12 @@ struct SetupPlaybookContent: View {
                 #if os(iOS)
                 .onDelete(perform: deleteSetups)
                 #endif
+=======
+                        SetupRow(setup: setup)
+                    }
+                }
+                .onDelete(perform: deleteSetups)
+>>>>>>> first-branch
             }
         }
     }
@@ -73,6 +83,7 @@ struct SetupPlaybookContent: View {
 
     private func deleteSetups(at offsets: IndexSet) {
         for index in offsets {
+<<<<<<< HEAD
             deleteSetup(setups[index])
         }
     }
@@ -88,10 +99,16 @@ struct SetupPlaybookContent: View {
 
 private enum SetupPlaybookRoute: Hashable {
     case setup(UUID)
+=======
+            modelContext.delete(setups[index])
+        }
+    }
+>>>>>>> first-branch
 }
 
 private struct SetupRow: View {
     let setup: TradingSetup
+<<<<<<< HEAD
     let onDelete: () -> Void
 
     var body: some View {
@@ -131,6 +148,35 @@ private struct SetupRow: View {
             .buttonStyle(.borderless)
             .help("Delete Setup")
             #endif
+=======
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(setup.name.isEmpty ? "Untitled Setup" : setup.name)
+                    .font(.headline)
+
+                Spacer()
+
+                if !setup.isActive {
+                    Text("Paused")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Text(metadata)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if let criteria = setup.criteria, !criteria.isEmpty {
+                Text(criteria)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+>>>>>>> first-branch
         }
         .padding(.vertical, 4)
     }
@@ -152,7 +198,11 @@ private struct SetupDetailView: View {
 
     var body: some View {
         Form {
+<<<<<<< HEAD
             PlaybookFormSection("Definition") {
+=======
+            Section("Definition") {
+>>>>>>> first-branch
                 TextField("Setup Name", text: $setup.name)
                 TextField("Strategy", text: optionalTextBinding($setup.strategyName))
                 TextField("Timeframe", text: optionalTextBinding($setup.timeframe))
@@ -160,27 +210,47 @@ private struct SetupDetailView: View {
                 Toggle("Active", isOn: $setup.isActive)
             }
 
+<<<<<<< HEAD
             PlaybookFormSection("A+ Criteria") {
+=======
+            Section("A+ Criteria") {
+>>>>>>> first-branch
                 TextField("What must be true before taking this setup?", text: optionalTextBinding($setup.criteria), axis: .vertical)
                     .lineLimit(3...8)
             }
 
+<<<<<<< HEAD
             PlaybookFormSection("Invalidation") {
+=======
+            Section("Invalidation") {
+>>>>>>> first-branch
                 TextField("What tells you this setup is no longer valid?", text: optionalTextBinding($setup.invalidation), axis: .vertical)
                     .lineLimit(2...6)
             }
 
+<<<<<<< HEAD
             PlaybookFormSection("Notes") {
+=======
+            Section("Notes") {
+>>>>>>> first-branch
                 TextField("Examples, reminders, or screenshots to add later", text: optionalTextBinding($setup.notes), axis: .vertical)
                     .lineLimit(2...8)
             }
 
+<<<<<<< HEAD
             PlaybookFormSection("Journal Stats") {
+=======
+            Section("Journal Stats") {
+>>>>>>> first-branch
                 SetupPerformanceSummary(setup: setup, trades: matchingTrades)
             }
 
             if !matchingTrades.isEmpty {
+<<<<<<< HEAD
                 PlaybookFormSection("Matching Trades") {
+=======
+                Section("Matching Trades") {
+>>>>>>> first-branch
                     ForEach(matchingTrades.prefix(8)) { trade in
                         NavigationLink {
                             TradeJournalDetailView(trade: trade)
@@ -197,10 +267,22 @@ private struct SetupDetailView: View {
                 }
             }
         }
+<<<<<<< HEAD
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(setup.name.isEmpty ? "Setup" : setup.name)
         .onTradingSetupChange(setup, perform: markUpdated)
+=======
+        .navigationTitle(setup.name.isEmpty ? "Setup" : setup.name)
+        .onChange(of: setup.name) { _, _ in markUpdated() }
+        .onChange(of: setup.strategyName) { _, _ in markUpdated() }
+        .onChange(of: setup.timeframe) { _, _ in markUpdated() }
+        .onChange(of: setup.catalyst) { _, _ in markUpdated() }
+        .onChange(of: setup.criteria) { _, _ in markUpdated() }
+        .onChange(of: setup.invalidation) { _, _ in markUpdated() }
+        .onChange(of: setup.notes) { _, _ in markUpdated() }
+        .onChange(of: setup.isActive) { _, _ in markUpdated() }
+>>>>>>> first-branch
     }
 
     private var matchingTrades: [Trade] {
@@ -233,6 +315,7 @@ private struct SetupDetailView: View {
     }
 }
 
+<<<<<<< HEAD
 private struct PlaybookFormSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
@@ -268,6 +351,8 @@ private extension View {
     }
 }
 
+=======
+>>>>>>> first-branch
 private struct SetupPerformanceSummary: View {
     let setup: TradingSetup
     let trades: [Trade]
@@ -298,3 +383,7 @@ private struct SetupPerformanceSummary: View {
     SetupPlaybookView()
         .modelContainer(for: [TradingSetup.self, Trade.self, TradeReview.self], inMemory: true)
 }
+<<<<<<< HEAD
+=======
+
+>>>>>>> first-branch
