@@ -22,8 +22,11 @@ struct Calc_EdgeApp: App {
             TradeFieldSuggestion.self,
             TradeLeg.self,
             TradeReview.self,
+            TradeRuleCheck.self,
             TradeTransaction.self,
-            TradeValueChangeLog.self
+            TradeValueChangeLog.self,
+            TradingRule.self,
+            TradingSetup.self
         ])
         let modelConfiguration = ModelConfiguration(
             schema: schema,

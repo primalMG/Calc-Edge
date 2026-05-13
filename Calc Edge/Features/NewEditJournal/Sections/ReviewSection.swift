@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct ReviewSection: View {
     @Bindable var trade: Trade
@@ -42,6 +43,9 @@ struct ReviewSection: View {
 }
 
 private struct TradeReviewEditor: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \TradingRule.title) private var rules: [TradingRule]
+
     @Bindable var review: TradeReview
     let onRemove: () -> Void
     
@@ -110,6 +114,21 @@ private struct TradeReviewEditor: View {
                     .textFieldStyle(JournalCustomTextFieldStyle())
 #endif
             }
+
+            if !activeRules.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Rule Checks")
+                        .font(.headline)
+
+                    ForEach(activeRules) { rule in
+                        RuleCheckRow(
+                            rule: rule,
+                            isFollowed: ruleFollowedBinding(for: rule)
+                        )
+                    }
+                }
+                .padding(.top, 4)
+            }
             
             
             Button("Remove Review") {
@@ -131,4 +150,50 @@ private struct TradeReviewEditor: View {
         GridItem(.adaptive(minimum: 150), spacing: 15)
     ]
 #endif
+
+    private var activeRules: [TradingRule] {
+        rules.filter(\.isActive)
+    }
+
+    private func ruleFollowedBinding(for rule: TradingRule) -> Binding<Bool> {
+        Binding {
+            existingCheck(for: rule)?.followed ?? true
+        } set: { newValue in
+            let check = existingCheck(for: rule) ?? createCheck(for: rule)
+            check.followed = newValue
+            try? modelContext.save()
+        }
+    }
+
+    private func existingCheck(for rule: TradingRule) -> TradeRuleCheck? {
+        review.ruleChecks?.first { $0.rule?.ruleId == rule.ruleId }
+    }
+
+    private func createCheck(for rule: TradingRule) -> TradeRuleCheck {
+        let check = TradeRuleCheck(followed: true, rule: rule, review: review)
+        modelContext.insert(check)
+        review.ruleChecks = (review.ruleChecks ?? []) + [check]
+        return check
+    }
+}
+
+private struct RuleCheckRow: View {
+    let rule: TradingRule
+    @Binding var isFollowed: Bool
+
+    var body: some View {
+        Toggle(isOn: $isFollowed) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(rule.title.isEmpty ? "Untitled Rule" : rule.title)
+                    .font(.subheadline.weight(.semibold))
+
+                if let prompt = rule.checklistPrompt, !prompt.isEmpty {
+                    Text(prompt)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+    }
 }

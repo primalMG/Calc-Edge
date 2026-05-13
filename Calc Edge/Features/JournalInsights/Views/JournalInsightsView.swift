@@ -33,7 +33,7 @@ struct JournalInsightsView: View {
                 if filteredTrades.isEmpty && !usesMockInsights {
                     JournalInsightsEmptyState()
                 } else {
-                    insightsContent(insights: insights, minSampleSize: 30)
+                    insightsContent(insights: insights, trades: filteredTrades, minSampleSize: 30)
                 }
             }
             .padding()
@@ -42,7 +42,7 @@ struct JournalInsightsView: View {
     }
 
     @ViewBuilder
-    private func insightsContent(insights: TradeInsights, minSampleSize: Int) -> some View {
+    private func insightsContent(insights: TradeInsights, trades: [Trade], minSampleSize: Int) -> some View {
         insightReadinessBanner(for: insights)
 
         if !insights.highlights.isEmpty {
@@ -60,22 +60,27 @@ struct JournalInsightsView: View {
         JournalInsightsOverviewSection(insights: insights, columns: statColumns)
         JournalInsightsEdgeMapSection(
             insights: insights,
+            trades: trades,
             minSampleSize: minSampleSize,
             selectedCategory: $selectedEdgeCategory
         )
-        JournalInsightsStrengthsDragSection(insights: insights, minSampleSize: minSampleSize)
+        JournalInsightsStrengthsDragSection(insights: insights, trades: trades, minSampleSize: minSampleSize)
         JournalInsightsRiskEfficiencySection(insights: insights, columns: statColumns)
         JournalInsightsProcessQualitySection(insights: insights, columns: statColumns)
         JournalInsightsDataQualitySection(insights: insights, columns: statColumns)
         JournalInsightsCountedItemsSection(
             title: "Common Mistakes",
             emptyText: "No mistake tags recorded yet.",
-            items: insights.topMistakes
+            items: insights.topMistakes,
+            trades: trades,
+            kind: .mistake
         )
         JournalInsightsCountedItemsSection(
             title: "Exit Reasons",
             emptyText: "No exit reasons recorded yet.",
-            items: insights.exitReasons
+            items: insights.exitReasons,
+            trades: trades,
+            kind: .exitReason
         )
     }
 

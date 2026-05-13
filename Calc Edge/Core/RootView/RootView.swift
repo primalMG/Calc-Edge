@@ -37,8 +37,20 @@ struct RootView: View {
                     rootTab(.insights)
                 }
 
+                Tab(RootTab.reviewCalendar.title, systemImage: RootTab.reviewCalendar.systemImage) {
+                    rootTab(.reviewCalendar)
+                }
+
                 Tab(RootTab.notes.title, systemImage: RootTab.notes.systemImage) {
                     rootTab(.notes)
+                }
+
+                Tab(RootTab.rulebook.title, systemImage: RootTab.rulebook.systemImage) {
+                    rootTab(.rulebook)
+                }
+
+                Tab(RootTab.playbook.title, systemImage: RootTab.playbook.systemImage) {
+                    rootTab(.playbook)
                 }
             }
 

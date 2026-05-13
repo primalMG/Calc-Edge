@@ -27,6 +27,7 @@ struct JournalInsightsOverviewSection: View {
 
 struct JournalInsightsEdgeMapSection: View {
     let insights: TradeInsights
+    let trades: [Trade]
     let minSampleSize: Int
     @Binding var selectedCategory: String
 
@@ -61,7 +62,16 @@ struct JournalInsightsEdgeMapSection: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(selectedSegments.prefix(8)) { segment in
-                        EdgeMapRow(segment: segment)
+                        NavigationLink {
+                            TradeInsightDrillDownView(
+                                title: segment.label,
+                                subtitle: "\(segment.category) segment from the current insight range.",
+                                trades: TradeInsightTradeMatcher.trades(for: segment, in: trades)
+                            )
+                        } label: {
+                            EdgeMapRow(segment: segment)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -76,6 +86,7 @@ struct JournalInsightsEdgeMapSection: View {
 
 struct JournalInsightsStrengthsDragSection: View {
     let insights: TradeInsights
+    let trades: [Trade]
     let minSampleSize: Int
 
     var body: some View {
@@ -100,10 +111,19 @@ struct JournalInsightsStrengthsDragSection: View {
                 .fontWeight(.semibold)
 
             ForEach(insights.strengths) { segment in
-                InfoRow(
-                    title: "\(segment.category): \(segment.label)",
-                    detail: JournalInsightsFormatting.segmentDetail(segment)
-                )
+                NavigationLink {
+                    TradeInsightDrillDownView(
+                        title: segment.label,
+                        subtitle: "\(segment.category) strength from the current insight range.",
+                        trades: TradeInsightTradeMatcher.trades(for: segment, in: trades)
+                    )
+                } label: {
+                    InfoRow(
+                        title: "\(segment.category): \(segment.label)",
+                        detail: JournalInsightsFormatting.segmentDetail(segment)
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -117,10 +137,19 @@ struct JournalInsightsStrengthsDragSection: View {
                 .padding(.top, 4)
 
             ForEach(insights.weaknesses) { segment in
-                InfoRow(
-                    title: "\(segment.category): \(segment.label)",
-                    detail: JournalInsightsFormatting.segmentDetail(segment)
-                )
+                NavigationLink {
+                    TradeInsightDrillDownView(
+                        title: segment.label,
+                        subtitle: "\(segment.category) drag from the current insight range.",
+                        trades: TradeInsightTradeMatcher.trades(for: segment, in: trades)
+                    )
+                } label: {
+                    InfoRow(
+                        title: "\(segment.category): \(segment.label)",
+                        detail: JournalInsightsFormatting.segmentDetail(segment)
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -204,6 +233,8 @@ struct JournalInsightsCountedItemsSection: View {
     let title: String
     let emptyText: String
     let items: [TradeInsightCountedItem]
+    let trades: [Trade]
+    let kind: TradeInsightTradeMatcher.CountedItemKind
 
     var body: some View {
         InfoSection(title: title) {
@@ -212,10 +243,19 @@ struct JournalInsightsCountedItemsSection: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(items) { item in
-                    InfoRow(
-                        title: item.label,
-                        detail: "\(item.count) trades • \(JournalInsightsFormatting.percent(item.percentage))"
-                    )
+                    NavigationLink {
+                        TradeInsightDrillDownView(
+                            title: item.label,
+                            subtitle: "\(title) from the current insight range.",
+                            trades: TradeInsightTradeMatcher.trades(for: item, kind: kind, in: trades)
+                        )
+                    } label: {
+                        InfoRow(
+                            title: item.label,
+                            detail: "\(item.count) trades • \(JournalInsightsFormatting.percent(item.percentage))"
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
