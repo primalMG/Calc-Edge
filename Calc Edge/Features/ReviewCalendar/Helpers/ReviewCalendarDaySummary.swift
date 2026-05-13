@@ -14,6 +14,10 @@ struct ReviewCalendarDaySummary: Identifiable {
         trades.filter { $0.review != nil }.count
     }
 
+    var openTradeCount: Int {
+        trades.filter { $0.closedAt == nil }.count
+    }
+
     var reviewCoverage: Double? {
         guard !trades.isEmpty else { return nil }
         return Double(reviewedCount) / Double(trades.count)
@@ -48,7 +52,7 @@ enum ReviewCalendarSummaryBuilder {
         }
 
         let groupedTrades = Dictionary(grouping: trades) { trade in
-            calendar.startOfDay(for: trade.openedAt)
+            calendar.startOfDay(for: calendarDate(for: trade))
         }
 
         var days: [ReviewCalendarDaySummary] = []
@@ -65,5 +69,9 @@ enum ReviewCalendarSummaryBuilder {
         }
 
         return days
+    }
+
+    static func calendarDate(for trade: Trade) -> Date {
+        trade.closedAt ?? trade.openedAt
     }
 }

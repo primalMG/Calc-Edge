@@ -130,6 +130,7 @@ struct TradingReviewCalendarView: View {
             VStack(alignment: .leading, spacing: 14) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], alignment: .leading, spacing: 12) {
                     InfoStatCard(title: "Trades", value: "\(summary.tradeCount)")
+                    InfoStatCard(title: "Open", value: "\(summary.openTradeCount)")
                     InfoStatCard(
                         title: "Expectancy",
                         value: JournalInsightsFormatting.rMultiple(summary.expectancy),
@@ -147,11 +148,11 @@ struct TradingReviewCalendarView: View {
                     Text("No trades logged for this day.")
                         .foregroundStyle(.secondary)
                 } else {
-                    ForEach(summary.trades.sorted { $0.openedAt > $1.openedAt }) { trade in
+                    ForEach(summary.trades.sorted { calendarDate(for: $0) > calendarDate(for: $1) }) { trade in
                         NavigationLink {
                             TradeJournalDetailView(trade: trade)
                         } label: {
-                            TradeJournalRow(trade: trade)
+                            ReviewCalendarTradeRow(trade: trade)
                         }
                         .buttonStyle(.plain)
                     }
@@ -164,6 +165,10 @@ struct TradingReviewCalendarView: View {
         if let nextMonth = calendar.date(byAdding: .month, value: value, to: visibleMonth) {
             visibleMonth = nextMonth
         }
+    }
+
+    private func calendarDate(for trade: Trade) -> Date {
+        ReviewCalendarSummaryBuilder.calendarDate(for: trade)
     }
 
     #if DEBUG
@@ -244,37 +249,42 @@ private enum ReviewCalendarMockDataFactory {
         let monthStart = calendar.dateInterval(of: .month, for: month)?.start ?? month
 
         let fixtures: [Fixture] = [
-            Fixture(day: 1, ticker: "AAPL", direction: .long, setup: "Opening Drive", entry: 194, exit: 199, stop: 192, target: 200, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .targetHit),
-            Fixture(day: 1, ticker: "MSFT", direction: .short, setup: "Failed Breakout", entry: 428, exit: 421, stop: 432, target: 418, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .manual),
-            Fixture(day: 3, ticker: "TSLA", direction: .long, setup: "VWAP Reclaim", entry: 182, exit: 176, stop: 179, target: 190, reviewed: true, followedPlan: false, mistake: "Moved stop", emotion: .anxious, exitReason: .stopHit),
-            Fixture(day: 4, ticker: "NVDA", direction: .long, setup: "Trend Pullback", entry: 915, exit: 940, stop: 905, target: 950, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .manual),
-            Fixture(day: 6, ticker: "AMD", direction: .long, setup: "Breakout Retest", entry: 161, exit: 158, stop: 157, target: 169, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
-            Fixture(day: 7, ticker: "META", direction: .short, setup: "Lower High", entry: 512, exit: 517, stop: 516, target: 500, reviewed: true, followedPlan: false, mistake: "Chased entry", emotion: .fomo, exitReason: .stopHit),
-            Fixture(day: 7, ticker: "QQQ", direction: .long, setup: "Range Break", entry: 445, exit: 449, stop: 443, target: 452, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .partial),
-            Fixture(day: 9, ticker: "NFLX", direction: .long, setup: "News Continuation", entry: 626, exit: 632, stop: 620, target: 642, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
-            Fixture(day: 11, ticker: "SPY", direction: .short, setup: "Reversal", entry: 528, exit: 525, stop: 530, target: 522, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .targetHit),
-            Fixture(day: 11, ticker: "IWM", direction: .short, setup: "Breakdown", entry: 206, exit: 211, stop: 209, target: 200, reviewed: true, followedPlan: false, mistake: "Oversized", emotion: .frustrated, exitReason: .stopHit),
-            Fixture(day: 15, ticker: "CRM", direction: .long, setup: "Earnings Drift", entry: 287, exit: 294, stop: 283, target: 300, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .manual),
-            Fixture(day: 18, ticker: "COIN", direction: .long, setup: "Momentum", entry: 228, exit: 219, stop: 224, target: 240, reviewed: true, followedPlan: false, mistake: "Ignored market regime", emotion: .revenge, exitReason: .invalidated),
-            Fixture(day: 19, ticker: "AMZN", direction: .long, setup: "Trend Pullback", entry: 184, exit: 188, stop: 181, target: 191, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .partial),
-            Fixture(day: 22, ticker: "GOOGL", direction: .short, setup: "Failed Breakout", entry: 174, exit: 170, stop: 176, target: 168, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .targetHit),
-            Fixture(day: 24, ticker: "BABA", direction: .long, setup: "Gap Fill", entry: 81, exit: 78, stop: 79, target: 86, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
-            Fixture(day: 25, ticker: "SMCI", direction: .short, setup: "Parabolic Fade", entry: 812, exit: 795, stop: 824, target: 780, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .manual),
-            Fixture(day: 25, ticker: "PLTR", direction: .long, setup: "Breakout Retest", entry: 23, exit: 22, stop: 22.4, target: 25, reviewed: true, followedPlan: false, mistake: "Early entry", emotion: .hesitant, exitReason: .stopHit),
-            Fixture(day: 28, ticker: "UBER", direction: .long, setup: "Relative Strength", entry: 73, exit: 76, stop: 71, target: 78, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .partial)
+            Fixture(openDay: 1, closeDay: 1, ticker: "AAPL", direction: .long, setup: "Opening Drive", entry: 194, exit: 199, stop: 192, target: 200, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .targetHit),
+            Fixture(openDay: 1, closeDay: 1, ticker: "MSFT", direction: .short, setup: "Failed Breakout", entry: 428, exit: 421, stop: 432, target: 418, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .manual),
+            Fixture(openDay: 3, closeDay: 3, ticker: "TSLA", direction: .long, setup: "VWAP Reclaim", entry: 182, exit: 176, stop: 179, target: 190, reviewed: true, followedPlan: false, mistake: "Moved stop", emotion: .anxious, exitReason: .stopHit),
+            Fixture(openDay: 4, closeDay: 4, ticker: "NVDA", direction: .long, setup: "Trend Pullback", entry: 915, exit: 940, stop: 905, target: 950, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .manual),
+            Fixture(openDay: 6, closeDay: 6, ticker: "AMD", direction: .long, setup: "Breakout Retest", entry: 161, exit: 158, stop: 157, target: 169, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
+            Fixture(openDay: 7, closeDay: 7, ticker: "META", direction: .short, setup: "Lower High", entry: 512, exit: 517, stop: 516, target: 500, reviewed: true, followedPlan: false, mistake: "Chased entry", emotion: .fomo, exitReason: .stopHit),
+            Fixture(openDay: 7, closeDay: 7, ticker: "QQQ", direction: .long, setup: "Range Break", entry: 445, exit: 449, stop: 443, target: 452, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .partial),
+            Fixture(openDay: 9, closeDay: 9, ticker: "NFLX", direction: .long, setup: "News Continuation", entry: 626, exit: 632, stop: 620, target: 642, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
+            Fixture(openDay: 11, closeDay: 11, ticker: "SPY", direction: .short, setup: "Reversal", entry: 528, exit: 525, stop: 530, target: 522, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .targetHit),
+            Fixture(openDay: 11, closeDay: 11, ticker: "IWM", direction: .short, setup: "Breakdown", entry: 206, exit: 211, stop: 209, target: 200, reviewed: true, followedPlan: false, mistake: "Oversized", emotion: .frustrated, exitReason: .stopHit),
+            Fixture(openDay: -18, closeDay: 15, ticker: "VTI", direction: .long, setup: "Core Holding", entry: 248, exit: 263, stop: 238, target: 265, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .targetHit),
+            Fixture(openDay: 15, closeDay: 15, ticker: "CRM", direction: .long, setup: "Earnings Drift", entry: 287, exit: 294, stop: 283, target: 300, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .manual),
+            Fixture(openDay: 18, closeDay: 18, ticker: "COIN", direction: .long, setup: "Momentum", entry: 228, exit: 219, stop: 224, target: 240, reviewed: true, followedPlan: false, mistake: "Ignored market regime", emotion: .revenge, exitReason: .invalidated),
+            Fixture(openDay: 19, closeDay: nil, ticker: "AMZN", direction: .long, setup: "Trend Pullback", entry: 184, exit: nil, stop: 181, target: 191, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: nil),
+            Fixture(openDay: 22, closeDay: 22, ticker: "GOOGL", direction: .short, setup: "Failed Breakout", entry: 174, exit: 170, stop: 176, target: 168, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .targetHit),
+            Fixture(openDay: 24, closeDay: 24, ticker: "BABA", direction: .long, setup: "Gap Fill", entry: 81, exit: 78, stop: 79, target: 86, reviewed: false, followedPlan: true, mistake: nil, emotion: .unknown, exitReason: .manual),
+            Fixture(openDay: 25, closeDay: 25, ticker: "SMCI", direction: .short, setup: "Parabolic Fade", entry: 812, exit: 795, stop: 824, target: 780, reviewed: true, followedPlan: true, mistake: nil, emotion: .focused, exitReason: .manual),
+            Fixture(openDay: 25, closeDay: 25, ticker: "PLTR", direction: .long, setup: "Breakout Retest", entry: 23, exit: 22, stop: 22.4, target: 25, reviewed: true, followedPlan: false, mistake: "Early entry", emotion: .hesitant, exitReason: .stopHit),
+            Fixture(openDay: 28, closeDay: 28, ticker: "UBER", direction: .long, setup: "Relative Strength", entry: 73, exit: 76, stop: 71, target: 78, reviewed: true, followedPlan: true, mistake: nil, emotion: .calm, exitReason: .partial)
         ]
 
         return fixtures.compactMap { fixture in
-            guard let openedAt = calendar.date(byAdding: .day, value: fixture.day - 1, to: monthStart),
-                  let closedAt = calendar.date(byAdding: .hour, value: 3, to: openedAt) else {
+            guard let openedAt = calendar.date(byAdding: .day, value: fixture.openDay - 1, to: monthStart) else {
                 return nil
+            }
+
+            let closedAt = fixture.closeDay.flatMap { closeDay in
+                calendar.date(byAdding: .day, value: closeDay - 1, to: monthStart)
+                    .flatMap { calendar.date(byAdding: .hour, value: 3, to: $0) }
             }
 
             return makeTrade(from: fixture, openedAt: openedAt, closedAt: closedAt)
         }
     }
 
-    private static func makeTrade(from fixture: Fixture, openedAt: Date, closedAt: Date) -> Trade {
+    private static func makeTrade(from fixture: Fixture, openedAt: Date, closedAt: Date?) -> Trade {
         let trade = Trade(
             openedAt: openedAt,
             closedAt: closedAt,
@@ -301,7 +311,7 @@ private enum ReviewCalendarMockDataFactory {
             slippage: fixture.followedPlan ? 1 : 8,
             mae: abs(fixture.entry - fixture.stop) * 0.6,
             mfe: abs(fixture.target - fixture.entry) * 0.7,
-            exitReason: fixture.exitReason
+            exitReason: closedAt == nil ? nil : fixture.exitReason
         )
 
         let context = TradeContext(
@@ -337,22 +347,40 @@ private enum ReviewCalendarMockDataFactory {
     }
 
     private struct Fixture {
-        let day: Int
+        let openDay: Int
+        let closeDay: Int?
         let ticker: String
         let direction: TradeDirection
         let setup: String
         let entry: Decimal
-        let exit: Decimal
+        let exit: Decimal?
         let stop: Decimal
         let target: Decimal
         let reviewed: Bool
         let followedPlan: Bool
         let mistake: String?
         let emotion: EmotionalState
-        let exitReason: ExitReason
+        let exitReason: ExitReason?
     }
 }
 #endif
+
+private struct ReviewCalendarTradeRow: View {
+    let trade: Trade
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            TradeJournalRow(trade: trade)
+
+            if trade.closedAt != nil {
+                Label("Opened \(TradeJournalFormatting.date(trade.openedAt))", systemImage: "calendar.badge.clock")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
 
 private struct ReviewCalendarDayCell: View {
     let summary: ReviewCalendarDaySummary
