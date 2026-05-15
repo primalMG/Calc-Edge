@@ -13,6 +13,7 @@ struct RulebookContent: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \TradingRule.updatedAt, order: .reverse) private var rules: [TradingRule]
 
+    @State private var selectedRule: TradingRule?
     @State private var toast: ToastConfiguration?
 
     var body: some View {
@@ -27,15 +28,13 @@ struct RulebookContent: View {
                 }
             }
             .toast($toast)
-            .navigationDestination(for: RulebookRoute.self) { route in
-                switch route {
-                case .rule(let ruleID):
-                    if let rule = rule(with: ruleID) {
-                        RuleDetailView(rule: rule)
-                    } else {
-                        ContentUnavailableView("Rule Not Found", systemImage: "checklist.checked")
-                    }
+            .sheet(item: $selectedRule) { rule in
+                NavigationStack {
+                    RuleDetailView(rule: rule)
                 }
+                #if os(macOS)
+                .frame(minWidth: 520, idealWidth: 620, minHeight: 520, idealHeight: 680)
+                #endif
             }
     }
 
@@ -51,11 +50,12 @@ struct RulebookContent: View {
             List {
                 ForEach(rules) { rule in
                     HStack(spacing: 12) {
-                        NavigationLink {
-                            RuleDetailView(rule: rule)
+                        Button {
+                            selectedRule = rule
                         } label: {
                             RuleRow(rule: rule)
                         }
+                        .buttonStyle(.plain)
 
                         #if os(macOS)
                         Button(role: .destructive) {
@@ -79,6 +79,7 @@ struct RulebookContent: View {
     private func addRule() {
         let rule = TradingRule(title: "New Rule", category: "Process")
         modelContext.insert(rule)
+        selectedRule = rule
         toast = ToastConfiguration(title: "Rule Created", message: "Edit the title and checklist prompt.", state: .success)
     }
 
@@ -89,16 +90,11 @@ struct RulebookContent: View {
     }
 
     private func deleteRule(_ rule: TradingRule) {
+        if selectedRule?.ruleId == rule.ruleId {
+            selectedRule = nil
+        }
         modelContext.delete(rule)
     }
-
-    private func rule(with ruleID: UUID) -> TradingRule? {
-        rules.first { $0.ruleId == ruleID }
-    }
-}
-
-private enum RulebookRoute: Hashable {
-    case rule(UUID)
 }
 
 private struct RuleRow: View {
@@ -135,35 +131,46 @@ private struct RuleRow: View {
 }
 
 private struct RuleDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Bindable var rule: TradingRule
     @Query private var trades: [Trade]
 
     var body: some View {
-        Form {
-            RulebookFormSection("Rule") {
-                TextField("Title", text: $rule.title)
-                TextField("Category", text: $rule.category)
-                Toggle("Active", isOn: $rule.isActive)
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                RulebookFormSection("Rule") {
+                    TextField("Title", text: $rule.title)
+                    TextField("Category", text: $rule.category)
+                    Toggle("Active", isOn: $rule.isActive)
+                }
 
-            RulebookFormSection("Checklist") {
-                TextField("Prompt shown during trade review", text: optionalTextBinding($rule.checklistPrompt), axis: .vertical)
-                    .lineLimit(2...4)
-            }
+                RulebookFormSection("Checklist") {
+                    TextField("Prompt shown during trade review", text: optionalTextBinding($rule.checklistPrompt), axis: .vertical)
+                        .lineLimit(2...4)
+                }
 
-            RulebookFormSection("Description") {
-                TextField("Why this rule matters", text: optionalTextBinding($rule.ruleDescription), axis: .vertical)
-                    .lineLimit(3...8)
-            }
+                RulebookFormSection("Description") {
+                    TextField("Why this rule matters", text: optionalTextBinding($rule.ruleDescription), axis: .vertical)
+                        .lineLimit(3...8)
+                }
 
-            RulebookFormSection("Performance") {
-                RulePerformanceSummary(rule: rule, trades: trades)
+                RulebookFormSection("Performance") {
+                    RulePerformanceSummary(rule: rule, trades: trades)
+                }
             }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(rule.title.isEmpty ? "Rule" : rule.title)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
         .onTradingRuleChange(rule, perform: markUpdated)
     }
 
@@ -183,14 +190,18 @@ private struct RulebookFormSection<Content: View>: View {
     }
 
     var body: some View {
-        Section {
-            content
-        } header: {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.headline)
-                .padding(.bottom, 4)
+
+            VStack(alignment: .leading, spacing: 10) {
+                content
+            }
         }
-        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -248,4 +259,3 @@ private struct RulePerformanceSummary: View {
     RulebookView()
         .modelContainer(for: [TradingRule.self, TradeRuleCheck.self, Trade.self, TradeReview.self], inMemory: true)
 }
-

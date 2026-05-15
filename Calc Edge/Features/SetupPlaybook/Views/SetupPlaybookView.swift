@@ -13,6 +13,7 @@ struct SetupPlaybookContent: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \TradingSetup.updatedAt, order: .reverse) private var setups: [TradingSetup]
 
+    @State private var selectedSetup: TradingSetup?
     @State private var toast: ToastConfiguration?
 
     var body: some View {
@@ -27,15 +28,13 @@ struct SetupPlaybookContent: View {
                 }
             }
             .toast($toast)
-            .navigationDestination(for: SetupPlaybookRoute.self) { route in
-                switch route {
-                case .setup(let setupID):
-                    if let setup = setup(with: setupID) {
-                        SetupDetailView(setup: setup)
-                    } else {
-                        ContentUnavailableView("Setup Not Found", systemImage: "rectangle.stack")
-                    }
+            .sheet(item: $selectedSetup) { setup in
+                NavigationStack {
+                    SetupDetailView(setup: setup)
                 }
+                #if os(macOS)
+                .frame(minWidth: 560, idealWidth: 700, minHeight: 560, idealHeight: 760)
+                #endif
             }
     }
 
@@ -51,11 +50,12 @@ struct SetupPlaybookContent: View {
             List {
                 ForEach(setups) { setup in
                     HStack(spacing: 12) {
-                        NavigationLink {
-                            SetupDetailView(setup: setup)
+                        Button {
+                            selectedSetup = setup
                         } label: {
                             SetupRow(setup: setup)
                         }
+                        .buttonStyle(.plain)
 
                         #if os(macOS)
                         Button(role: .destructive) {
@@ -79,6 +79,7 @@ struct SetupPlaybookContent: View {
     private func addSetup() {
         let setup = TradingSetup(name: "New Setup")
         modelContext.insert(setup)
+        selectedSetup = setup
         toast = ToastConfiguration(title: "Setup Created", message: "Add criteria, invalidation, and notes.", state: .success)
     }
 
@@ -89,16 +90,11 @@ struct SetupPlaybookContent: View {
     }
 
     private func deleteSetup(_ setup: TradingSetup) {
+        if selectedSetup?.setupId == setup.setupId {
+            selectedSetup = nil
+        }
         modelContext.delete(setup)
     }
-
-    private func setup(with setupID: UUID) -> TradingSetup? {
-        setups.first { $0.setupId == setupID }
-    }
-}
-
-private enum SetupPlaybookRoute: Hashable {
-    case setup(UUID)
 }
 
 private struct SetupRow: View {
@@ -145,60 +141,71 @@ private struct SetupRow: View {
 }
 
 private struct SetupDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Bindable var setup: TradingSetup
     @Query private var trades: [Trade]
 
     var body: some View {
-        Form {
-            PlaybookFormSection("Definition") {
-                TextField("Setup Name", text: $setup.name)
-                TextField("Strategy", text: optionalTextBinding($setup.strategyName))
-                TextField("Timeframe", text: optionalTextBinding($setup.timeframe))
-                TextField("Catalyst", text: optionalTextBinding($setup.catalyst))
-                Toggle("Active", isOn: $setup.isActive)
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                PlaybookFormSection("Definition") {
+                    TextField("Setup Name", text: $setup.name)
+                    TextField("Strategy", text: optionalTextBinding($setup.strategyName))
+                    TextField("Timeframe", text: optionalTextBinding($setup.timeframe))
+                    TextField("Catalyst", text: optionalTextBinding($setup.catalyst))
+                    Toggle("Active", isOn: $setup.isActive)
+                }
 
-            PlaybookFormSection("A+ Criteria") {
-                TextField("What must be true before taking this setup?", text: optionalTextBinding($setup.criteria), axis: .vertical)
-                    .lineLimit(3...8)
-            }
+                PlaybookFormSection("A+ Criteria") {
+                    TextField("What must be true before taking this setup?", text: optionalTextBinding($setup.criteria), axis: .vertical)
+                        .lineLimit(3...8)
+                }
 
-            PlaybookFormSection("Invalidation") {
-                TextField("What tells you this setup is no longer valid?", text: optionalTextBinding($setup.invalidation), axis: .vertical)
-                    .lineLimit(2...6)
-            }
+                PlaybookFormSection("Invalidation") {
+                    TextField("What tells you this setup is no longer valid?", text: optionalTextBinding($setup.invalidation), axis: .vertical)
+                        .lineLimit(2...6)
+                }
 
-            PlaybookFormSection("Notes") {
-                TextField("Examples, reminders, or screenshots to add later", text: optionalTextBinding($setup.notes), axis: .vertical)
-                    .lineLimit(2...8)
-            }
+                PlaybookFormSection("Notes") {
+                    TextField("Examples, reminders, or screenshots to add later", text: optionalTextBinding($setup.notes), axis: .vertical)
+                        .lineLimit(2...8)
+                }
 
-            PlaybookFormSection("Journal Stats") {
-                SetupPerformanceSummary(setup: setup, trades: matchingTrades)
-            }
+                PlaybookFormSection("Journal Stats") {
+                    SetupPerformanceSummary(setup: setup, trades: matchingTrades)
+                }
 
-            if !matchingTrades.isEmpty {
-                PlaybookFormSection("Matching Trades") {
-                    ForEach(matchingTrades.prefix(8)) { trade in
-                        NavigationLink {
-                            TradeJournalDetailView(trade: trade)
-                        } label: {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(trade.ticker)
-                                    .font(.headline)
-                                Text(trade.openedAt.formatted(date: .abbreviated, time: .omitted))
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                if !matchingTrades.isEmpty {
+                    PlaybookFormSection("Matching Trades") {
+                        ForEach(matchingTrades.prefix(8)) { trade in
+                            NavigationLink {
+                                TradeJournalDetailView(trade: trade)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(trade.ticker)
+                                        .font(.headline)
+                                    Text(trade.openedAt.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
                 }
             }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(setup.name.isEmpty ? "Setup" : setup.name)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
         .onTradingSetupChange(setup, perform: markUpdated)
     }
 
@@ -242,14 +249,18 @@ private struct PlaybookFormSection<Content: View>: View {
     }
 
     var body: some View {
-        Section {
-            content
-        } header: {
+        VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.headline)
-                .padding(.bottom, 4)
+
+            VStack(alignment: .leading, spacing: 10) {
+                content
+            }
         }
-        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -297,4 +308,3 @@ private struct SetupPerformanceSummary: View {
     SetupPlaybookView()
         .modelContainer(for: [TradingSetup.self, Trade.self, TradeReview.self], inMemory: true)
 }
-
