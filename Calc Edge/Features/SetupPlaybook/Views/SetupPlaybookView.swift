@@ -13,7 +13,10 @@ struct SetupPlaybookContent: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \TradingSetup.updatedAt, order: .reverse) private var setups: [TradingSetup]
 
-    @State private var selectedSetup: TradingSetup?
+    @State private var selectedSetupID: UUID?
+    #if os(iOS)
+    @State private var presentedSetup: TradingSetup?
+    #endif
     @State private var toast: ToastConfiguration?
 
     var body: some View {
@@ -28,13 +31,18 @@ struct SetupPlaybookContent: View {
                 }
             }
             .toast($toast)
-            .sheet(item: $selectedSetup) { setup in
+            #if os(iOS)
+            .sheet(item: $presentedSetup) { setup in
                 NavigationStack {
                     SetupDetailView(setup: setup)
                 }
-                #if os(macOS)
-                .frame(minWidth: 560, idealWidth: 700, minHeight: 560, idealHeight: 760)
-                #endif
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+            }
+            #endif
+            .onAppear(perform: keepSelectionInSync)
+            .onChange(of: setups.map(\.setupId)) { _, _ in
+                keepSelectionInSync()
             }
     }
 
@@ -47,39 +55,104 @@ struct SetupPlaybookContent: View {
                 description: Text("Create setup definitions and compare them with your journal results.")
             )
         } else {
-            List {
-                ForEach(setups) { setup in
-                    HStack(spacing: 12) {
-                        Button {
-                            selectedSetup = setup
-                        } label: {
-                            SetupRow(setup: setup)
-                        }
-                        .buttonStyle(.plain)
+            #if os(macOS)
+            HSplitView {
+                setupList
+                    .frame(minWidth: 280, idealWidth: 340, maxWidth: 460)
 
-                        #if os(macOS)
-                        Button(role: .destructive) {
-                            deleteSetup(setup)
-                        } label: {
-                            Label("Delete Setup", systemImage: "trash")
-                                .labelStyle(.iconOnly)
-                        }
-                        .buttonStyle(.borderless)
-                        .help("Delete Setup")
-                        #endif
+                setupDetail
+                    .frame(minWidth: 460, idealWidth: 700)
+            }
+            #else
+            setupList
+            #endif
+        }
+    }
+
+    private var setupList: some View {
+        List {
+            ForEach(setups) { setup in
+                #if os(macOS)
+                HStack(spacing: 12) {
+                    Button {
+                        selectedSetupID = setup.setupId
+                    } label: {
+                        SetupRow(setup: setup)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .buttonStyle(.plain)
+
+                    Button(role: .destructive) {
+                        deleteSetup(setup)
+                    } label: {
+                        Label("Delete Setup", systemImage: "trash")
+                            .labelStyle(.iconOnly)
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Delete Setup")
                 }
-                #if os(iOS)
-                .onDelete(perform: deleteSetups)
+                .listRowBackground(selectedSetupID == setup.setupId ? Color.accentColor.opacity(0.12) : nil)
+                #else
+                Button {
+                    presentedSetup = setup
+                } label: {
+                    SetupRow(setup: setup)
+                }
+                .buttonStyle(.plain)
                 #endif
             }
+            #if os(iOS)
+            .onDelete(perform: deleteSetups)
+            #endif
         }
+    }
+
+    #if os(macOS)
+    @ViewBuilder
+    private var setupDetail: some View {
+        if let selectedSetup {
+            SetupDetailView(setup: selectedSetup)
+        } else {
+            ContentUnavailableView("Select a Setup", systemImage: "rectangle.stack.badge.plus")
+        }
+    }
+    #endif
+
+    private var selectedSetup: TradingSetup? {
+        guard let selectedSetupID else { return nil }
+        return setup(with: selectedSetupID)
+    }
+
+    private func setup(with setupID: UUID) -> TradingSetup? {
+        setups.first(where: { $0.setupId == setupID })
+    }
+
+    private func keepSelectionInSync() {
+        guard !setups.isEmpty else {
+            selectedSetupID = nil
+            return
+        }
+
+        if let selectedSetupID,
+           setups.contains(where: { $0.setupId == selectedSetupID }) {
+            return
+        }
+
+        #if os(macOS)
+        selectedSetupID = setups.first?.setupId
+        #else
+        selectedSetupID = nil
+        #endif
     }
 
     private func addSetup() {
         let setup = TradingSetup(name: "New Setup")
         modelContext.insert(setup)
-        selectedSetup = setup
+        #if os(macOS)
+        selectedSetupID = setup.setupId
+        #else
+        presentedSetup = setup
+        #endif
         toast = ToastConfiguration(title: "Setup Created", message: "Add criteria, invalidation, and notes.", state: .success)
     }
 
@@ -90,10 +163,16 @@ struct SetupPlaybookContent: View {
     }
 
     private func deleteSetup(_ setup: TradingSetup) {
-        if selectedSetup?.setupId == setup.setupId {
-            selectedSetup = nil
+        if selectedSetupID == setup.setupId {
+            selectedSetupID = nil
         }
+        #if os(iOS)
+        if presentedSetup?.setupId == setup.setupId {
+            presentedSetup = nil
+        }
+        #endif
         modelContext.delete(setup)
+        keepSelectionInSync()
     }
 }
 
@@ -141,7 +220,9 @@ private struct SetupRow: View {
 }
 
 private struct SetupDetailView: View {
+    #if os(iOS)
     @Environment(\.dismiss) private var dismiss
+    #endif
     @Environment(\.modelContext) private var modelContext
     @Bindable var setup: TradingSetup
     @Query private var trades: [Trade]
@@ -199,6 +280,7 @@ private struct SetupDetailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(setup.name.isEmpty ? "Setup" : setup.name)
+        #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Done") {
@@ -206,6 +288,7 @@ private struct SetupDetailView: View {
                 }
             }
         }
+        #endif
         .onTradingSetupChange(setup, perform: markUpdated)
     }
 
