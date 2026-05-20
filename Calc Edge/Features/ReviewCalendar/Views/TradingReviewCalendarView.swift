@@ -39,7 +39,13 @@ struct TradingReviewCalendarView: View {
             selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: Date.now) })
         }
         .onChange(of: visibleMonth) { _, _ in
-            selectedDay = days.first(where: { !$0.trades.isEmpty })
+            selectedDay = selectedDay.flatMap { selectedDay in
+                guard calendar.isDate(selectedDay.date, equalTo: visibleMonth, toGranularity: .month) else {
+                    return nil
+                }
+
+                return days.first(where: { calendar.isDate($0.date, inSameDayAs: selectedDay.date) })
+            } ?? days.first(where: { !$0.trades.isEmpty })
         }
         .onChange(of: calendarMode) { _, _ in
             selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: selectedSummary.date) })
@@ -124,13 +130,16 @@ struct TradingReviewCalendarView: View {
                     Text(mode.title).tag(mode)
                 }
             }
+            #if os(iOS)
+            .pickerStyle(.menu)
+            #else
             .pickerStyle(.segmented)
+            #endif
             .frame(maxWidth: 260)
             .help("Calendar Mode")
 
             Button("Today") {
-                visibleMonth = Date.now
-                selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: Date.now) })
+                selectToday()
             }
             .buttonStyle(.bordered)
 
@@ -217,6 +226,13 @@ struct TradingReviewCalendarView: View {
         if let nextMonth = calendar.date(byAdding: .month, value: value, to: visibleMonth) {
             visibleMonth = nextMonth
         }
+    }
+
+    private func selectToday() {
+        let today = Date.now
+        visibleMonth = today
+        selectedDay = ReviewCalendarSummaryBuilder.monthDays(containing: today, trades: trades, mode: calendarMode)
+            .first(where: { calendar.isDate($0.date, inSameDayAs: today) })
     }
 
     private func calendarDate(for trade: Trade) -> Date {
