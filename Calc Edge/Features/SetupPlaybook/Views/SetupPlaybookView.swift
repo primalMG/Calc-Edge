@@ -58,7 +58,7 @@ struct SetupPlaybookContent: View {
             #if os(macOS)
             HSplitView {
                 setupList
-                    .frame(minWidth: 280, idealWidth: 340, maxWidth: 460)
+                    .frame(width: 300)
 
                 setupDetail
                     .frame(minWidth: 460, idealWidth: 700)

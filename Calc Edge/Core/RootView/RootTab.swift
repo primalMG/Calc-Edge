@@ -20,7 +20,7 @@ enum RootTab: String, Identifiable {
         #if os(macOS)
         [.journal, .insights, .reviewCalendar, .notes, .rulebook, .playbook, .stockCalc, .forexCalc, .accounts, .suggestions]
         #else
-        [.journal, .insights, .calculators, .notes, .more]
+        [.journal, .insights, .reviewCalendar, .calculators, .more]
         #endif
     }
 

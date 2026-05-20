@@ -58,7 +58,7 @@ struct RulebookContent: View {
             #if os(macOS)
             HSplitView {
                 ruleList
-                    .frame(minWidth: 260, idealWidth: 320, maxWidth: 420)
+                    .frame(width: 300)
 
                 ruleDetail
                     .frame(minWidth: 420, idealWidth: 620)

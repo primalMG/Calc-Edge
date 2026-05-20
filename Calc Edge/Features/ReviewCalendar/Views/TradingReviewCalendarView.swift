@@ -71,6 +71,41 @@ struct TradingReviewCalendarView: View {
     }
 
     private var header: some View {
+        #if os(iOS)
+        VStack(alignment: .leading, spacing: 12) {
+            headerTitle
+            headerControls
+        }
+        #else
+        HStack(spacing: 12) {
+            headerControlsLeading
+            headerTitle
+            Spacer()
+            headerControlsTrailing
+        }
+        #endif
+    }
+
+    private var headerTitle: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(visibleMonth.formatted(.dateTime.month(.wide).year()))
+                .font(.title2)
+                .fontWeight(.semibold)
+
+            Text("Daily trading results, review coverage, and process notes.")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var headerControls: some View {
+        HStack(spacing: 12) {
+            headerControlsLeading
+            Spacer()
+            headerControlsTrailing
+        }
+    }
+
+    private var headerControlsLeading: some View {
         HStack(spacing: 12) {
             Button {
                 moveMonth(by: -1)
@@ -79,18 +114,11 @@ struct TradingReviewCalendarView: View {
             }
             .buttonStyle(.bordered)
             .help("Previous Month")
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(visibleMonth.formatted(.dateTime.month(.wide).year()))
-                    .font(.title2)
-                    .fontWeight(.semibold)
-
-                Text("Daily trading results, review coverage, and process notes.")
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
+    private var headerControlsTrailing: some View {
+        HStack(spacing: 12) {
             Picker("Calendar Mode", selection: $calendarMode) {
                 ForEach(ReviewCalendarDateMode.allCases) { mode in
                     Text(mode.title).tag(mode)
@@ -432,31 +460,29 @@ private struct ReviewCalendarDayCell: View {
     var body: some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(summary.date.formatted(.dateTime.day()))
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-
-                    Spacer()
-
-                    if summary.tradeCount > 0 {
-                        Text("\(summary.tradeCount)")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.thinMaterial)
-                            .clipShape(Capsule())
-                    }
+                Text(summary.date.formatted(.dateTime.day()))
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                if summary.tradeCount > 0 {
+                    Text("\(summary.tradeCount)")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.thinMaterial)
+                        .clipShape(Capsule())
                 }
 
                 Spacer(minLength: 8)
 
                 if summary.tradeCount > 0 {
+                    #if os(macOS)
                     Text(JournalInsightsFormatting.rMultiple(summary.expectancy))
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundStyle(accentColor)
+                    #endif
 
                     ProgressView(value: summary.reviewCoverage ?? 0, total: 1)
                         .progressViewStyle(.linear)
