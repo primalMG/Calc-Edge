@@ -126,7 +126,8 @@ private enum NoteLinkFormatter {
 
     static func attributedString(from source: AttributedString) -> AttributedString {
         let plainText = source.plainText
-        var linkedText = source
+        var linkedText = AttributedString(plainText)
+        linkedText.foregroundColor = .primary
         linkedText.link = nil
 
         for match in plainText.matches(of: urlPattern) {
@@ -137,7 +138,12 @@ private enum NoteLinkFormatter {
                 continue
             }
 
-            linkedText[lowerBound..<upperBound].link = url
+            let linkRange = lowerBound..<upperBound
+            linkedText[linkRange].link = url
+            #if os(iOS)
+            linkedText[linkRange].foregroundColor = .blue
+            linkedText[linkRange].underlineStyle = .single
+            #endif
         }
 
         return linkedText
