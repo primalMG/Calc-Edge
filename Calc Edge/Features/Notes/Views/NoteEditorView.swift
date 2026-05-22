@@ -140,10 +140,8 @@ private enum NoteLinkFormatter {
 
             let linkRange = lowerBound..<upperBound
             linkedText[linkRange].link = url
-            #if os(iOS)
             linkedText[linkRange].foregroundColor = .blue
             linkedText[linkRange].underlineStyle = .single
-            #endif
         }
 
         return linkedText

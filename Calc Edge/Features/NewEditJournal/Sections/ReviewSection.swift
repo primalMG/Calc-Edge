@@ -139,17 +139,6 @@ private struct TradeReviewEditor: View {
             .buttonStyle(.borderless)
         }
     }
-    
-#if os(macOS)
-    private let columns = [
-        GridItem(.flexible(minimum: 160), spacing: 12),
-        GridItem(.flexible(minimum: 160), spacing: 12)
-    ]
-#else
-    private let columns = [
-        GridItem(.adaptive(minimum: 150), spacing: 15)
-    ]
-#endif
 
     private var activeRules: [TradingRule] {
         rules.filter(\.isActive)
