@@ -10,6 +10,7 @@ final class Trade {
 
     var ticker: String = ""
     var market: String?
+    var accountId: UUID?
     var account: String?
     var instrument: InstrumentType = InstrumentType.stock
     var direction: TradeDirection = TradeDirection.long
@@ -64,6 +65,7 @@ final class Trade {
         closedAt: Date? = nil,
         ticker: String,
         market: String? = nil,
+        accountId: UUID? = nil,
         account: String? = nil,
         instrument: InstrumentType = .stock,
         direction: TradeDirection = .long,
@@ -94,6 +96,7 @@ final class Trade {
 
         self.ticker = ticker.uppercased()
         self.market = market
+        self.accountId = accountId
         self.account = account
         self.instrument = instrument
         self.direction = direction

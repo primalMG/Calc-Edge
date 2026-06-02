@@ -4,6 +4,7 @@ struct TradeJournalChangeSnapshot: Equatable {
     private static let orderedFields = [
         "Ticker",
         "Market",
+        "Account ID",
         "Account",
         "Instrument",
         "Direction",
@@ -56,6 +57,7 @@ struct TradeJournalChangeSnapshot: Equatable {
         values = [
             "Ticker": trade.ticker,
             "Market": Self.text(trade.market),
+            "Account ID": trade.accountId?.uuidString ?? Self.emptyValue,
             "Account": Self.text(trade.account),
             "Instrument": trade.instrument.rawValue,
             "Direction": trade.direction.rawValue,

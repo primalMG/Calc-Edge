@@ -370,6 +370,7 @@ private enum ReviewCalendarMockDataFactory {
             closedAt: closedAt,
             ticker: fixture.ticker,
             market: "US",
+            accountId: nil,
             account: mockAccount,
             instrument: fixture.ticker == "QQQ" || fixture.ticker == "SPY" || fixture.ticker == "IWM" ? .etf : .stock,
             direction: fixture.direction,

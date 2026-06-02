@@ -55,8 +55,14 @@ extension InstrumentType {
 extension String {
     var journalAccountColor: Color {
         let palette: [Color] = [.blue, .green, .orange, .purple, .teal, .pink]
-        let index = abs(hashValue) % palette.count
+        let index = Int(deterministicJournalHash % UInt64(palette.count))
         return palette[index]
+    }
+
+    private var deterministicJournalHash: UInt64 {
+        unicodeScalars.reduce(5381) { hash, scalar in
+            ((hash << 5) &+ hash) &+ UInt64(scalar.value)
+        }
     }
 }
 #endif

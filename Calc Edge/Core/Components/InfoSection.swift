@@ -12,20 +12,8 @@ struct InfoSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.title3)
-                .fontWeight(.semibold)
-
+        FormSectionContainer(title, style: .info) {
             content
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        #if os(iOS)
-        .background(.gray.tertiary.opacity(0.8))
-        #else
-        .background(.thinMaterial)
-        #endif
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 }

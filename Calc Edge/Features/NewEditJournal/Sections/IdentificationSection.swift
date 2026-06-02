@@ -51,7 +51,7 @@ struct IdentificationSection: View {
                                 }
                             }
                             .onChange(of: selectedAccountID) { _, _ in
-                                trade.account = selectedAccount.accountName
+                                applySelectedAccount()
                             }
                         } else {
                             Text("No Accounts Found")
@@ -108,8 +108,10 @@ struct IdentificationSection: View {
         .onAppear {
             if selectedAccountID == nil {
                 selectedAccountID =
-                    accounts.first(where: { $0.accountName == trade.account })?.id
+                    accounts.first(where: { $0.id == trade.accountId })?.id
+                    ?? accounts.first(where: { $0.accountName == trade.account })?.id
                     ?? accounts.first?.id
+                applySelectedAccount()
             }
         }
     }
@@ -147,6 +149,16 @@ struct IdentificationSection: View {
         }
 
         return accounts.first?.accountName ?? "Select Account"
+    }
+
+    private func applySelectedAccount() {
+        guard let account = accounts.first(where: { $0.id == selectedAccountID }) else {
+            trade.accountId = nil
+            return
+        }
+
+        trade.accountId = account.id
+        trade.account = account.accountName
     }
 
     @ViewBuilder
