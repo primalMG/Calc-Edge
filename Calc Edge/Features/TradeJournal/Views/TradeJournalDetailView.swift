@@ -7,14 +7,7 @@ struct TradeJournalDetailView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var toggleDelete: Bool = false
-    @State private var persistedSuggestionValues: [TradeSuggestionField: String] = [:]
-    @State private var pendingSuggestionValues: [TradeSuggestionField: String] = [:]
-    @State private var suggestionSaveTask: Task<Void, Never>?
-    @State private var trackedSuggestionTradeID: UUID?
-    @State private var persistedChangeSnapshot: TradeJournalChangeSnapshot?
-    @State private var pendingChangeSnapshot: TradeJournalChangeSnapshot?
-    @State private var changeLogTask: Task<Void, Never>?
-    @State private var trackedChangeLogTradeID: UUID?
+    @State private var persistenceCoordinator = TradeJournalDetailPersistenceCoordinator()
     #if os(iOS)
     @State private var activeSheet: ActiveTradeJournalSheet?
     #else
@@ -45,24 +38,19 @@ struct TradeJournalDetailView: View {
         }
         .navigationTitle(trade.ticker)
         .onAppear {
-            configureSuggestionTracking()
-            configureChangeLogTracking()
+            persistenceCoordinator.configure(for: trade)
         }
         .onChange(of: currentSuggestionValues) { _, newValues in
-            queueSuggestionSave(with: newValues)
+            persistenceCoordinator.queueSuggestionSave(for: trade, values: newValues, modelContext: modelContext)
         }
         .onChange(of: currentChangeSnapshot) { _, newSnapshot in
-            queueChangeLog(with: newSnapshot)
+            persistenceCoordinator.queueChangeLog(for: trade, snapshot: newSnapshot, modelContext: modelContext)
         }
         .onChange(of: trade.tradeId) { _, _ in
-            suggestionSaveTask?.cancel()
-            configureSuggestionTracking()
-            changeLogTask?.cancel()
-            configureChangeLogTracking()
+            persistenceCoordinator.configure(for: trade)
         }
         .onDisappear {
-            flushPendingSuggestionSave()
-            flushPendingChangeLog()
+            persistenceCoordinator.flush(for: trade, modelContext: modelContext)
         }
         .toolbar {
             ToolbarItem(placement: .automatic) {
@@ -277,109 +265,6 @@ struct TradeJournalDetailView: View {
 
     private var currentChangeSnapshot: TradeJournalChangeSnapshot {
         TradeJournalChangeSnapshot(trade: trade)
-    }
-
-    private func configureSuggestionTracking() {
-        let values = currentSuggestionValues
-        trackedSuggestionTradeID = trade.tradeId
-        persistedSuggestionValues = values
-        pendingSuggestionValues = values
-    }
-
-    private func queueSuggestionSave(with values: [TradeSuggestionField: String]) {
-        pendingSuggestionValues = values
-        suggestionSaveTask?.cancel()
-        suggestionSaveTask = Task {
-            try? await Task.sleep(for: .seconds(2))
-
-            guard !Task.isCancelled else {
-                return
-            }
-
-            await MainActor.run {
-                persistPendingSuggestionValuesIfNeeded()
-            }
-        }
-    }
-
-    private func flushPendingSuggestionSave() {
-        suggestionSaveTask?.cancel()
-        persistPendingSuggestionValuesIfNeeded()
-    }
-
-    private func persistPendingSuggestionValuesIfNeeded() {
-        guard trackedSuggestionTradeID == trade.tradeId,
-              pendingSuggestionValues != persistedSuggestionValues else {
-            return
-        }
-
-        var didPersistSuggestions = false
-
-        for (field, value) in pendingSuggestionValues {
-            if persistedSuggestionValues[field] != value {
-                modelContext.upsertTradeSuggestion(field: field, value: value)
-                didPersistSuggestions = true
-            }
-        }
-
-        persistedSuggestionValues = pendingSuggestionValues
-
-        if didPersistSuggestions {
-            try? modelContext.save()
-        }
-    }
-
-    private func configureChangeLogTracking() {
-        let snapshot = currentChangeSnapshot
-        trackedChangeLogTradeID = trade.tradeId
-        persistedChangeSnapshot = snapshot
-        pendingChangeSnapshot = snapshot
-    }
-
-    private func queueChangeLog(with snapshot: TradeJournalChangeSnapshot) {
-        pendingChangeSnapshot = snapshot
-        changeLogTask?.cancel()
-        changeLogTask = Task {
-            try? await Task.sleep(for: .seconds(2))
-
-            guard !Task.isCancelled else {
-                return
-            }
-
-            await MainActor.run {
-                persistPendingChangeLogIfNeeded()
-            }
-        }
-    }
-
-    private func flushPendingChangeLog() {
-        changeLogTask?.cancel()
-        persistPendingChangeLogIfNeeded()
-    }
-
-    private func persistPendingChangeLogIfNeeded() {
-        guard trackedChangeLogTradeID == trade.tradeId,
-              let previous = persistedChangeSnapshot,
-              let pending = pendingChangeSnapshot,
-              pending != previous else {
-            return
-        }
-
-        let details = pending.changeDetails(from: previous)
-        guard !details.isEmpty else {
-            persistedChangeSnapshot = pending
-            return
-        }
-
-        let position = trade.positionSummary
-        trade.appendValueChangeLog(
-            summary: "Updated journal entry",
-            detail: details.joined(separator: "\n"),
-            previous: position,
-            current: position
-        )
-        persistedChangeSnapshot = pending
-        try? modelContext.save()
     }
 }
 
