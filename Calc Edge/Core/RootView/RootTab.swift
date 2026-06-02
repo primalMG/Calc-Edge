@@ -12,6 +12,8 @@ enum RootTab: String, Identifiable {
     case playbook
     case accounts
     case suggestions
+    case privacy
+    case clearData
     case more
 
     var id: String { rawValue }
@@ -48,6 +50,10 @@ enum RootTab: String, Identifiable {
             "Accounts"
         case .suggestions:
             "Suggestions"
+        case .privacy:
+            "Privacy & Terms"
+        case .clearData:
+            "Clear Data"
         case .more:
             "More"
         }
@@ -77,6 +83,10 @@ enum RootTab: String, Identifiable {
             "person.crop.circle"
         case .suggestions:
             "text.badge.star"
+        case .privacy:
+            "hand.raised"
+        case .clearData:
+            "trash"
         case .more:
             "ellipsis.circle"
         }

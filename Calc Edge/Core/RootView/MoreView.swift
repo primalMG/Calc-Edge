@@ -37,6 +37,20 @@ struct MoreView: View {
                     Label(RootTab.accounts.title, systemImage: RootTab.accounts.systemImage)
                 }
             }
+
+            Section("App") {
+                NavigationLink {
+                    PrivacyTermsView()
+                } label: {
+                    Label(RootTab.privacy.title, systemImage: RootTab.privacy.systemImage)
+                }
+
+                NavigationLink {
+                    ClearAllDataView()
+                } label: {
+                    Label(RootTab.clearData.title, systemImage: RootTab.clearData.systemImage)
+                }
+            }
         }
         .navigationTitle(RootTab.more.title)
     }

@@ -35,6 +35,10 @@ struct RootTabScene: View {
             AccountsContent(showsCloseButton: false)
         case .suggestions:
             SuggestionsView()
+        case .privacy:
+            PrivacyTermsView()
+        case .clearData:
+            ClearAllDataView()
         case .more:
             MoreView()
         }

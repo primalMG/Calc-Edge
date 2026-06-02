@@ -73,6 +73,16 @@ struct RootView: View {
                     rootTab(.suggestions)
                 }
             }
+
+            TabSection("App") {
+                Tab(RootTab.privacy.title, systemImage: RootTab.privacy.systemImage) {
+                    rootTab(.privacy)
+                }
+
+                Tab(RootTab.clearData.title, systemImage: RootTab.clearData.systemImage) {
+                    rootTab(.clearData)
+                }
+            }
         }
     }
     #endif
