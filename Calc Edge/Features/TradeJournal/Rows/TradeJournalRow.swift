@@ -11,6 +11,9 @@ struct TradeJournalRow: View {
     let trade: Trade
 
     var body: some View {
+        #if os(iOS)
+        TradeJournalIOSRow(trade: trade)
+        #else
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
                 Text(TradeJournalFormatting.title(for: trade))
@@ -57,5 +60,6 @@ struct TradeJournalRow: View {
             }
         }
         .padding(.vertical, 4)
+        #endif
     }
 }
