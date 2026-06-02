@@ -215,7 +215,6 @@ private struct RuleDetailView: View {
     #endif
     @Environment(\.modelContext) private var modelContext
     @Bindable var rule: TradingRule
-    @Query private var trades: [Trade]
 
     var body: some View {
         ScrollView {
@@ -237,7 +236,7 @@ private struct RuleDetailView: View {
                 }
 
                 RulebookFormSection("Performance") {
-                    RulePerformanceSummary(rule: rule, trades: trades)
+                    RulePerformanceSummary(rule: rule)
                 }
             }
             .padding()
@@ -254,7 +253,7 @@ private struct RuleDetailView: View {
             }
         }
         #endif
-        .onTradingRuleChange(rule, perform: markUpdated)
+        .onDebouncedChange(of: TradingRuleEditSnapshot(rule: rule), perform: markUpdated)
     }
 
     private func markUpdated() {
@@ -285,56 +284,6 @@ private struct RulebookFormSection<Content: View>: View {
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-private extension View {
-    func onTradingRuleChange(_ rule: TradingRule, perform action: @escaping () -> Void) -> some View {
-        self
-            .onChange(of: rule.title) { _, _ in action() }
-            .onChange(of: rule.category) { _, _ in action() }
-            .onChange(of: rule.ruleDescription) { _, _ in action() }
-            .onChange(of: rule.checklistPrompt) { _, _ in action() }
-            .onChange(of: rule.isActive) { _, _ in action() }
-    }
-}
-
-private struct RulePerformanceSummary: View {
-    let rule: TradingRule
-    let trades: [Trade]
-
-    var body: some View {
-        let checks = rule.checks ?? []
-        let followed = checks.filter(\.followed)
-        let broken = checks.filter { !$0.followed }
-
-        LazyVGrid(columns: columns, spacing: 12) {
-            InfoStatCard(title: "Checked", value: "\(checks.count)")
-            InfoStatCard(title: "Followed", value: percentage(followed.count, checks.count))
-            InfoStatCard(title: "Broken", value: "\(broken.count)", accentColor: broken.isEmpty ? .green : .orange)
-            InfoStatCard(title: "Avg R When Followed", value: averageR(for: followed))
-        }
-    }
-
-    private var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: 140), spacing: 12)]
-    }
-
-    private func percentage(_ count: Int, _ total: Int) -> String {
-        guard total > 0 else { return "No data" }
-        return "\(Int((Double(count) / Double(total) * 100).rounded()))%"
-    }
-
-    private func averageR(for checks: [TradeRuleCheck]) -> String {
-        let calculator = TradeInsightsCalculator(trades: checks.compactMap { $0.review?.trade })
-        let values = checks.compactMap { check -> Double? in
-            guard let trade = check.review?.trade else { return nil }
-            return calculator.rMultiple(for: trade)
-        }
-        guard !values.isEmpty else { return "No data" }
-        let total = values.reduce(0, +)
-        let average = total / Double(values.count)
-        return "\(average.formatted(.number.precision(.fractionLength(2))))R"
     }
 }
 

@@ -15,30 +15,44 @@ struct JournalInsightsView: View {
 
     @State private var selectedTimeRange: InsightTimeRange = .all
     @State private var selectedEdgeCategory = "All"
+    @State private var insightState = JournalInsightsState()
 
     private let statColumns = [
         GridItem(.adaptive(minimum: 180), spacing: 12)
     ]
 
     var body: some View {
-        let filteredTrades = selectedTimeRange.filter(trades)
-        let calculator = TradeInsightsCalculator(trades: filteredTrades)
-        let insights = usesMockInsights ? TradeInsights.mock : calculator.calculate()
-
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 JournalInsightsHeader()
                 InsightTimeRangePicker(selection: $selectedTimeRange)
 
-                if filteredTrades.isEmpty && !usesMockInsights {
+                if insightState.filteredTrades.isEmpty && !usesMockInsights {
                     JournalInsightsEmptyState()
-                } else {
+                } else if let insights = insightState.insights {
                     insightsContent(insights: insights, trades: filteredTrades, minSampleSize: 30)
                 }
             }
             .padding()
         }
         .navigationTitle("Journal Insights")
+        .task(id: insightRefreshToken) {
+            refreshInsights()
+        }
+    }
+
+    private var filteredTrades: [Trade] {
+        insightState.filteredTrades
+    }
+
+    private var insightRefreshToken: JournalInsightsRefreshToken {
+        JournalInsightsRefreshToken(timeRange: selectedTimeRange, trades: trades)
+    }
+
+    private func refreshInsights() {
+        let filteredTrades = selectedTimeRange.filter(trades)
+        let insights = usesMockInsights ? TradeInsights.mock : TradeInsightsCalculator(trades: filteredTrades).calculate()
+        insightState = JournalInsightsState(filteredTrades: filteredTrades, insights: insights)
     }
 
     @ViewBuilder

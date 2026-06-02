@@ -225,7 +225,6 @@ private struct SetupDetailView: View {
     #endif
     @Environment(\.modelContext) private var modelContext
     @Bindable var setup: TradingSetup
-    @Query private var trades: [Trade]
 
     var body: some View {
         ScrollView {
@@ -253,27 +252,7 @@ private struct SetupDetailView: View {
                         .lineLimit(2...8)
                 }
 
-                PlaybookFormSection("Journal Stats") {
-                    SetupPerformanceSummary(setup: setup, trades: matchingTrades)
-                }
-
-                if !matchingTrades.isEmpty {
-                    PlaybookFormSection("Matching Trades") {
-                        ForEach(matchingTrades.prefix(8)) { trade in
-                            NavigationLink {
-                                TradeJournalDetailView(trade: trade)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(trade.ticker)
-                                        .font(.headline)
-                                    Text(trade.openedAt.formatted(date: .abbreviated, time: .omitted))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
+                SetupPlaybookTradeMatches(setup: setup)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -289,31 +268,7 @@ private struct SetupDetailView: View {
             }
         }
         #endif
-        .onTradingSetupChange(setup, perform: markUpdated)
-    }
-
-    private var matchingTrades: [Trade] {
-        trades
-            .filter(matchesSetup)
-            .sorted { $0.openedAt > $1.openedAt }
-    }
-
-    private func matchesSetup(_ trade: Trade) -> Bool {
-        matches(setup.name, trade.setupType)
-            || matches(setup.strategyName, trade.strategyName)
-            || matches(setup.timeframe, trade.timeframe)
-            || matches(setup.catalyst, trade.catalyst)
-    }
-
-    private func matches(_ lhs: String?, _ rhs: String?) -> Bool {
-        guard let lhs = lhs?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let rhs = rhs?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !lhs.isEmpty,
-              !rhs.isEmpty else {
-            return false
-        }
-
-        return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedSame
+        .onDebouncedChange(of: TradingSetupEditSnapshot(setup: setup), perform: markUpdated)
     }
 
     private func markUpdated() {
@@ -322,7 +277,7 @@ private struct SetupDetailView: View {
     }
 }
 
-private struct PlaybookFormSection<Content: View>: View {
+struct PlaybookFormSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
 
@@ -344,46 +299,6 @@ private struct PlaybookFormSection<Content: View>: View {
         .padding()
         .background(.thinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-private extension View {
-    func onTradingSetupChange(_ setup: TradingSetup, perform action: @escaping () -> Void) -> some View {
-        self
-            .onChange(of: setup.name) { _, _ in action() }
-            .onChange(of: setup.strategyName) { _, _ in action() }
-            .onChange(of: setup.timeframe) { _, _ in action() }
-            .onChange(of: setup.catalyst) { _, _ in action() }
-            .onChange(of: setup.criteria) { _, _ in action() }
-            .onChange(of: setup.invalidation) { _, _ in action() }
-            .onChange(of: setup.notes) { _, _ in action() }
-            .onChange(of: setup.isActive) { _, _ in action() }
-    }
-}
-
-private struct SetupPerformanceSummary: View {
-    let setup: TradingSetup
-    let trades: [Trade]
-
-    var body: some View {
-        let insights = TradeInsightsCalculator(trades: trades).calculate()
-
-        LazyVGrid(columns: columns, spacing: 12) {
-            InfoStatCard(title: "Trades", value: "\(trades.count)")
-            InfoStatCard(title: "Win Rate", value: JournalInsightsFormatting.percentage(insights.winRate))
-            InfoStatCard(title: "Expectancy", value: JournalInsightsFormatting.rMultiple(insights.expectancy))
-            InfoStatCard(title: "A+ Rate", value: JournalInsightsFormatting.percentage(aPlusRate))
-        }
-    }
-
-    private var columns: [GridItem] {
-        [GridItem(.adaptive(minimum: 140), spacing: 12)]
-    }
-
-    private var aPlusRate: Double? {
-        guard !trades.isEmpty else { return nil }
-        let aPlusCount = trades.filter(\.isAPlusSetup).count
-        return Double(aPlusCount) / Double(trades.count)
     }
 }
 

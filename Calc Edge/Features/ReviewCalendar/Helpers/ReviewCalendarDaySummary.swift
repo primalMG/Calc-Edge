@@ -19,6 +19,31 @@ enum ReviewCalendarDateMode: String, CaseIterable, Identifiable {
 struct ReviewCalendarDaySummary: Identifiable {
     let date: Date
     let trades: [Trade]
+    let reviewedCount: Int
+    let openTradeCount: Int
+    let reviewCoverage: Double?
+    let topMistake: String?
+    let expectancy: Double?
+    let followedPlanRate: Double?
+
+    init(date: Date, trades: [Trade]) {
+        self.date = date
+        self.trades = trades
+
+        reviewedCount = trades.filter { $0.review != nil }.count
+        openTradeCount = trades.filter { $0.closedAt == nil }.count
+        reviewCoverage = trades.isEmpty ? nil : Double(reviewedCount) / Double(trades.count)
+        topMistake = Self.topMistake(in: trades)
+
+        if trades.isEmpty {
+            expectancy = nil
+            followedPlanRate = nil
+        } else {
+            let insights = TradeInsightsCalculator(trades: trades).calculate()
+            expectancy = insights.expectancy
+            followedPlanRate = insights.followedPlanRate
+        }
+    }
 
     var id: Date { date }
 
@@ -26,34 +51,13 @@ struct ReviewCalendarDaySummary: Identifiable {
         trades.count
     }
 
-    var reviewedCount: Int {
-        trades.filter { $0.review != nil }.count
-    }
-
-    var openTradeCount: Int {
-        trades.filter { $0.closedAt == nil }.count
-    }
-
-    var reviewCoverage: Double? {
-        guard !trades.isEmpty else { return nil }
-        return Double(reviewedCount) / Double(trades.count)
-    }
-
-    var topMistake: String? {
+    private static func topMistake(in trades: [Trade]) -> String? {
         let mistakes = trades.compactMap { trade -> String? in
             let mistake = trade.review?.mistakeType?.trimmingCharacters(in: .whitespacesAndNewlines)
             return mistake?.isEmpty == false ? mistake : nil
         }
         let grouped = Dictionary(grouping: mistakes, by: { $0 })
         return grouped.max { $0.value.count < $1.value.count }?.key
-    }
-
-    var expectancy: Double? {
-        TradeInsightsCalculator(trades: trades).calculate().expectancy
-    }
-
-    var followedPlanRate: Double? {
-        TradeInsightsCalculator(trades: trades).calculate().followedPlanRate
     }
 }
 

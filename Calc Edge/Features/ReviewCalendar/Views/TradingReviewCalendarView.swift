@@ -8,6 +8,7 @@ struct TradingReviewCalendarView: View {
     @State private var visibleMonth = Date.now
     @State private var calendarMode: ReviewCalendarDateMode = .reviewDate
     @State private var selectedDay: ReviewCalendarDaySummary?
+    @State private var calendarState = ReviewCalendarState()
     @State private var toast: ToastConfiguration?
 
     private let calendar = Calendar.current
@@ -18,11 +19,20 @@ struct TradingReviewCalendarView: View {
     #endif
 
     private var days: [ReviewCalendarDaySummary] {
-        ReviewCalendarSummaryBuilder.monthDays(containing: visibleMonth, trades: trades, mode: calendarMode)
+        calendarState.days
     }
 
     private var selectedSummary: ReviewCalendarDaySummary {
         selectedDay ?? days.first(where: { !$0.trades.isEmpty }) ?? ReviewCalendarDaySummary(date: Date.now, trades: [])
+    }
+
+    private var calendarRefreshToken: ReviewCalendarRefreshToken {
+        ReviewCalendarRefreshToken(
+            visibleMonth: visibleMonth,
+            calendar: calendar,
+            mode: calendarMode,
+            trades: trades
+        )
     }
 
     var body: some View {
@@ -35,21 +45,8 @@ struct TradingReviewCalendarView: View {
             .padding()
         }
         .navigationTitle("Review Calendar")
-        .onAppear {
-            selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: Date.now) })
-        }
-        .onChange(of: visibleMonth) { _, _ in
-            selectedDay = selectedDay.flatMap { selectedDay in
-                guard calendar.isDate(selectedDay.date, equalTo: visibleMonth, toGranularity: .month) else {
-                    return nil
-                }
-
-                return days.first(where: { calendar.isDate($0.date, inSameDayAs: selectedDay.date) })
-            } ?? days.first(where: { !$0.trades.isEmpty })
-        }
-        .onChange(of: calendarMode) { _, _ in
-            selectedDay = days.first(where: { calendar.isDate($0.date, inSameDayAs: selectedSummary.date) })
-                ?? days.first(where: { !$0.trades.isEmpty })
+        .task(id: calendarRefreshToken) {
+            refreshCalendarSummaries()
         }
         .toolbar {
             #if DEBUG
@@ -231,12 +228,27 @@ struct TradingReviewCalendarView: View {
     private func selectToday() {
         let today = Date.now
         visibleMonth = today
-        selectedDay = ReviewCalendarSummaryBuilder.monthDays(containing: today, trades: trades, mode: calendarMode)
-            .first(where: { calendar.isDate($0.date, inSameDayAs: today) })
+        refreshCalendarSummaries(preferredSelection: today)
     }
 
     private func calendarDate(for trade: Trade) -> Date {
         ReviewCalendarSummaryBuilder.calendarDate(for: trade, mode: calendarMode)
+    }
+
+    private func refreshCalendarSummaries(preferredSelection: Date? = nil) {
+        let refreshedDays = ReviewCalendarSummaryBuilder.monthDays(
+            containing: visibleMonth,
+            trades: trades,
+            mode: calendarMode
+        )
+        calendarState = ReviewCalendarState(days: refreshedDays)
+        selectedDay = ReviewCalendarSelectionResolver.selectedDay(
+            from: refreshedDays,
+            visibleMonth: visibleMonth,
+            calendar: calendar,
+            preferredSelection: preferredSelection,
+            previousSelection: selectedDay?.date
+        )
     }
 
     #if DEBUG
