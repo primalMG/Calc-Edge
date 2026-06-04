@@ -74,6 +74,11 @@ struct JournalCSVImporter {
         let quantity = row.decimal(for: Column.quantity)
         let fee = row.decimal(for: Column.commissions)
         let exchangeRate = row.decimal(for: Column.exchangeRate)
+        let transactionAction = TradeTransactionAction(csvAction: action, direction: direction)
+        let dividendAmount = transactionAction == .dividend ? total ?? price : nil
+        let importedQuantity = transactionAction == .dividend ? 0 : quantity ?? 0
+        let importedEntryPrice = transactionAction == .dividend ? nil : direction == .long ? price : nil
+        let importedExitPrice = transactionAction == .dividend ? nil : direction == .short ? price : nil
 
         let trade = Trade(
             openedAt: openedAt,
@@ -81,9 +86,9 @@ struct JournalCSVImporter {
             market: row.value(for: Column.market),
             instrument: instrument,
             direction: direction,
-            shareCount: quantity ?? 0,
-            entryPrice: direction == .long ? price : nil,
-            exitPrice: direction == .short ? price : nil,
+            shareCount: importedQuantity,
+            entryPrice: importedEntryPrice,
+            exitPrice: importedExitPrice,
             exchangeRate: exchangeRate,
             commissions: fee
         )
@@ -92,24 +97,25 @@ struct JournalCSVImporter {
             TradeLeg(
                 symbol: ticker,
                 legInstrument: instrument,
-                quantity: quantity ?? 0,
-                entryPrice: direction == .long ? price : nil,
-                exitPrice: direction == .short ? price : nil
+                quantity: importedQuantity,
+                entryPrice: importedEntryPrice,
+                exitPrice: importedExitPrice
             )
         ]
 
         trade.transactions = [
             TradeTransaction(
                 date: openedAt,
-                action: TradeTransactionAction(csvAction: action, direction: direction),
-                quantity: quantity ?? 0,
-                price: price ?? 0,
+                action: transactionAction,
+                quantity: importedQuantity,
+                price: transactionAction == .dividend ? 0 : price ?? 0,
+                amount: dividendAmount,
                 exchangeRate: exchangeRate,
                 fees: fee
             )
         ]
 
-        if let total, fee == nil {
+        if let total, fee == nil, transactionAction != .dividend {
             trade.plannedRiskAmount = total
         }
 
@@ -128,6 +134,7 @@ struct JournalCSVImporter {
                     action: transaction.action,
                     quantity: transaction.quantity,
                     price: transaction.price,
+                    amount: transaction.amount,
                     exchangeRate: transaction.exchangeRate,
                     fees: transaction.fees,
                     note: transaction.note

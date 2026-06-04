@@ -71,6 +71,91 @@ struct Calc_EdgeTests {
         #expect(aapl.transactions?.count == 2)
     }
 
+    @Test @MainActor func tradeFinancialSummaryCalculatesSpendAndClosedProfitLoss() async throws {
+        let openTrade = Trade(
+            ticker: "AAPL",
+            direction: .long,
+            shareCount: 10,
+            entryPrice: 100,
+            currentPrice: 108
+        )
+        let closedTrade = Trade(
+            openedAt: .init(timeIntervalSince1970: 0),
+            closedAt: .init(timeIntervalSince1970: 86_400),
+            ticker: "AAPL",
+            direction: .long,
+            shareCount: 10,
+            entryPrice: 100,
+            exitPrice: 112
+        )
+        let closedShort = Trade(
+            openedAt: .init(timeIntervalSince1970: 0),
+            closedAt: .init(timeIntervalSince1970: 86_400),
+            ticker: "TSLA",
+            direction: .short,
+            shareCount: 4,
+            entryPrice: 200,
+            exitPrice: 185
+        )
+
+        #expect(openTrade.currentSpend == 1_000)
+        #expect(openTrade.totalProfitLoss == 80)
+        #expect(closedTrade.totalProfitLoss == 120)
+        #expect(closedShort.totalProfitLoss == 60)
+    }
+
+    @Test @MainActor func tradeCurrentShareCountUsesManualCountUntilTransactionsExist() async throws {
+        let trade = Trade(
+            ticker: "AAPL",
+            direction: .long,
+            shareCount: 10,
+            entryPrice: 100
+        )
+
+        #expect(trade.currentShareCount == 10)
+
+        trade.transactions = [
+            TradeTransaction(date: .init(timeIntervalSince1970: 0), action: .buy, quantity: 10, price: 100),
+            TradeTransaction(date: .init(timeIntervalSince1970: 1), action: .trim, quantity: 4, price: 110)
+        ]
+
+        #expect(trade.currentShareCount == 6)
+    }
+
+    @Test @MainActor func tradeDividendTotalSumsDividendTransactionAmounts() async throws {
+        let trade = Trade(ticker: "AAPL")
+        trade.transactions = [
+            TradeTransaction(date: .init(timeIntervalSince1970: 0), action: .dividend, quantity: 0, price: 0, amount: 12.34),
+            TradeTransaction(date: .init(timeIntervalSince1970: 1), action: .dividend, quantity: 0, price: 0, amount: 5.66),
+            TradeTransaction(date: .init(timeIntervalSince1970: 2), action: .buy, quantity: 1, price: 100)
+        ]
+
+        #expect(trade.dividendTotal == 18)
+    }
+
+    @Test @MainActor func csvImporterStoresDividendAmountSeparately() async throws {
+        let csv = """
+        Date,Ticker,Action,Quantity,Price,Total
+        2026-06-04,AAPL,Dividend,0,0,12.34
+        """
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("csv")
+
+        try csv.write(to: url, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: url)
+        }
+
+        let trade = try #require(try JournalCSVImporter().importTrades(from: url).first)
+        let transaction = try #require(trade.transactions?.first)
+
+        #expect(trade.plannedRiskAmount == nil)
+        #expect(trade.entryPrice == nil)
+        #expect(transaction.action == .dividend)
+        #expect(transaction.amount == Decimal(string: "12.34"))
+    }
+
     private func makeAnalyticsFixtureTrades() -> [Trade] {
         [
             makeTrade(

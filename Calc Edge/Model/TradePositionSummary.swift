@@ -71,4 +71,85 @@ extension Trade {
     var positionSummary: TradePositionSummary {
         TradePositionSummary(transactions: transactions ?? [])
     }
+
+    var currentShareCount: Decimal {
+        let summary = positionSummary
+        return hasPositionTransactions ? summary.currentShareCount : shareCount
+    }
+
+    var currentSpend: Decimal? {
+        let summary = positionSummary
+
+        if hasPositionTransactions {
+            guard summary.currentShareCount > 0, let averagePrice = summary.averagePrice else {
+                return nil
+            }
+
+            return summary.currentShareCount * averagePrice
+        }
+
+        guard closedAt == nil, shareCount > 0, let entryPrice else {
+            return nil
+        }
+
+        return shareCount * entryPrice
+    }
+
+    var totalProfitLoss: Decimal? {
+        guard let entryPrice,
+              let comparisonPrice = closedAt == nil ? currentPrice : exitPrice else {
+            return nil
+        }
+
+        let quantity = shareCount > 0 ? shareCount : openingTransactionQuantity
+        guard quantity > 0 else {
+            return nil
+        }
+
+        let priceMove: Decimal
+        switch direction {
+        case .long:
+            priceMove = comparisonPrice - entryPrice
+        case .short:
+            priceMove = entryPrice - comparisonPrice
+        }
+
+        return priceMove * quantity
+    }
+
+    var dividendTotal: Decimal {
+        (transactions ?? []).reduce(0) { total, transaction in
+            guard transaction.action == .dividend else {
+                return total
+            }
+
+            if let amount = transaction.amount {
+                return total + amount
+            }
+
+            return total + (transaction.quantity * transaction.price)
+        }
+    }
+
+    private var hasPositionTransactions: Bool {
+        (transactions ?? []).contains { transaction in
+            switch transaction.action {
+            case .buy, .add, .sell, .trim:
+                return true
+            case .dividend, .fee:
+                return false
+            }
+        }
+    }
+
+    private var openingTransactionQuantity: Decimal {
+        (transactions ?? []).reduce(0) { total, transaction in
+            switch transaction.action {
+            case .buy, .add, .sell:
+                return total + transaction.quantity
+            case .trim, .dividend, .fee:
+                return total
+            }
+        }
+    }
 }

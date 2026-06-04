@@ -123,8 +123,10 @@ struct IdentificationSection: View {
                 withAnimation(.easeInOut) {
                     if isClosed {
                         trade.closedAt = trade.closedAt ?? Date()
+                        trade.exitPrice = trade.exitPrice ?? trade.currentPrice
                     } else {
                         trade.closedAt = nil
+                        trade.currentPrice = trade.currentPrice ?? trade.exitPrice
                     }
                 }
             }

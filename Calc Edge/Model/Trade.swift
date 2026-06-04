@@ -27,6 +27,7 @@ final class Trade {
     // Entry/Exit (for simple single-leg trades)
     var shareCount: Decimal = 0
     var entryPrice: Decimal?
+    var currentPrice: Decimal?
     var exitPrice: Decimal?
     var exchangeRate: Decimal?
 
@@ -78,6 +79,7 @@ final class Trade {
         isAPlusSetup: Bool = false,
         shareCount: Decimal = 0,
         entryPrice: Decimal? = nil,
+        currentPrice: Decimal? = nil,
         exitPrice: Decimal? = nil,
         exchangeRate: Decimal? = nil,
         stopPrice: Decimal? = nil,
@@ -111,6 +113,7 @@ final class Trade {
 
         self.shareCount = shareCount
         self.entryPrice = entryPrice
+        self.currentPrice = currentPrice
         self.exitPrice = exitPrice
         self.exchangeRate = exchangeRate
         self.stopPrice = stopPrice

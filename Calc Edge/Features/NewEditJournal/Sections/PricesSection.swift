@@ -10,7 +10,7 @@ struct PricesSection: View {
     var body: some View {
         JournalSectionContainer("Prices") {
             LazyVGrid(columns: columns, spacing: 12) {
-                JournalField("Planned Share Count") {
+                JournalField("Share Count") {
                     TextField("", text: decimalBinding($trade.shareCount))
                     #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
@@ -18,7 +18,7 @@ struct PricesSection: View {
                 }
 
                 JournalField("Current Share Count") {
-                    Text(ValueDisplayFormatter.decimal(positionSummary.currentShareCount, fractionDigits: 2))
+                    Text(ValueDisplayFormatter.decimal(trade.currentShareCount, fractionDigits: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(.primary)
                 }
@@ -29,18 +29,45 @@ struct PricesSection: View {
                         .foregroundStyle(positionSummary.averagePrice == nil ? .secondary : .primary)
                 }
 
+                JournalField("Current Spend") {
+                    Text(ValueDisplayFormatter.decimal(trade.currentSpend, placeholder: "Waiting for inputs", fractionDigits: 2))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(trade.currentSpend == nil ? .secondary : .primary)
+                }
+
                 JournalField("Entry Price") {
                     TextField("", text: optionalDecimalBinding($trade.entryPrice, fractionDigits: 2))
                     #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                     #endif
                 }
-                
-                JournalField("Exit Price") {
-                    TextField("", text: optionalDecimalBinding($trade.exitPrice, fractionDigits: 2))
+
+                if trade.closedAt == nil {
+                    JournalField("Current Price") {
+                        TextField("", text: optionalDecimalBinding($trade.currentPrice, fractionDigits: 2))
                         #if os(iOS)
-                        .textFieldStyle(CustomTextFieldStyle())
+                            .textFieldStyle(CustomTextFieldStyle())
                         #endif
+                    }
+                } else {
+                    JournalField("Exit Price") {
+                        TextField("", text: optionalDecimalBinding($trade.exitPrice, fractionDigits: 2))
+                        #if os(iOS)
+                            .textFieldStyle(CustomTextFieldStyle())
+                        #endif
+                    }
+                }
+
+                JournalField("Total Profit/Loss") {
+                    Text(ValueDisplayFormatter.decimal(trade.totalProfitLoss, placeholder: "Waiting for inputs", fractionDigits: 2))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(profitLossStyle)
+                }
+
+                JournalField("Dividend Total") {
+                    Text(ValueDisplayFormatter.decimal(trade.dividendTotal, fractionDigits: 2))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(.primary)
                 }
 
                 JournalField("Exchange Rate") {
@@ -65,6 +92,14 @@ struct PricesSection: View {
                 }
             }
         }
+    }
+
+    private var profitLossStyle: Color {
+        guard let totalProfitLoss = trade.totalProfitLoss else {
+            return .secondary
+        }
+
+        return totalProfitLoss >= 0 ? .green : .red
     }
     
     #if os(macOS)

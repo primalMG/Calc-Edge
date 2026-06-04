@@ -78,6 +78,7 @@ struct TransactionsSection: View {
             action: draft.action,
             quantity: draft.quantity,
             price: draft.price,
+            amount: draft.amount,
             exchangeRate: draft.exchangeRate,
             fees: draft.fees,
             note: draft.note
@@ -87,6 +88,7 @@ struct TransactionsSection: View {
         transaction.action = draft.action
         transaction.quantity = draft.quantity
         transaction.price = draft.price
+        transaction.amount = draft.amount
         transaction.exchangeRate = draft.exchangeRate
         transaction.fees = draft.fees
         transaction.note = draft.note
@@ -131,7 +133,12 @@ struct TransactionsSection: View {
     }
 
     private func transactionSummary(for transaction: TradeTransaction) -> String {
-        var summary = "\(transaction.action.displayName) \(ValueDisplayFormatter.decimal(transaction.quantity)) @ \(ValueDisplayFormatter.decimal(transaction.price))"
+        var summary: String
+        if transaction.action == .dividend, let amount = transaction.amount {
+            summary = "\(transaction.action.displayName) \(ValueDisplayFormatter.decimal(amount, fractionDigits: 2))"
+        } else {
+            summary = "\(transaction.action.displayName) \(ValueDisplayFormatter.decimal(transaction.quantity)) @ \(ValueDisplayFormatter.decimal(transaction.price))"
+        }
 
         if let exchangeRate = transaction.exchangeRate {
             summary += " FX \(ValueDisplayFormatter.decimal(exchangeRate))"
@@ -210,9 +217,14 @@ private struct TradeTransactionRow: View {
     }
 
     private var transactionDetail: String {
-        let quantity = ValueDisplayFormatter.decimal(transaction.quantity)
-        let price = ValueDisplayFormatter.decimal(transaction.price)
-        let base = "\(quantity) @ \(price)"
+        let base: String
+        if transaction.action == .dividend, let amount = transaction.amount {
+            base = "Amount \(ValueDisplayFormatter.decimal(amount, fractionDigits: 2))"
+        } else {
+            let quantity = ValueDisplayFormatter.decimal(transaction.quantity)
+            let price = ValueDisplayFormatter.decimal(transaction.price)
+            base = "\(quantity) @ \(price)"
+        }
 
         var details = [base]
 
@@ -253,6 +265,7 @@ struct TradeTransactionDraft {
     var action: TradeTransactionAction = .buy
     var quantity: Decimal = 0
     var price: Decimal = 0
+    var amount: Decimal?
     var exchangeRate: Decimal?
     var fees: Decimal?
     var note: String?
@@ -264,6 +277,7 @@ struct TradeTransactionDraft {
         action = transaction.action
         quantity = transaction.quantity
         price = transaction.price
+        amount = transaction.amount
         exchangeRate = transaction.exchangeRate
         fees = transaction.fees
         note = transaction.note
@@ -303,8 +317,12 @@ private struct TradeTransactionEditorSheet: View {
                 }
 
                 Section {
-                    TextField("Quantity", text: decimalBinding($draft.quantity))
-                    TextField("Price", text: decimalBinding($draft.price))
+                    if draft.action == .dividend {
+                        TextField("Amount", text: optionalDecimalBinding($draft.amount, fractionDigits: 2))
+                    } else {
+                        TextField("Quantity", text: decimalBinding($draft.quantity))
+                        TextField("Price", text: decimalBinding($draft.price))
+                    }
                     TextField("Exchange Rate", text: optionalDecimalBinding($draft.exchangeRate))
                     TextField("Fees", text: optionalDecimalBinding($draft.fees))
                 }
@@ -341,7 +359,11 @@ private struct TradeTransactionEditorSheet: View {
     }
 
     private var canSave: Bool {
-        draft.quantity >= 0 && draft.price >= 0 && (draft.exchangeRate ?? 0) >= 0 && (draft.fees ?? 0) >= 0
+        if draft.action == .dividend {
+            return (draft.amount ?? -1) >= 0 && (draft.exchangeRate ?? 0) >= 0 && (draft.fees ?? 0) >= 0
+        }
+
+        return draft.quantity >= 0 && draft.price >= 0 && (draft.amount ?? 0) >= 0 && (draft.exchangeRate ?? 0) >= 0 && (draft.fees ?? 0) >= 0
     }
 
     private var normalizedDraft: TradeTransactionDraft {
@@ -349,6 +371,9 @@ private struct TradeTransactionEditorSheet: View {
         normalized.note = draft.note?.trimmingCharacters(in: .whitespacesAndNewlines)
         if normalized.note?.isEmpty == true {
             normalized.note = nil
+        }
+        if normalized.action != .dividend {
+            normalized.amount = nil
         }
         return normalized
     }
