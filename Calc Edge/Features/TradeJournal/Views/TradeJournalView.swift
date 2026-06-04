@@ -18,6 +18,7 @@ struct TradeJournalView: View {
     @State private var showFileImporter = false
     @State private var presentedSheet: JournalPresentation?
     @State private var importAlert: ImportAlert?
+    @State private var isImportingCSV = false
     #if os(macOS)
     @Environment(\.openWindow) private var openWindow
     #endif
@@ -44,6 +45,14 @@ struct TradeJournalView: View {
             .searchable(text: $filters.tickerQuery, placement: .toolbarPrincipal)
             .toolbar {
                 toolbarItems
+            }
+            .overlay {
+                if isImportingCSV {
+                    ProgressView("Importing CSV...")
+                        .padding(18)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
             }
             #if os(macOS)
             .task(id: selectionSyncToken) {
@@ -95,6 +104,7 @@ struct TradeJournalView: View {
         } label: {
             Image(systemName: "square.and.arrow.down")
         }
+        .disabled(isImportingCSV)
         .help("Import CSV")
         .fileImporter(
             isPresented: $showFileImporter,
@@ -228,25 +238,37 @@ struct TradeJournalView: View {
     }
 
     private func importJournalCSV(from file: URL) {
-        let gotAccess = file.startAccessingSecurityScopedResource()
-        defer {
-            if gotAccess {
-                file.stopAccessingSecurityScopedResource()
-            }
+        guard !isImportingCSV else {
+            return
         }
 
-        do {
-            let trades = try JournalCSVImporter().importTrades(from: file)
-            if trades.count == 1, let trade = trades.first {
-                presentedSheet = .draft(JournalDraftPresentation(trade: trade))
-            } else {
-                presentedSheet = .importReview(JournalImportReviewPresentation(trades: trades))
+        isImportingCSV = true
+
+        Task {
+            try? await Task.sleep(nanoseconds: 150_000_000)
+
+            let gotAccess = file.startAccessingSecurityScopedResource()
+            defer {
+                if gotAccess {
+                    file.stopAccessingSecurityScopedResource()
+                }
+
+                isImportingCSV = false
             }
-        } catch {
-            importAlert = ImportAlert(
-                title: "Import Failed",
-                message: error.localizedDescription
-            )
+
+            do {
+                let trades = try JournalCSVImporter().importTrades(from: file)
+                if trades.count == 1, let trade = trades.first {
+                    presentedSheet = .draft(JournalDraftPresentation(trade: trade))
+                } else {
+                    presentedSheet = .importReview(JournalImportReviewPresentation(trades: trades))
+                }
+            } catch {
+                importAlert = ImportAlert(
+                    title: "Import Failed",
+                    message: error.localizedDescription
+                )
+            }
         }
     }
 

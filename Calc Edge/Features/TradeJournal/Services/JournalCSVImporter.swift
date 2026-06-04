@@ -18,7 +18,7 @@ enum JournalCSVImportError: LocalizedError {
 struct JournalCSVImporter {
     enum Broker {
         case automatic
-        case trading212
+        case robinhood
     }
 
     var broker: Broker = .automatic
@@ -65,6 +65,7 @@ struct JournalCSVImporter {
         }
 
         let openedAt = row.value(for: Column.openedAt).flatMap(DateParser.date(from:)) ?? .now
+        let description = row.value(for: Column.description)
         let direction = TradeDirection(action: action)
         let instrument = row.value(for: Column.instrument)
             .flatMap(InstrumentType.init(csvValue:))
@@ -74,11 +75,15 @@ struct JournalCSVImporter {
         let quantity = row.decimal(for: Column.quantity)
         let fee = row.decimal(for: Column.commissions)
         let exchangeRate = row.decimal(for: Column.exchangeRate)
-        let transactionAction = TradeTransactionAction(csvAction: action, direction: direction)
-        let dividendAmount = transactionAction == .dividend ? total ?? price : nil
-        let importedQuantity = transactionAction == .dividend ? 0 : quantity ?? 0
-        let importedEntryPrice = transactionAction == .dividend ? nil : direction == .long ? price : nil
-        let importedExitPrice = transactionAction == .dividend ? nil : direction == .short ? price : nil
+        let dividendInfo = description.flatMap(DividendDescriptionParser.parse)
+        let transactionAction = TradeTransactionAction(csvAction: action, description: description, direction: direction)
+        let transactionQuantity = dividendInfo?.quantity ?? quantity ?? 0
+        let transactionPrice = dividendInfo?.rate ?? price ?? 0
+        let importedQuantity = transactionAction.affectsPosition ? transactionQuantity : 0
+        let importedEntryPrice = transactionAction.affectsPosition && direction == .long ? transactionPrice : nil
+        let importedExitPrice = transactionAction.affectsPosition && direction == .short ? transactionPrice : nil
+        let dividendAmount = transactionAction == .dividend ? total ?? (transactionQuantity * transactionPrice) : nil
+        let importedFees = transactionAction == .fee && dividendInfo?.isTaxWithholding == true ? total.map(Self.absolute) : fee
 
         let trade = Trade(
             openedAt: openedAt,
@@ -107,16 +112,17 @@ struct JournalCSVImporter {
             TradeTransaction(
                 date: openedAt,
                 action: transactionAction,
-                quantity: importedQuantity,
-                price: transactionAction == .dividend ? 0 : price ?? 0,
+                quantity: transactionQuantity,
+                price: transactionPrice,
                 amount: dividendAmount,
                 exchangeRate: exchangeRate,
-                fees: fee
+                fees: importedFees,
+                note: description
             )
         ]
 
-        if let total, fee == nil, transactionAction != .dividend {
-            trade.plannedRiskAmount = total
+        if let total, fee == nil, transactionAction.affectsPosition {
+            trade.plannedRiskAmount = Self.absolute(total)
         }
 
         return trade
@@ -180,6 +186,10 @@ struct JournalCSVImporter {
 
         return values.dropFirst().reduce(first, +)
     }
+
+    private nonisolated static func absolute(_ value: Decimal) -> Decimal {
+        value < 0 ? -value : value
+    }
 }
 
 private struct TradeImportGroupKey: Hashable {
@@ -200,18 +210,29 @@ private struct TradeImportGroupKey: Hashable {
 
 
 private extension TradeTransactionAction {
-    init(csvAction: String?, direction: TradeDirection) {
-        let normalized = csvAction?
-            .lowercased()
-            .components(separatedBy: CharacterSet.alphanumerics.inverted)
-            .joined() ?? ""
+    var affectsPosition: Bool {
+        switch self {
+        case .buy, .add, .sell, .trim:
+            true
+        case .dividend, .fee:
+            false
+        }
+    }
+
+    init(csvAction: String?, description: String?, direction: TradeDirection) {
+        let normalized = [csvAction, description]
+            .compactMap { $0 }
+            .map(TextNormalizer.normalizedTokenString)
+            .joined(separator: " ")
 
         switch normalized {
-        case let value where value.contains("dividend") || value.contains("CDIV"):
+        case let value where DividendDescriptionParser.isTaxWithholding(value):
+            self = .fee
+        case let value where DividendDescriptionParser.isDividend(value):
             self = .dividend
         case let value where value.contains("fee") || value.contains("charge") || value.contains("commission"):
             self = .fee
-        case let value where value.contains("trim") || value.contains("NRAT"):
+        case let value where value.contains("trim"):
             self = .trim
         case let value where value.contains("add"):
             self = .add
@@ -222,6 +243,118 @@ private extension TradeTransactionAction {
         default:
             self = direction == .long ? .buy : .sell
         }
+    }
+}
+
+private struct DividendDescriptionParser {
+    let quantity: Decimal?
+    let rate: Decimal?
+    let isTaxWithholding: Bool
+
+    nonisolated static func parse(_ description: String) -> DividendDescriptionParser? {
+        let normalized = TextNormalizer.normalizedSentence(description)
+        guard isDividend(normalized) || isTaxWithholding(normalized) else {
+            return nil
+        }
+
+        let values = shareAndRate(from: normalized)
+        return DividendDescriptionParser(
+            quantity: values?.quantity,
+            rate: values?.rate,
+            isTaxWithholding: isTaxWithholding(normalized)
+        )
+    }
+
+    nonisolated static func isDividend(_ value: String) -> Bool {
+        let normalized = TextNormalizer.normalizedTokenString(value)
+        return [
+            "cdiv",
+            "cashdiv",
+            "div",
+            "dividend",
+            "dividende",
+            "dividendo",
+            "dividenden",
+            "dividenda",
+            "dywidenda"
+        ].contains { normalized.contains($0) }
+    }
+
+    nonisolated static func isTaxWithholding(_ value: String) -> Bool {
+        let normalized = TextNormalizer.normalizedTokenString(value)
+        return [
+            "nrat",
+            "tax",
+            "withhold",
+            "withholding",
+            "retenue",
+            "retenu",
+            "impot",
+            "ritenuta",
+            "impuesto",
+            "steuer",
+            "quellensteuer",
+            "podatek"
+        ].contains { normalized.contains($0) }
+    }
+
+    private nonisolated static func shareAndRate(from value: String) -> (quantity: Decimal, rate: Decimal)? {
+        let shareTerms = [
+            "share",
+            "shares",
+            "stock",
+            "stocks",
+            "unit",
+            "units",
+            "action",
+            "actions",
+            "accion",
+            "acciones",
+            "aktie",
+            "aktien",
+            "azione",
+            "azioni",
+            "aandeel",
+            "aandelen",
+            "acao",
+            "acoes",
+            "akcja",
+            "akcji",
+            "udzial",
+            "udzialy"
+        ].joined(separator: "|")
+        let rateTerms = "at|@|a|au|zu|por|per|x"
+        let pattern = "([+-]?[0-9]+(?:[\\.,][0-9]+)?)\\s*(?:" + shareTerms + ")\\b.*?(?:" + rateTerms + ")\\s*([+-]?[0-9]+(?:[\\.,][0-9]+)?)"
+
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+
+        let range = NSRange(value.startIndex..<value.endIndex, in: value)
+        guard let match = regex.firstMatch(in: value, range: range),
+              match.numberOfRanges >= 3,
+              let quantityRange = Range(match.range(at: 1), in: value),
+              let rateRange = Range(match.range(at: 2), in: value),
+              let quantity = Decimal(string: String(value[quantityRange]).replacingOccurrences(of: ",", with: "."), locale: Locale(identifier: "en_US_POSIX")),
+              let rate = Decimal(string: String(value[rateRange]).replacingOccurrences(of: ",", with: "."), locale: Locale(identifier: "en_US_POSIX")) else {
+            return nil
+        }
+
+        return (quantity, rate)
+    }
+}
+
+private enum TextNormalizer {
+    nonisolated static func normalizedSentence(_ value: String) -> String {
+        value
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "en_US_POSIX"))
+            .lowercased()
+    }
+
+    nonisolated static func normalizedTokenString(_ value: String) -> String {
+        normalizedSentence(value)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .joined()
     }
 }
 
@@ -253,12 +386,19 @@ private struct CSVRow {
             return nil
         }
 
-        let stripped = value
+        var stripped = value
             .replacingOccurrences(of: "£", with: "")
             .replacingOccurrences(of: "$", with: "")
             .replacingOccurrences(of: "€", with: "")
             .replacingOccurrences(of: ",", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let isParenthesized = stripped.hasPrefix("(") && stripped.hasSuffix(")")
+        if isParenthesized {
+            stripped.removeFirst()
+            stripped.removeLast()
+            stripped = "-" + stripped
+        }
 
         return Decimal(string: stripped, locale: Locale(identifier: "en_US_POSIX"))
     }
@@ -274,6 +414,7 @@ private struct CSVRow {
 private enum Column {
     static let action = ["Action", "Side", "Type", "Transaction Type", "Trade Type", "Trans Code"]
     static let ticker = ["Ticker", "Symbol", "Instrument", "Market"]
+    static let description = ["Description", "Details", "Narrative", "Memo", "Notes"]
     static let market = ["Market", "Exchange", "Venue", "Currency (Price / share)"]
     static let instrument = ["Instrument Type", "Asset Type", "Type", "Product Type"]
     static let openedAt = ["Time", "Date", "Opened At", "Open Time", "Execution Time", "Trade Date", "Created At", "Settle Date"]

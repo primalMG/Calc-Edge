@@ -156,9 +156,28 @@ private struct ImportTradeEditorCard: View {
     let entryNumber: Int
     let onDelete: () -> Void
 
+    @State private var isExpanded: Bool
+
+    init(trade: Trade, entryNumber: Int, onDelete: @escaping () -> Void) {
+        self.trade = trade
+        self.entryNumber = entryNumber
+        self.onDelete = onDelete
+        _isExpanded = State(initialValue: entryNumber == 1)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+        DisclosureGroup(isExpanded: $isExpanded) {
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 14) {
+                    IdentificationSection(trade: trade, inEditMode: .constant(false))
+                    PricesSection(trade: trade)
+                    TransactionsSection(trade: trade)
+                    RiskSection(trade: trade, inEditMode: .constant(false))
+                }
+                .padding(.top, 14)
+            }
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Entry \(entryNumber)")
                         .font(.headline)
@@ -172,15 +191,11 @@ private struct ImportTradeEditorCard: View {
 
                 Button(role: .destructive, action: onDelete) {
                     Image(systemName: "trash")
+                        .frame(width: 28, height: 28)
                 }
-                .buttonStyle(.borderless)
+                .buttonStyle(.plain)
                 .accessibilityLabel("Delete imported entry")
             }
-
-            IdentificationSection(trade: trade, inEditMode: .constant(false))
-            PricesSection(trade: trade)
-            TransactionsSection(trade: trade)
-            RiskSection(trade: trade, inEditMode: .constant(false))
         }
         .padding(14)
         .background(.regularMaterial)

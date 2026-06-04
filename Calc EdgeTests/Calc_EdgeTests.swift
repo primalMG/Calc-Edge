@@ -160,6 +160,35 @@ struct Calc_EdgeTests {
         #expect(transaction.amount == Decimal(string: "12.34"))
     }
 
+    @Test @MainActor func csvImporterParsesRobinhoodDividendDescriptions() async throws {
+        let csv = #"""
+        "Activity Date","Process Date","Settle Date","Instrument","Description","Trans Code","Quantity","Price","Amount"
+        "4/27/2026","4/27/2026","4/27/2026","GE","Cash Div: R/D 2026-03-09 P/D 2026-04-27 - 0.283339 shares at 0.47 new dividend GB nra tax withhold","NRAT","","","($0.02)"
+        "4/27/2026","4/27/2026","4/27/2026","GE","Cash Div: R/D 2026-03-09 P/D 2026-04-27 - 0.283339 shares at 0.47","CDIV","","","$0.13"
+        """#
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("csv")
+
+        try csv.write(to: url, atomically: true, encoding: .utf8)
+        defer {
+            try? FileManager.default.removeItem(at: url)
+        }
+
+        let trades = try JournalCSVImporter().importTrades(from: url)
+        let taxTransaction = try #require(trades.first { $0.transactions?.first?.action == .fee }?.transactions?.first)
+        let dividendTransaction = try #require(trades.first { $0.transactions?.first?.action == .dividend }?.transactions?.first)
+
+        #expect(taxTransaction.quantity == Decimal(string: "0.283339"))
+        #expect(taxTransaction.price == Decimal(string: "0.47"))
+        #expect(taxTransaction.fees == Decimal(string: "0.02"))
+        #expect(taxTransaction.amount == nil)
+
+        #expect(dividendTransaction.quantity == Decimal(string: "0.283339"))
+        #expect(dividendTransaction.price == Decimal(string: "0.47"))
+        #expect(dividendTransaction.amount == Decimal(string: "0.13"))
+    }
+
     private func makeAnalyticsFixtureTrades() -> [Trade] {
         [
             makeTrade(
