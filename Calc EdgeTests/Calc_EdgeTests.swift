@@ -104,7 +104,7 @@ struct Calc_EdgeTests {
         #expect(closedShort.totalProfitLoss == 60)
     }
 
-    @Test @MainActor func tradeCurrentShareCountUsesManualCountUntilTransactionsExist() async throws {
+    @Test @MainActor func tradeCurrentShareCountCombinesManualCountAndTransactions() async throws {
         let trade = Trade(
             ticker: "AAPL",
             direction: .long,
@@ -113,13 +113,17 @@ struct Calc_EdgeTests {
         )
 
         #expect(trade.currentShareCount == 10)
+        #expect(!trade.isInitialShareCountLocked)
 
         trade.transactions = [
-            TradeTransaction(date: .init(timeIntervalSince1970: 0), action: .buy, quantity: 10, price: 100),
-            TradeTransaction(date: .init(timeIntervalSince1970: 1), action: .trim, quantity: 4, price: 110)
+            TradeTransaction(date: .init(timeIntervalSince1970: 0), action: .buy, quantity: 5, price: 110),
+            TradeTransaction(date: .init(timeIntervalSince1970: 1), action: .trim, quantity: 2, price: 115)
         ]
 
-        #expect(trade.currentShareCount == 6)
+        #expect(trade.isInitialShareCountLocked)
+        #expect(trade.currentShareCount == 13)
+        #expect((trade.currentSpend ?? 0) > Decimal(string: "1343.33")!)
+        #expect((trade.currentSpend ?? 0) < Decimal(string: "1343.34")!)
     }
 
     @Test @MainActor func tradeDividendTotalSumsDividendTransactionAmounts() async throws {

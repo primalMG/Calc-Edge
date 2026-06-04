@@ -3,18 +3,25 @@ import SwiftUI
 struct PricesSection: View {
     @Bindable var trade: Trade
 
-    private var positionSummary: TradePositionSummary {
-        trade.positionSummary
-    }
-
     var body: some View {
         JournalSectionContainer("Prices") {
             LazyVGrid(columns: columns, spacing: 12) {
-                JournalField("Share Count") {
-                    TextField("", text: decimalBinding($trade.shareCount))
-                    #if os(iOS)
-                        .textFieldStyle(CustomTextFieldStyle())
-                    #endif
+                JournalField("Initial Share Count") {
+                    if trade.isInitialShareCountLocked {
+                        HStack(spacing: 8) {
+                            Text(ValueDisplayFormatter.decimal(trade.shareCount, fractionDigits: 2))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        TextField("", text: decimalBinding($trade.shareCount))
+                        #if os(iOS)
+                            .textFieldStyle(CustomTextFieldStyle())
+                        #endif
+                    }
                 }
 
                 JournalField("Current Share Count") {
@@ -24,9 +31,9 @@ struct PricesSection: View {
                 }
 
                 JournalField("Average Price") {
-                    Text(ValueDisplayFormatter.decimal(positionSummary.averagePrice, placeholder: "No open position", fractionDigits: 2))
+                    Text(ValueDisplayFormatter.decimal(trade.currentAveragePrice, placeholder: "No open position", fractionDigits: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .foregroundStyle(positionSummary.averagePrice == nil ? .secondary : .primary)
+                        .foregroundStyle(trade.currentAveragePrice == nil ? .secondary : .primary)
                 }
 
                 JournalField("Current Spend") {

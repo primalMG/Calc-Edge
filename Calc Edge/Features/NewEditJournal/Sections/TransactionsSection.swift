@@ -70,7 +70,7 @@ struct TransactionsSection: View {
     }
 
     private func save(_ draft: TradeTransactionDraft, for transaction: TradeTransaction?) {
-        let previousSummary = trade.positionSummary
+        let previousSummary = trade.currentPositionSummary
         let wasNew = transaction == nil
         let previousTransactionSummary = transaction.map(transactionSummary(for:))
         let transaction = transaction ?? TradeTransaction(
@@ -108,12 +108,12 @@ struct TransactionsSection: View {
                 current: transactionSummary(for: transaction)
             ),
             previous: previousSummary,
-            current: trade.positionSummary
+            current: trade.currentPositionSummary
         )
     }
 
     private func remove(_ transaction: TradeTransaction) {
-        let previousSummary = trade.positionSummary
+        let previousSummary = trade.currentPositionSummary
         let removedTransactionSummary = transactionSummary(for: transaction)
 
         if let index = trade.transactions?.firstIndex(where: { $0 === transaction }) {
@@ -128,7 +128,7 @@ struct TransactionsSection: View {
             summary: "Deleted \(transaction.action.displayName) transaction",
             detail: removedTransactionSummary,
             previous: previousSummary,
-            current: trade.positionSummary
+            current: trade.currentPositionSummary
         )
     }
 

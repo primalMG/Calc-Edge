@@ -13,9 +13,13 @@ struct TradePositionSummary {
         totalFees: 0
     )
 
-    init(transactions: [TradeTransaction]) {
-        var quantity: Decimal = 0
-        var costBasis: Decimal = 0
+    init(
+        transactions: [TradeTransaction],
+        initialQuantity: Decimal = 0,
+        initialAveragePrice: Decimal? = nil
+    ) {
+        var quantity = initialQuantity
+        var costBasis = initialQuantity * (initialAveragePrice ?? 0)
         var totalFees: Decimal = 0
 
         for transaction in transactions.sorted(by: { $0.date < $1.date }) {
@@ -72,27 +76,29 @@ extension Trade {
         TradePositionSummary(transactions: transactions ?? [])
     }
 
+    var currentPositionSummary: TradePositionSummary {
+        TradePositionSummary(
+            transactions: transactions ?? [],
+            initialQuantity: transactionsRepresentStoredShareCount ? 0 : shareCount,
+            initialAveragePrice: entryPrice
+        )
+    }
+
     var currentShareCount: Decimal {
-        let summary = positionSummary
-        return hasPositionTransactions ? summary.currentShareCount : shareCount
+        currentPositionSummary.currentShareCount
+    }
+
+    var currentAveragePrice: Decimal? {
+        currentPositionSummary.averagePrice
     }
 
     var currentSpend: Decimal? {
-        let summary = positionSummary
-
-        if hasPositionTransactions {
-            guard summary.currentShareCount > 0, let averagePrice = summary.averagePrice else {
-                return nil
-            }
-
-            return summary.currentShareCount * averagePrice
-        }
-
-        guard closedAt == nil, shareCount > 0, let entryPrice else {
+        let summary = currentPositionSummary
+        guard summary.currentShareCount > 0 else {
             return nil
         }
 
-        return shareCount * entryPrice
+        return summary.costBasis
     }
 
     var totalProfitLoss: Decimal? {
@@ -101,7 +107,7 @@ extension Trade {
             return nil
         }
 
-        let quantity = shareCount > 0 ? shareCount : openingTransactionQuantity
+        let quantity = currentShareCount > 0 ? currentShareCount : openingTransactionQuantity
         guard quantity > 0 else {
             return nil
         }
@@ -131,7 +137,11 @@ extension Trade {
         }
     }
 
-    private var hasPositionTransactions: Bool {
+    var isInitialShareCountLocked: Bool {
+        hasPositionTransactions
+    }
+
+    var hasPositionTransactions: Bool {
         (transactions ?? []).contains { transaction in
             switch transaction.action {
             case .buy, .add, .sell, .trim:
@@ -140,6 +150,17 @@ extension Trade {
                 return false
             }
         }
+    }
+
+    private var transactionsRepresentStoredShareCount: Bool {
+        guard shareCount > 0,
+              hasPositionTransactions,
+              let entryPrice,
+              let averagePrice = positionSummary.averagePrice else {
+            return false
+        }
+
+        return positionSummary.currentShareCount == shareCount && averagePrice == entryPrice
     }
 
     private var openingTransactionQuantity: Decimal {

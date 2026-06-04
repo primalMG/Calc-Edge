@@ -129,7 +129,7 @@ final class TradeJournalDetailPersistenceCoordinator {
             return
         }
 
-        let position = trade.positionSummary
+        let position = trade.currentPositionSummary
         trade.appendValueChangeLog(
             summary: "Updated journal entry",
             detail: details.joined(separator: "\n"),
