@@ -113,6 +113,8 @@ private struct ToastPresenter: ViewModifier {
     @Binding var toast: ToastConfiguration?
     let edge: VerticalEdge
 
+    @GestureState private var dragOffset: CGSize = .zero
+
     func body(content: Content) -> some View {
         content
             .overlay(alignment: edge == .top ? .top : .bottom) {
@@ -120,6 +122,8 @@ private struct ToastPresenter: ViewModifier {
                     ToastBanner(configuration: toast)
                         .padding(.horizontal, 16)
                         .padding(edge == .top ? .top : .bottom, 12)
+                        .offset(y: min(0, dragOffset.height))
+                        .gesture(dismissGesture)
                         .transition(transition)
                 }
             }
@@ -151,6 +155,22 @@ private struct ToastPresenter: ViewModifier {
         withAnimation(.easeInOut(duration: 0.25)) {
             self.toast = nil
         }
+    }
+
+    private var dismissGesture: some Gesture {
+        DragGesture(minimumDistance: 12)
+            .updating($dragOffset) { value, state, _ in
+                state = value.translation
+            }
+            .onEnded { value in
+                guard value.translation.height < -28 || value.predictedEndTranslation.height < -48 else {
+                    return
+                }
+
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    toast = nil
+                }
+            }
     }
 
     private var transition: AnyTransition {
