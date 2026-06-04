@@ -10,10 +10,14 @@ func optionalTextBinding(_ binding: Binding<String?>) -> Binding<String> {
     )
 }
 
-func optionalDecimalBinding(_ binding: Binding<Decimal?>) -> Binding<String> {
+func optionalDecimalBinding(_ binding: Binding<Decimal?>, fractionDigits: Int? = nil) -> Binding<String> {
     Binding(
         get: {
             guard let value = binding.wrappedValue else { return "" }
+            if let fractionDigits {
+                return ValueDisplayFormatter.decimal(value, fractionDigits: fractionDigits)
+            }
+
             return NSDecimalNumber(decimal: value).stringValue
         },
         set: { newValue in
@@ -27,10 +31,14 @@ func optionalDecimalBinding(_ binding: Binding<Decimal?>) -> Binding<String> {
     )
 }
 
-func decimalBinding(_ binding: Binding<Decimal>) -> Binding<String> {
+func decimalBinding(_ binding: Binding<Decimal>, fractionDigits: Int? = nil) -> Binding<String> {
     Binding(
         get: {
-            NSDecimalNumber(decimal: binding.wrappedValue).stringValue
+            if let fractionDigits {
+                return ValueDisplayFormatter.decimal(binding.wrappedValue, fractionDigits: fractionDigits)
+            }
+
+            return NSDecimalNumber(decimal: binding.wrappedValue).stringValue
         },
         set: { newValue in
             let cleaned = newValue.replacingOccurrences(of: ",", with: ".")

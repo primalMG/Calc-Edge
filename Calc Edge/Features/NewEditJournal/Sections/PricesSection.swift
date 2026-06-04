@@ -18,26 +18,26 @@ struct PricesSection: View {
                 }
 
                 JournalField("Current Share Count") {
-                    Text(ValueDisplayFormatter.decimal(positionSummary.currentShareCount))
+                    Text(ValueDisplayFormatter.decimal(positionSummary.currentShareCount, fractionDigits: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(.primary)
                 }
 
                 JournalField("Average Price") {
-                    Text(ValueDisplayFormatter.decimal(positionSummary.averagePrice, placeholder: "No open position"))
+                    Text(ValueDisplayFormatter.decimal(positionSummary.averagePrice, placeholder: "No open position", fractionDigits: 2))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .foregroundStyle(positionSummary.averagePrice == nil ? .secondary : .primary)
                 }
 
                 JournalField("Entry Price") {
-                    TextField("", text: optionalDecimalBinding($trade.entryPrice))
+                    TextField("", text: optionalDecimalBinding($trade.entryPrice, fractionDigits: 2))
                     #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                     #endif
                 }
                 
                 JournalField("Exit Price") {
-                    TextField("", text: optionalDecimalBinding($trade.exitPrice))
+                    TextField("", text: optionalDecimalBinding($trade.exitPrice, fractionDigits: 2))
                         #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                         #endif
@@ -51,14 +51,14 @@ struct PricesSection: View {
                 }
                 
                 JournalField("Stop Price") {
-                    TextField("", text: optionalDecimalBinding($trade.stopPrice))
+                    TextField("", text: optionalDecimalBinding($trade.stopPrice, fractionDigits: 2))
                         #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                         #endif
                 }
                 
                 JournalField("Target Price") {
-                    TextField("", text: optionalDecimalBinding($trade.targetPrice))
+                    TextField("", text: optionalDecimalBinding($trade.targetPrice, fractionDigits: 2))
                         #if os(iOS)
                         .textFieldStyle(CustomTextFieldStyle())
                         #endif
