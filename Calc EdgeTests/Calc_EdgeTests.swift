@@ -41,6 +41,36 @@ struct Calc_EdgeTests {
         #expect(isClose(insights.performanceByAccount.last?.expectancy, 0.25))
     }
 
+    @Test @MainActor func csvImportGroupingCombinesMatchingTickerRows() async throws {
+        let firstAAPL = makeImportedTrade(
+            ticker: "AAPL",
+            openedAt: .init(timeIntervalSince1970: 0),
+            quantity: 10,
+            price: 100
+        )
+        let secondAAPL = makeImportedTrade(
+            ticker: "AAPL",
+            openedAt: .init(timeIntervalSince1970: 86_400),
+            quantity: 5,
+            price: 110
+        )
+        let msft = makeImportedTrade(
+            ticker: "MSFT",
+            openedAt: .init(timeIntervalSince1970: 172_800),
+            quantity: 2,
+            price: 250
+        )
+
+        let grouped = JournalCSVImporter.groupedByMatchingTickers([firstAAPL, secondAAPL, msft])
+        let aapl = try #require(grouped.first { $0.ticker == "AAPL" })
+
+        #expect(grouped.count == 2)
+        #expect(aapl.shareCount == 15)
+        #expect((aapl.entryPrice ?? 0) > Decimal(string: "103.33")!)
+        #expect((aapl.entryPrice ?? 0) < Decimal(string: "103.34")!)
+        #expect(aapl.transactions?.count == 2)
+    }
+
     private func makeAnalyticsFixtureTrades() -> [Trade] {
         [
             makeTrade(
@@ -130,6 +160,33 @@ struct Calc_EdgeTests {
             exitPrice: exitPrice,
             stopPrice: stopPrice
         )
+    }
+
+    private func makeImportedTrade(
+        ticker: String,
+        openedAt: Date,
+        quantity: Decimal,
+        price: Decimal
+    ) -> Trade {
+        let trade = Trade(
+            openedAt: openedAt,
+            ticker: ticker,
+            instrument: .stock,
+            direction: .long,
+            shareCount: quantity,
+            entryPrice: price
+        )
+
+        trade.transactions = [
+            TradeTransaction(
+                date: openedAt,
+                action: .buy,
+                quantity: quantity,
+                price: price
+            )
+        ]
+
+        return trade
     }
 
     private func isClose(_ lhs: Double?, _ rhs: Double, tolerance: Double = 0.0001) -> Bool {

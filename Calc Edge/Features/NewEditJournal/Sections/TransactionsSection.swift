@@ -118,7 +118,9 @@ struct TransactionsSection: View {
             trade.transactions?.remove(at: index)
         }
 
-        modelContext.delete(transaction)
+        if transaction.modelContext != nil {
+            modelContext.delete(transaction)
+        }
 
         trade.appendValueChangeLog(
             summary: "Deleted \(transaction.action.displayName) transaction",
@@ -187,15 +189,17 @@ private struct TradeTransactionRow: View {
 
             Button(action: onEdit) {
                 Image(systemName: "pencil")
+                    .frame(width: 28, height: 28)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .accessibilityLabel("Edit transaction")
 
             Button(role: .destructive, action: onDelete) {
                 Image(systemName: "trash")
+                    .frame(width: 28, height: 28)
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
             .foregroundStyle(.secondary)
             .accessibilityLabel("Delete transaction")
         }
@@ -203,8 +207,6 @@ private struct TradeTransactionRow: View {
         .padding(10)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onEdit)
     }
 
     private var transactionDetail: String {

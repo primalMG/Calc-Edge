@@ -5,10 +5,14 @@ struct JournalImportReviewView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
+    private let importedTrades: [Trade]
+
     @State private var trades: [Trade]
+    @State private var groupMatchingTickers = false
     @State private var alert: ImportReviewAlert?
 
     init(trades: [Trade]) {
+        self.importedTrades = trades
         _trades = State(initialValue: trades)
     }
 
@@ -16,6 +20,12 @@ struct JournalImportReviewView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
+                    ImportGroupingControls(
+                        groupMatchingTickers: $groupMatchingTickers,
+                        originalCount: importedTrades.count,
+                        reviewedCount: trades.count
+                    )
+
                     ForEach(trades) { trade in
                         ImportTradeEditorCard(
                             trade: trade,
@@ -62,6 +72,9 @@ struct JournalImportReviewView: View {
                     message: Text(alert.message),
                     dismissButton: .default(Text("OK"))
                 )
+            }
+            .onChange(of: groupMatchingTickers) { _, shouldGroup in
+                trades = shouldGroup ? JournalCSVImporter.groupedByMatchingTickers(importedTrades) : importedTrades
             }
         }
         #if os(macOS)
@@ -112,6 +125,28 @@ struct JournalImportReviewView: View {
                 message: error.localizedDescription
             )
         }
+    }
+}
+
+private struct ImportGroupingControls: View {
+    @Binding var groupMatchingTickers: Bool
+
+    let originalCount: Int
+    let reviewedCount: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle("Group matching tickers", isOn: $groupMatchingTickers)
+
+            if groupMatchingTickers {
+                Text("\(originalCount) CSV rows grouped into \(reviewedCount) journal entries.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(14)
+        .background(.regularMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

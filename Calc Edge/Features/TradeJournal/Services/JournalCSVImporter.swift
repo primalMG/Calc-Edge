@@ -41,6 +41,21 @@ struct JournalCSVImporter {
         return trades
     }
 
+    @MainActor
+    static func groupedByMatchingTickers(_ trades: [Trade]) -> [Trade] {
+        let grouped = Dictionary(grouping: trades, by: TradeImportGroupKey.init)
+
+        return grouped.values
+            .map { group in
+                guard group.count > 1 else {
+                    return group[0]
+                }
+
+                return groupedTrade(from: group)
+            }
+            .sorted { $0.openedAt < $1.openedAt }
+    }
+
     private func trade(from row: CSVRow) -> Trade? {
         let action = row.value(for: Column.action)
         let ticker = row.value(for: Column.ticker)?.uppercased()
@@ -100,7 +115,82 @@ struct JournalCSVImporter {
 
         return trade
     }
+
+    private static func groupedTrade(from trades: [Trade]) -> Trade {
+        let sortedTrades = trades.sorted { $0.openedAt < $1.openedAt }
+        let firstTrade = sortedTrades[0]
+        let transactions = sortedTrades
+            .flatMap { $0.transactions ?? [] }
+            .sorted { $0.date < $1.date }
+            .map { transaction in
+                TradeTransaction(
+                    date: transaction.date,
+                    action: transaction.action,
+                    quantity: transaction.quantity,
+                    price: transaction.price,
+                    exchangeRate: transaction.exchangeRate,
+                    fees: transaction.fees,
+                    note: transaction.note
+                )
+            }
+        let summary = TradePositionSummary(transactions: transactions)
+        let exchangeRates = Set(sortedTrades.compactMap { $0.exchangeRate })
+
+        let trade = Trade(
+            openedAt: sortedTrades.map(\.openedAt).min() ?? firstTrade.openedAt,
+            ticker: firstTrade.ticker,
+            market: firstTrade.market,
+            accountId: firstTrade.accountId,
+            account: firstTrade.account,
+            instrument: firstTrade.instrument,
+            direction: firstTrade.direction,
+            shareCount: summary.currentShareCount,
+            entryPrice: firstTrade.direction == .long ? summary.averagePrice : nil,
+            exitPrice: firstTrade.direction == .short ? firstTrade.exitPrice : nil,
+            exchangeRate: exchangeRates.count == 1 ? exchangeRates.first : nil,
+            plannedRiskAmount: sum(sortedTrades.compactMap(\.plannedRiskAmount)),
+            commissions: sum(sortedTrades.compactMap(\.commissions))
+        )
+
+        trade.legs = [
+            TradeLeg(
+                symbol: firstTrade.ticker,
+                legInstrument: firstTrade.instrument,
+                quantity: summary.currentShareCount,
+                entryPrice: firstTrade.direction == .long ? summary.averagePrice : nil,
+                exitPrice: firstTrade.direction == .short ? firstTrade.exitPrice : nil
+            )
+        ]
+        trade.transactions = transactions
+
+        return trade
+    }
+
+    private static func sum(_ values: [Decimal]) -> Decimal? {
+        guard let first = values.first else {
+            return nil
+        }
+
+        return values.dropFirst().reduce(first, +)
+    }
 }
+
+private struct TradeImportGroupKey: Hashable {
+    let ticker: String
+    let instrument: InstrumentType
+    let accountId: UUID?
+    let account: String?
+    let market: String?
+
+    init(trade: Trade) {
+        ticker = trade.ticker.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        instrument = trade.instrument
+        accountId = trade.accountId
+        account = trade.account?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        market = trade.market?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
 
 private extension TradeTransactionAction {
     init(csvAction: String?, direction: TradeDirection) {
@@ -110,11 +200,11 @@ private extension TradeTransactionAction {
             .joined() ?? ""
 
         switch normalized {
-        case let value where value.contains("dividend"):
+        case let value where value.contains("dividend") || value.contains("CDIV"):
             self = .dividend
         case let value where value.contains("fee") || value.contains("charge") || value.contains("commission"):
             self = .fee
-        case let value where value.contains("trim"):
+        case let value where value.contains("trim") || value.contains("NRAT"):
             self = .trim
         case let value where value.contains("add"):
             self = .add
@@ -175,7 +265,7 @@ private struct CSVRow {
 }
 
 private enum Column {
-    static let action = ["Action", "Side", "Type", "Transaction Type", "Trade Type"]
+    static let action = ["Action", "Side", "Type", "Transaction Type", "Trade Type", "Trans Code"]
     static let ticker = ["Ticker", "Symbol", "Instrument", "Market"]
     static let market = ["Market", "Exchange", "Venue", "Currency (Price / share)"]
     static let instrument = ["Instrument Type", "Asset Type", "Type", "Product Type"]
