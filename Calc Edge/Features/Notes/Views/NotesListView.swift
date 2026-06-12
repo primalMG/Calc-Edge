@@ -5,6 +5,8 @@ struct NotesListView: View {
     @Binding var selectedNoteID: UUID?
     let deleteItems: (IndexSet) -> Void
     let deleteNote: (Note) -> Void
+    let canLoadMore: Bool
+    let loadMore: () -> Void
     
     #if os(iOS)
     @State private var note: Note?
@@ -26,6 +28,12 @@ struct NotesListView: View {
                 #endif
             }
             .onDelete(perform: deleteItems)
+
+            PagedLoadMoreFooter(
+                visibleCount: notes.count,
+                canLoadMore: canLoadMore,
+                loadMore: loadMore
+            )
         }
         #if os(macOS)
         .listStyle(.sidebar)

@@ -181,6 +181,7 @@ struct RulebookContent: View {
         #endif
         modelContext.delete(rule)
         keepSelectionInSync()
+        try? modelContext.saveIfNeeded()
     }
 }
 

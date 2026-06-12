@@ -9,14 +9,47 @@ import SwiftUI
 import SwiftData
 
 struct RiskCalcListView: View {
+    @Binding var selectedStock: Stock
+    @State private var fetchLimit = PlatformPageSize.initial
+
+    var body: some View {
+        RiskCalcPagedListView(
+            selectedStock: $selectedStock,
+            fetchLimit: fetchLimit
+        ) {
+            fetchLimit += PlatformPageSize.increment
+        }
+    }
+}
+
+private struct RiskCalcPagedListView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Stock.createdAt, order: .reverse) private var stockCalcs: [Stock]
+    @Query private var stockCalcs: [Stock]
 
     @Binding var selectedStock: Stock
     #if os(macOS)
     @State private var selectedStockID: UUID?
     #endif
     @State private var presentSheet: Bool = false
+
+    let fetchLimit: Int
+    let loadMore: () -> Void
+
+    init(
+        selectedStock: Binding<Stock>,
+        fetchLimit: Int,
+        loadMore: @escaping () -> Void
+    ) {
+        _selectedStock = selectedStock
+        self.fetchLimit = fetchLimit
+        self.loadMore = loadMore
+
+        var descriptor = FetchDescriptor<Stock>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = fetchLimit
+        _stockCalcs = Query(descriptor)
+    }
 
     var body: some View {
         listContent
@@ -81,6 +114,12 @@ struct RiskCalcListView: View {
                     .tag(stock.id)
             }
             .onDelete(perform: deleteItems)
+
+            PagedLoadMoreFooter(
+                visibleCount: stockCalcs.count,
+                canLoadMore: canLoadMore,
+                loadMore: loadMore
+            )
         }
         #else
         List {
@@ -92,8 +131,18 @@ struct RiskCalcListView: View {
                 }
             }
             .onDelete(perform: deleteItems)
+
+            PagedLoadMoreFooter(
+                visibleCount: stockCalcs.count,
+                canLoadMore: canLoadMore,
+                loadMore: loadMore
+            )
         }
         #endif
+    }
+
+    private var canLoadMore: Bool {
+        stockCalcs.count >= fetchLimit
     }
 
     private func deleteItems(offsets: IndexSet) {
@@ -106,6 +155,7 @@ struct RiskCalcListView: View {
                 #endif
                 modelContext.delete(stockCalcs[index])
             }
+            try? modelContext.saveIfNeeded()
         }
     }
 

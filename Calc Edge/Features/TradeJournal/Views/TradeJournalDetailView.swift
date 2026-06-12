@@ -125,6 +125,7 @@ struct TradeJournalDetailView: View {
 
     private func delete() {
         modelContext.delete(trade)
+        try? modelContext.saveIfNeeded()
         dismiss()
     }
 

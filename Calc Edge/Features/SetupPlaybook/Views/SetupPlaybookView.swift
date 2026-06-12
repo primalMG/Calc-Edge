@@ -181,6 +181,7 @@ struct SetupPlaybookContent: View {
         #endif
         modelContext.delete(setup)
         keepSelectionInSync()
+        try? modelContext.saveIfNeeded()
     }
 }
 

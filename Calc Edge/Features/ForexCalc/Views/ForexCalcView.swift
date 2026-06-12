@@ -9,14 +9,38 @@ import SwiftUI
 import SwiftData
 
 struct ForexCalcView: View {
+    @State private var fetchLimit = PlatformPageSize.initial
+
+    var body: some View {
+        ForexCalcPagedView(fetchLimit: fetchLimit) {
+            fetchLimit += PlatformPageSize.increment
+        }
+    }
+}
+
+private struct ForexCalcPagedView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \ForexCalculation.createdAt, order: .reverse) private var calculations: [ForexCalculation]
+    @Query private var calculations: [ForexCalculation]
 
     @State private var draftCalculation = ForexCalculation.emptyDraft
     @State private var presentSheet = false
     #if os(macOS)
     @State private var selectedCalculationID: UUID?
     #endif
+
+    let fetchLimit: Int
+    let loadMore: () -> Void
+
+    init(fetchLimit: Int, loadMore: @escaping () -> Void) {
+        self.fetchLimit = fetchLimit
+        self.loadMore = loadMore
+
+        var descriptor = FetchDescriptor<ForexCalculation>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = fetchLimit
+        _calculations = Query(descriptor)
+    }
 
     var body: some View {
         listContent
@@ -88,6 +112,12 @@ struct ForexCalcView: View {
                         .tag(calculation.id)
                 }
                 .onDelete(perform: deleteItems)
+
+                PagedLoadMoreFooter(
+                    visibleCount: calculations.count,
+                    canLoadMore: canLoadMore,
+                    loadMore: loadMore
+                )
             }
             #else
             List {
@@ -99,9 +129,19 @@ struct ForexCalcView: View {
                     }
                 }
                 .onDelete(perform: deleteItems)
+
+                PagedLoadMoreFooter(
+                    visibleCount: calculations.count,
+                    canLoadMore: canLoadMore,
+                    loadMore: loadMore
+                )
             }
             #endif
         }
+    }
+
+    private var canLoadMore: Bool {
+        calculations.count >= fetchLimit
     }
 
     private func deleteItems(offsets: IndexSet) {
@@ -114,6 +154,7 @@ struct ForexCalcView: View {
                 #endif
                 modelContext.delete(calculations[index])
             }
+            try? modelContext.saveIfNeeded()
         }
     }
 

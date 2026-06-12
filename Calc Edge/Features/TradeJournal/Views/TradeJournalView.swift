@@ -11,6 +11,16 @@ import SwiftUI
 internal import UniformTypeIdentifiers
 
 struct TradeJournalView: View {
+    @State private var fetchLimit = PlatformPageSize.initial
+
+    var body: some View {
+        TradeJournalPagedView(fetchLimit: fetchLimit) {
+            fetchLimit += PlatformPageSize.increment
+        }
+    }
+}
+
+private struct TradeJournalPagedView: View {
     @Query private var trades: [Trade]
     @State private var selectedTradeIDs = Set<Trade.ID>()
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
@@ -24,6 +34,20 @@ struct TradeJournalView: View {
     #endif
 
     @Environment(\.modelContext) private var modelContext
+
+    let fetchLimit: Int
+    let loadMore: () -> Void
+
+    init(fetchLimit: Int, loadMore: @escaping () -> Void) {
+        self.fetchLimit = fetchLimit
+        self.loadMore = loadMore
+
+        var descriptor = FetchDescriptor<Trade>(
+            sortBy: [SortDescriptor(\.openedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = fetchLimit
+        _trades = Query(descriptor)
+    }
 
     private var sortedTrades: [Trade] {
         trades.sorted(using: sortOrder)
@@ -165,6 +189,10 @@ struct TradeJournalView: View {
         visibleTrades.first(where: { selectedTradeIDs.contains($0.id) })
     }
 
+    private var canLoadMore: Bool {
+        trades.count >= fetchLimit
+    }
+
     @ViewBuilder
     private var journalContent: some View {
         if sortedTrades.isEmpty {
@@ -196,12 +224,21 @@ struct TradeJournalView: View {
     private var platformJournalContent: some View {
         #if os(macOS)
         HSplitView {
-            TradeJournalTable(
-                trades: visibleTrades,
-                selectedTradeIDs: $selectedTradeIDs,
-                sortOrder: $sortOrder,
-                deleteTrades: delete
-            )
+            VStack(spacing: 0) {
+                TradeJournalTable(
+                    trades: visibleTrades,
+                    selectedTradeIDs: $selectedTradeIDs,
+                    sortOrder: $sortOrder,
+                    deleteTrades: delete
+                )
+
+                PagedLoadMoreFooter(
+                    visibleCount: visibleTrades.count,
+                    canLoadMore: canLoadMore,
+                    loadMore: loadMore
+                )
+                .padding(.horizontal)
+            }
             .frame(minWidth: 720)
 
             tradeDetail
@@ -210,7 +247,9 @@ struct TradeJournalView: View {
         #else
         TradeJournalList(
             trades: visibleTrades,
-            deleteItems: deleteItems
+            deleteItems: deleteItems,
+            canLoadMore: canLoadMore,
+            loadMore: loadMore
         )
         #endif
     }
@@ -280,6 +319,7 @@ struct TradeJournalView: View {
         selectedTradeIDs.remove(tradeId)
 
         modelContext.delete(trade)
+        try? modelContext.saveIfNeeded()
     }
 
     #if os(macOS)

@@ -2,10 +2,34 @@ import SwiftUI
 import SwiftData
 
 struct NotesView: View {
+    @State private var fetchLimit = PlatformPageSize.initial
+
+    var body: some View {
+        NotesPagedView(fetchLimit: fetchLimit) {
+            fetchLimit += PlatformPageSize.increment
+        }
+    }
+}
+
+private struct NotesPagedView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Note.updatedAt, order: .reverse) private var notes: [Note]
+    @Query private var notes: [Note]
 
     @State private var selectedNoteID: UUID?
+
+    let fetchLimit: Int
+    let loadMore: () -> Void
+
+    init(fetchLimit: Int, loadMore: @escaping () -> Void) {
+        self.fetchLimit = fetchLimit
+        self.loadMore = loadMore
+
+        var descriptor = FetchDescriptor<Note>(
+            sortBy: [SortDescriptor(\.updatedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = fetchLimit
+        _notes = Query(descriptor)
+    }
 
     var body: some View {
         content
@@ -35,7 +59,9 @@ struct NotesView: View {
                     notes: notes,
                     selectedNoteID: $selectedNoteID,
                     deleteItems: deleteItems,
-                    deleteNote: delete
+                    deleteNote: delete,
+                    canLoadMore: canLoadMore,
+                    loadMore: loadMore
                 )
                 .frame(minWidth: 260, idealWidth: 320, maxWidth: 420)
 
@@ -47,7 +73,9 @@ struct NotesView: View {
                 notes: notes,
                 selectedNoteID: $selectedNoteID,
                 deleteItems: deleteItems,
-                deleteNote: delete
+                deleteNote: delete,
+                canLoadMore: canLoadMore,
+                loadMore: loadMore
             )
             #endif
         }
@@ -67,6 +95,10 @@ struct NotesView: View {
     private var selectedNote: Note? {
         guard let selectedNoteID else { return nil }
         return note(with: selectedNoteID)
+    }
+
+    private var canLoadMore: Bool {
+        notes.count >= fetchLimit
     }
 
     private func note(with noteID: UUID) -> Note? {
@@ -93,6 +125,7 @@ struct NotesView: View {
         }
 
         modelContext.delete(note)
+        try? modelContext.saveIfNeeded()
         keepSelectionInSync()
     }
 

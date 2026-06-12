@@ -11,6 +11,8 @@ import SwiftUI
 struct TradeJournalList: View {
     let trades: [Trade]
     let deleteItems: (IndexSet) -> Void
+    let canLoadMore: Bool
+    let loadMore: () -> Void
 
     var body: some View {
         List {
@@ -22,6 +24,12 @@ struct TradeJournalList: View {
                 }
             }
             .onDelete(perform: deleteItems)
+
+            PagedLoadMoreFooter(
+                visibleCount: trades.count,
+                canLoadMore: canLoadMore,
+                loadMore: loadMore
+            )
         }
     }
 }

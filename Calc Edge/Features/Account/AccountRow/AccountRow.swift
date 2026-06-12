@@ -112,6 +112,7 @@ struct AccountRow: View {
     private func delete() {
         let deletedAccountName = account.accountName
         modelContext.delete(account)
+        try? modelContext.saveIfNeeded()
         onDelete(deletedAccountName)
     }
 }

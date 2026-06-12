@@ -130,6 +130,7 @@ struct TransactionsSection: View {
             previous: previousSummary,
             current: trade.currentPositionSummary
         )
+        try? modelContext.saveIfNeeded()
     }
 
     private func transactionSummary(for transaction: TradeTransaction) -> String {
