@@ -15,6 +15,12 @@ struct TradeJournalDetailView: View {
     #endif
 
     @Bindable var trade: Trade
+    let deleteTrade: ((Trade.ID) -> Void)?
+
+    init(trade: Trade, deleteTrade: ((Trade.ID) -> Void)? = nil) {
+        self.trade = trade
+        self.deleteTrade = deleteTrade
+    }
 
     var body: some View {
         journalViewLayout {
@@ -124,8 +130,12 @@ struct TradeJournalDetailView: View {
     }
 
     private func delete() {
-        modelContext.delete(trade)
-        try? modelContext.saveIfNeeded()
+        if let deleteTrade {
+            deleteTrade(trade.id)
+        } else {
+            modelContext.delete(trade)
+            try? modelContext.saveIfNeeded()
+        }
         dismiss()
     }
 

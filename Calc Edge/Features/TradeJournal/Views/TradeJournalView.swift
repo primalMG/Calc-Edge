@@ -23,6 +23,7 @@ struct TradeJournalView: View {
 private struct TradeJournalPagedView: View {
     @Query private var trades: [Trade]
     @State private var selectedTradeIDs = Set<Trade.ID>()
+    @State private var pendingDeletedTradeIDs = Set<Trade.ID>()
     @State private var sortOrder = [KeyPathComparator(\Trade.openedAt, order: .reverse)]
     @State private var filters = TradeJournalFilters()
     @State private var showFileImporter = false
@@ -49,8 +50,12 @@ private struct TradeJournalPagedView: View {
         _trades = Query(descriptor)
     }
 
+    private var activeTrades: [Trade] {
+        trades.filter { !pendingDeletedTradeIDs.contains($0.id) }
+    }
+
     private var sortedTrades: [Trade] {
-        trades.sorted(using: sortOrder)
+        activeTrades.sorted(using: sortOrder)
     }
 
     private var visibleTrades: [Trade] {
@@ -83,6 +88,9 @@ private struct TradeJournalPagedView: View {
                 keepSelectionInSync()
             }
             #endif
+            .onChange(of: trades.map(\.id)) { _, tradeIDs in
+                pendingDeletedTradeIDs.formIntersection(Set(tradeIDs))
+            }
             .sheet(item: $presentedSheet) { presentation in
                 switch presentation {
                 case .draft(let draft):
@@ -259,7 +267,9 @@ private struct TradeJournalPagedView: View {
     private var tradeDetail: some View {
         ZStack {
             if let selectedTrade {
-                TradeJournalDetailView(trade: selectedTrade)
+                TradeJournalDetailView(trade: selectedTrade) { tradeID in
+                    deleteFromDetail(tradeId: tradeID)
+                }
             } else {
                 ContentUnavailableView("Select a Trade", systemImage: "book")
             }
@@ -312,29 +322,42 @@ private struct TradeJournalPagedView: View {
     }
 
     private func delete(tradeId: Trade.ID) {
-        guard let trade = trades.first(where: { $0.id == tradeId }) else {
+        guard let trade = activeTrades.first(where: { $0.id == tradeId }) else {
             return
         }
 
         selectedTradeIDs.remove(tradeId)
+        pendingDeletedTradeIDs.insert(tradeId)
 
         modelContext.delete(trade)
-        try? modelContext.saveIfNeeded()
     }
 
     #if os(macOS)
     private func delete(tradeIds: Set<Trade.ID>) {
-        for tradeId in tradeIds {
-            delete(tradeId: tradeId)
+        withAnimation {
+            for tradeId in tradeIds {
+                delete(tradeId: tradeId)
+            }
+            try? modelContext.saveIfNeeded()
         }
     }
     #endif
 
     private func deleteItems(offsets: IndexSet) {
+        let tradeIDs = offsets.map { visibleTrades[$0].id }
+
         withAnimation {
-            for index in offsets {
-                delete(tradeId: visibleTrades[index].id)
+            for tradeID in tradeIDs {
+                delete(tradeId: tradeID)
             }
+            try? modelContext.saveIfNeeded()
+        }
+    }
+
+    private func deleteFromDetail(tradeId: Trade.ID) {
+        withAnimation {
+            delete(tradeId: tradeId)
+            try? modelContext.saveIfNeeded()
         }
     }
 
