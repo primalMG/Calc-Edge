@@ -23,9 +23,23 @@ struct SetupPlaybookContent: View {
         content
             .navigationTitle("Playbook")
             .toolbar {
+                #if os(macOS)
                 ToolbarItem(placement: .primaryAction) {
+                    Button(role: .destructive, action: deleteSelectedSetup) {
+                        Label("Delete Setup", systemImage: "trash")
+                    }
+                    .disabled(selectedSetup == nil)
+                    .help("Delete Selected Setup")
+                }
+                #endif
+
+                ToolbarItem(placement: .automatic) {
                     Button(action: addSetup) {
+                        #if os(macOS)
+                        Image(systemName: "square.and.pencil")
+                        #else
                         Label("New Setup", systemImage: "plus")
+                        #endif
                     }
                     .help("New Setup")
                 }
@@ -73,24 +87,13 @@ struct SetupPlaybookContent: View {
         List {
             ForEach(setups) { setup in
                 #if os(macOS)
-                HStack(spacing: 12) {
-                    Button {
-                        selectedSetupID = setup.setupId
-                    } label: {
-                        SetupRow(setup: setup)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button(role: .destructive) {
-                        deleteSetup(setup)
-                    } label: {
-                        Label("Delete Setup", systemImage: "trash")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Delete Setup")
+                Button {
+                    selectedSetupID = setup.setupId
+                } label: {
+                    SetupRow(setup: setup)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
                 .listRowBackground(selectedSetupID == setup.setupId ? Color.accentColor.opacity(0.12) : nil)
                 #else
                 Button {
@@ -160,6 +163,11 @@ struct SetupPlaybookContent: View {
         for index in offsets {
             deleteSetup(setups[index])
         }
+    }
+
+    private func deleteSelectedSetup() {
+        guard let selectedSetup else { return }
+        deleteSetup(selectedSetup)
     }
 
     private func deleteSetup(_ setup: TradingSetup) {

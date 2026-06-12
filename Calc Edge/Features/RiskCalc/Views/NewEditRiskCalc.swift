@@ -137,12 +137,31 @@ struct NewEditRiskCalc: View {
 
     private var formContent: some View {
         Form {
-            accountSection
-            stockDetailsSection
-            riskSetupSection
-            targetSetupSection
-            resultsSection
-            actionSection
+            RiskCalcAccountSection(
+                accounts: accounts,
+                selectedAccountID: $selectedAccountID,
+                riskPercentage: $stock.riskPercentage,
+                displayAccountBalance: displayAccountBalance
+            )
+
+            RiskCalcStockDetailsSection(stock: stock)
+            RiskCalcLossInputsSection(stopLoss: $stock.stopLoss)
+            RiskCalcProfitInputsSection(targetPrice: $stock.targetPrice)
+
+            RiskCalcLiveResultsSection(
+                riskAmount: displayRiskAmount,
+                shareCount: displayShareCount,
+                lossDifference: displayLossDifference,
+                lossTotal: displayLossTotal,
+                profitDifference: displayProfitDifference,
+                profitTotal: displayProfitTotal,
+                riskRewardRatio: displayRiskRewardRatio
+            )
+
+            RiskCalcActionSection(
+                onSave: save,
+                onCancel: { dismiss() }
+            )
         }
         #if os(iOS)
         .toolbar {
@@ -164,123 +183,6 @@ struct NewEditRiskCalc: View {
         .frame(minWidth: 360, idealWidth: 520, maxWidth: 680)
         .frame(minHeight: 600)
         #endif
-    }
-
-    @ViewBuilder
-    private var accountSection: some View {
-        Section("Account") {
-            if accounts.isEmpty {
-                Text("Add an account in Accounts to reuse saved account sizes here.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                HStack {
-                    Picker("Accounts:", selection: $selectedAccountID) {
-                        ForEach(accounts) { account in
-                            Text(account.accountName)
-                                .tag(account.id as Account.ID?)
-                        }
-                    }
-
-                    Button {
-                        print("Open Accounts Sheet")
-                    } label: {
-                        Image(systemName: "person.2.fill")
-                    }
-                    .help("Open accounts view")
-                    .frame(width: 20)
-                }
-            }
-
-            LabeledContent("Balance:") {
-                Text(displayAccountBalance)
-                    .foregroundStyle(.secondary)
-            }
-
-            LabeledContent("Risk Percentage (%):") {
-                TextField("", text: doubleBinding($stock.riskPercentage))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
-        }
-    }
-
-    private var stockDetailsSection: some View {
-        Section("Stock Details") {
-            LabeledContent("Ticker/Stock:") {
-                TextField("", text: $stock.ticker)
-                #if os(iOS)
-                    .textInputAutocapitalization(.characters)
-                #endif
-                    .autocorrectionDisabled()
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
-
-            LabeledContent("Entry Price:") {
-                TextField("", text: doubleBinding($stock.entryPrice))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
-        }
-    }
-
-    private var riskSetupSection: some View {
-        Section("Loss Inputs") {
-            LabeledContent("Stop Loss:") {
-                TextField("", text: doubleBinding($stock.stopLoss))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
-        }
-    }
-
-    private var targetSetupSection: some View {
-        Section("Profit Inputs") {
-            LabeledContent("Technical Target:") {
-                TextField("", text: doubleBinding($stock.targetPrice))
-                    .textFieldStyle(CustomTextFieldStyle())
-            }
-        }
-    }
-
-    private var resultsSection: some View {
-        Section("Live Results") {
-            resultRow("Amount at Risk", displayRiskAmount)
-            resultRow("Shares Bought", displayShareCount)
-            resultRow("Loss Difference", displayLossDifference)
-            resultRow("Loss Total", displayLossTotal)
-            resultRow("Gain Per Share", displayProfitDifference)
-            resultRow("Profit", displayProfitTotal)
-            resultRow("Risk / Reward", displayRiskRewardRatio)
-        }
-    }
-
-    @ViewBuilder
-    private var actionSection: some View {
-        #if os(macOS)
-        HStack {
-            Button("Save", action: save)
-                .tint(.green)
-
-            Button("Cancel") {
-                dismiss()
-            }
-            .tint(.red)
-        }
-        .padding(.top, 8)
-        #endif
-    }
-
-    private func resultRow(_ label: String, _ value: Double?) -> some View {
-        LabeledContent(label + ":") {
-            Text(formatResultValue(value))
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private func formatResultValue(_ value: Double?) -> String {
-        guard let value else {
-            return "Waiting for inputs"
-        }
-
-        return value.formatted(.number.precision(.fractionLength(2)))
     }
 
     private func configureInitialAccountSelection() {

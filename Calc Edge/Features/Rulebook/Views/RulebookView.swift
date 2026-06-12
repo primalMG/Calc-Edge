@@ -23,9 +23,23 @@ struct RulebookContent: View {
         content
             .navigationTitle("Rulebook")
             .toolbar {
+                #if os(macOS)
                 ToolbarItem(placement: .primaryAction) {
+                    Button(role: .destructive, action: deleteSelectedRule) {
+                        Label("Delete Rule", systemImage: "trash")
+                    }
+                    .disabled(selectedRule == nil)
+                    .help("Delete Selected Rule")
+                }
+                #endif
+
+                ToolbarItem(placement: .automatic) {
                     Button(action: addRule) {
+                        #if os(macOS)
+                        Image(systemName: "square.and.pencil")
+                        #else
                         Label("New Rule", systemImage: "plus")
+                        #endif
                     }
                     .help("New Rule")
                 }
@@ -73,24 +87,13 @@ struct RulebookContent: View {
         List {
             ForEach(rules) { rule in
                 #if os(macOS)
-                HStack(spacing: 12) {
-                    Button {
-                        selectedRuleID = rule.ruleId
-                    } label: {
-                        RuleRow(rule: rule)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button(role: .destructive) {
-                        deleteRule(rule)
-                    } label: {
-                        Label("Delete Rule", systemImage: "trash")
-                            .labelStyle(.iconOnly)
-                    }
-                    .buttonStyle(.borderless)
-                    .help("Delete Rule")
+                Button {
+                    selectedRuleID = rule.ruleId
+                } label: {
+                    RuleRow(rule: rule)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(.plain)
                 .listRowBackground(selectedRuleID == rule.ruleId ? Color.accentColor.opacity(0.12) : nil)
                 #else
                 Button {
@@ -160,6 +163,11 @@ struct RulebookContent: View {
         for index in offsets {
             deleteRule(rules[index])
         }
+    }
+
+    private func deleteSelectedRule() {
+        guard let selectedRule else { return }
+        deleteRule(selectedRule)
     }
 
     private func deleteRule(_ rule: TradingRule) {
