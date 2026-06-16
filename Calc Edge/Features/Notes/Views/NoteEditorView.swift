@@ -40,6 +40,7 @@ struct NoteEditorView: View {
                 .padding(.horizontal, 8)
                 .font(.body)
                 .scrollContentBackground(.hidden)
+                .accessibilityLabel("Note Body")
                 .padding(.horizontal, 8)
                 .padding(.vertical, 8)
         }
@@ -59,6 +60,7 @@ struct NoteEditorView: View {
                     Button(role: .destructive, action: delete) {
                         Image(systemName: "trash")
                     }
+                    .accessibilityLabel("Delete Note")
                     .help("Delete Note")
                     .tint(.red)
                 }

@@ -23,5 +23,8 @@ struct InfoRow: View {
                 .multilineTextAlignment(.trailing)
         }
         .font(.callout)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(detail)
     }
 }

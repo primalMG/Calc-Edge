@@ -35,6 +35,7 @@ struct JournalField<Content: View>: View {
                 .foregroundStyle(.secondary)
 
             content
+                .accessibilityLabel(label)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         #if os(iOS)

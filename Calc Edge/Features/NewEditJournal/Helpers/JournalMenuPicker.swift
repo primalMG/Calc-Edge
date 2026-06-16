@@ -34,12 +34,14 @@ struct JournalMenuPicker<SelectionValue: Hashable, Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .labelsHidden()
+        .accessibilityLabel(title)
         .tint(.primary)
         #else
         Picker("", selection: $selection) {
             content
         }
         .labelsHidden()
+        .accessibilityLabel(title)
         .frame(maxWidth: .infinity, alignment: .leading)
         #endif
     }

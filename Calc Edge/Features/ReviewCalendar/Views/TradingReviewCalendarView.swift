@@ -116,6 +116,7 @@ struct TradingReviewCalendarView: View {
                 Image(systemName: "chevron.left")
             }
             .buttonStyle(.bordered)
+            .accessibilityLabel("Previous Month")
             .help("Previous Month")
         }
     }
@@ -146,6 +147,7 @@ struct TradingReviewCalendarView: View {
                 Image(systemName: "chevron.right")
             }
             .buttonStyle(.bordered)
+            .accessibilityLabel("Next Month")
             .help("Next Month")
         }
     }
@@ -467,8 +469,10 @@ private struct ReviewCalendarTradeRow: View {
                 .font(.caption)
                 .fontWeight(.semibold)
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 }
 

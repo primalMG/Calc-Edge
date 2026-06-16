@@ -62,6 +62,7 @@ private struct RiskCalcPagedListView: View {
                 } label: {
                     Image(systemName: "square.and.pencil")
                 }
+                .accessibilityLabel("New Stock Calculation")
                 .help("New Calculation")
                 .sheet(isPresented: $presentSheet) {
                     NewEditRiskCalc(stock: selectedStock, isNew: true)

@@ -121,7 +121,8 @@ struct StockCalcView: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
-                .help("Edit Calcuation")
+                .accessibilityLabel("Edit Calculation")
+                .help("Edit Calculation")
                 .keyboardShortcut("E")
                 .sheet(isPresented: $presentSheet) {
                     NewEditRiskCalc(stock: stock, isNew: false)
@@ -132,6 +133,7 @@ struct StockCalcView: View {
                 } label: {
                     Image(systemName: "trash")
                 }
+                .accessibilityLabel("Delete Calculation")
                 .help("Delete")
                 .keyboardShortcut("D")
                 .alert("Delete Calculation", isPresented: $toggleAlert) {

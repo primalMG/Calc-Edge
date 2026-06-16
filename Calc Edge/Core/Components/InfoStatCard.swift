@@ -45,5 +45,16 @@ struct InfoStatCard: View {
         .background(.regularMaterial)
         #endif
         .clipShape(RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(accessibilityValue)
+    }
+
+    private var accessibilityValue: String {
+        if let subtitle {
+            "\(value), \(subtitle)"
+        } else {
+            value
+        }
     }
 }

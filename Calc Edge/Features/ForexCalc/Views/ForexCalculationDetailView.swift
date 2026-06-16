@@ -69,6 +69,7 @@ struct ForexCalculationDetailView: View {
                 } label: {
                     Image(systemName: "pencil")
                 }
+                .accessibilityLabel("Edit Calculation")
                 .help("Edit Calculation")
                 .keyboardShortcut("E")
                 .sheet(isPresented: $presentSheet) {
@@ -80,6 +81,7 @@ struct ForexCalculationDetailView: View {
                 } label: {
                     Image(systemName: "trash")
                 }
+                .accessibilityLabel("Delete Calculation")
                 .help("Delete")
                 .keyboardShortcut("D")
                 .alert("Delete Calculation", isPresented: $toggleAlert) {

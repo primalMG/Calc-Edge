@@ -41,6 +41,7 @@ struct SetupPlaybookContent: View {
                         Label("New Setup", systemImage: "plus")
                         #endif
                     }
+                    .accessibilityLabel("New Setup")
                     .help("New Setup")
                 }
             }

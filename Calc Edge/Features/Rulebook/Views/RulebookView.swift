@@ -41,6 +41,7 @@ struct RulebookContent: View {
                         Label("New Rule", systemImage: "plus")
                         #endif
                     }
+                    .accessibilityLabel("New Rule")
                     .help("New Rule")
                 }
             }

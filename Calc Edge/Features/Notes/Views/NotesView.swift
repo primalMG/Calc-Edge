@@ -39,6 +39,7 @@ private struct NotesPagedView: View {
                     Button(action: createNote) {
                         Image(systemName: "square.and.pencil")
                     }
+                    .accessibilityLabel("New Note")
                     .help("New Note")
                 }
             }

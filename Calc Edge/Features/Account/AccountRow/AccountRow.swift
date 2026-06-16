@@ -96,6 +96,7 @@ struct AccountRow: View {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
                 }
+                .accessibilityLabel("Edit Account")
                 .help("Edit")
                 .tint(.primary)
 
@@ -103,6 +104,7 @@ struct AccountRow: View {
                     Image(systemName: "trash.fill")
                 }
                 .tint(.red)
+                .accessibilityLabel("Delete Account")
                 .help("Delete")
             }
             .font(.footnote)

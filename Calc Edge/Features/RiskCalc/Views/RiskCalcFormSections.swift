@@ -23,6 +23,7 @@ struct RiskCalcAccountSection: View {
 
             LabeledContent("Risk Percentage (%):") {
                 TextField("", text: doubleBinding($riskPercentage))
+                    .accessibilityLabel("Risk Percentage")
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -42,6 +43,7 @@ struct RiskCalcAccountSection: View {
             } label: {
                 Image(systemName: "person.2.fill")
             }
+            .accessibilityLabel("Open Accounts")
             .help("Open accounts view")
             .frame(width: 20)
         }
@@ -55,6 +57,7 @@ struct RiskCalcStockDetailsSection: View {
         Section("Stock Details") {
             LabeledContent("Ticker/Stock:") {
                 TextField("", text: $stock.ticker)
+                    .accessibilityLabel("Ticker or Stock")
                 #if os(iOS)
                     .textInputAutocapitalization(.characters)
                 #endif
@@ -64,6 +67,7 @@ struct RiskCalcStockDetailsSection: View {
 
             LabeledContent("Entry Price:") {
                 TextField("", text: doubleBinding($stock.entryPrice))
+                    .accessibilityLabel("Entry Price")
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -77,6 +81,7 @@ struct RiskCalcLossInputsSection: View {
         Section("Loss Inputs") {
             LabeledContent("Stop Loss:") {
                 TextField("", text: doubleBinding($stopLoss))
+                    .accessibilityLabel("Stop Loss")
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }
@@ -90,6 +95,7 @@ struct RiskCalcProfitInputsSection: View {
         Section("Profit Inputs") {
             LabeledContent("Technical Target:") {
                 TextField("", text: doubleBinding($targetPrice))
+                    .accessibilityLabel("Technical Target")
                     .textFieldStyle(CustomTextFieldStyle())
             }
         }

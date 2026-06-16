@@ -53,6 +53,7 @@ private struct ForexCalcPagedView: View {
                     } label: {
                         Image(systemName: "square.and.pencil")
                     }
+                    .accessibilityLabel("New Forex Calculation")
                     .help("New Calculation")
                     .sheet(isPresented: $presentSheet) {
                         AddEditForexCalcView(calculation: draftCalculation, isNew: true)

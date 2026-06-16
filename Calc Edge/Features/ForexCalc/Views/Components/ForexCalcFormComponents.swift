@@ -44,6 +44,7 @@ struct ForexAccountSection: View {
                 ForexDecimalFieldRow(label: "Account Balance", value: $calculation.accountBalance)
                 LabeledContent("Account Currency:") {
                     TextField("", text: $calculation.accountCurrency)
+                        .accessibilityLabel("Account Currency")
                         .textFieldStyle(CustomTextFieldStyle())
                         .autocorrectionDisabled()
                 }
@@ -70,6 +71,7 @@ struct ForexBasicsSection: View {
                     }
                 }
                 .labelsHidden()
+                .accessibilityLabel("Calculator Type")
             }
 
             LabeledContent("Pair:") {
@@ -80,6 +82,7 @@ struct ForexBasicsSection: View {
                     }
                 }
                 .labelsHidden()
+                .accessibilityLabel("Currency Pair")
                 .pickerStyle(.menu)
             }
             
@@ -111,14 +114,15 @@ struct ForexBasicsSection: View {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 6) {
-                Button(action: onFetchQuoteRate) {
-                    if isFetchingQuoteRate {
-                        Label("Fetching latest rate...", systemImage: "hourglass")
-                    } else {
-                        Label("Fetch Latest Rates", systemImage: "arrow.clockwise")
-                    }
+            Button(action: onFetchQuoteRate) {
+                if isFetchingQuoteRate {
+                    Label("Fetching latest rate...", systemImage: "hourglass")
+                } else {
+                    Label("Fetch Latest Rates", systemImage: "arrow.clockwise")
                 }
-                .disabled(!canFetchQuoteRate || isFetchingQuoteRate)
+            }
+            .accessibilityLabel(isFetchingQuoteRate ? "Fetching Latest Rate" : "Fetch Latest Rates")
+            .disabled(!canFetchQuoteRate || isFetchingQuoteRate)
 
                 if let quoteRateErrorMessage {
                     Text(quoteRateErrorMessage)
@@ -249,6 +253,7 @@ private struct ForexDecimalFieldRow: View {
     var body: some View {
         LabeledContent(label + ":") {
             TextField("", text: optionalDecimalBinding($value))
+                .accessibilityLabel(label)
                 .textFieldStyle(CustomTextFieldStyle())
         }
     }
@@ -260,6 +265,7 @@ private struct ForexLeverageRatioField: View {
     var body: some View {
         LabeledContent("Leverage (Ratio):") {
             TextField("", text: $text)
+                .accessibilityLabel("Leverage Ratio")
                 .textFieldStyle(CustomTextFieldStyle())
         }
     }

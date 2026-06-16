@@ -161,6 +161,7 @@ private struct AccountCurrencySection: View {
                 }
             }
             .labelsHidden()
+            .accessibilityLabel("Currency")
             .tint(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -174,6 +175,7 @@ private struct AccountBalanceSection: View {
         HStack(spacing: 8) {
             Text("Account Balance:")
             TextField("", text: doubleBinding($balance))
+                .accessibilityLabel("Account Balance")
         }
     }
 }

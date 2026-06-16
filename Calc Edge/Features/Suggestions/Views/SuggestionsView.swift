@@ -96,5 +96,8 @@ private struct SuggestionRow: View {
                 Label("Delete", systemImage: "trash")
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(suggestion.value)
+        .accessibilityValue("Used \(suggestion.useCount) times, last used \(suggestion.lastUsedAt.formatted(date: .abbreviated, time: .shortened))")
     }
 }

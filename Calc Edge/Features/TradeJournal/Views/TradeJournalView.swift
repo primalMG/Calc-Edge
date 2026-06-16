@@ -129,6 +129,7 @@ private struct TradeJournalPagedView: View {
         #if os(macOS)
         .keyboardShortcut("N")
         #endif
+        .accessibilityLabel("New Journal Entry")
         .help("New Journal Entry")
         
         Button {
@@ -137,6 +138,7 @@ private struct TradeJournalPagedView: View {
             Image(systemName: "square.and.arrow.down")
         }
         .disabled(isImportingCSV)
+        .accessibilityLabel("Import CSV")
         .help("Import CSV")
         .fileImporter(
             isPresented: $showFileImporter,
@@ -162,6 +164,8 @@ private struct TradeJournalPagedView: View {
         } label: {
             Image(systemName: filters.hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
         }
+        .accessibilityLabel("Filters")
+        .accessibilityValue(filters.hasActiveFilters ? "Active filters" : "No active filters")
         .help("Filters Menu")
     }
 
