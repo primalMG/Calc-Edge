@@ -47,7 +47,7 @@ struct OnboardingView: View {
                 .toolbar {
                     if session.currentStep == .welcome {
                         ToolbarItem(placement: .cancellationAction) {
-                            Button("Skip", action: skipOnboarding)
+                            Button("Skip", action: skipSetup)
                                 .accessibilityLabel("Skip onboarding")
                         }
                     }
@@ -78,11 +78,10 @@ struct OnboardingView: View {
         switch session.currentStep {
         case .welcome:
             OnboardingWelcomeView(
-                selectedGoal: $session.selectedGoal,
                 includeAccountSetup: $session.includeAccountSetup,
                 includeFrameworkSetup: $session.includeFrameworkSetup,
                 onContinue: startSetup,
-                onNotNow: skipOnboarding
+                onNotNow: skipSetup
             )
         case .account:
             OnboardingAccountSetupView(
@@ -110,10 +109,14 @@ struct OnboardingView: View {
                 accountResult: session.accountResult,
                 ruleResult: session.ruleResult,
                 playbookResult: session.playbookResult,
-                destinationTitle: session.selectedGoal.rootTab.title,
                 onEditAccount: editAccount,
                 onEditRule: editRule,
                 onEditPlaybook: editPlaybook,
+                onContinue: showDestination
+            )
+        case .destination:
+            OnboardingDestinationView(
+                selectedGoal: $session.selectedGoal,
                 onComplete: finishWithSelectedGoal
             )
         }
@@ -135,12 +138,16 @@ struct OnboardingView: View {
         session.pendingDiscardStep = nil
     }
 
-    private func skipOnboarding() {
-        completeOnboarding(.journal)
+    private func skipSetup() {
+        session.skipSetup()
     }
 
     private func finishWithSelectedGoal() {
         completeOnboarding(session.selectedGoal.rootTab)
+    }
+
+    private func showDestination() {
+        session.showDestination()
     }
 
     private func saveAccount() {

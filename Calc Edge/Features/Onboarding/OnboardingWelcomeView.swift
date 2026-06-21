@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct OnboardingWelcomeView: View {
-    @Binding var selectedGoal: OnboardingGoal
     @Binding var includeAccountSetup: Bool
     @Binding var includeFrameworkSetup: Bool
 
@@ -12,7 +11,6 @@ struct OnboardingWelcomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 OnboardingWelcomeHeader()
-                OnboardingGoalSection(selectedGoal: $selectedGoal)
                 OnboardingOptionsSection(
                     includeAccountSetup: $includeAccountSetup,
                     includeFrameworkSetup: $includeFrameworkSetup
@@ -32,17 +30,16 @@ struct OnboardingWelcomeView: View {
     }
 
     private var firstSessionSummary: String {
-        var steps = [selectedGoal.nextStep]
-
-        if includeAccountSetup {
-            steps.append("add your first account")
+        switch (includeAccountSetup, includeFrameworkSetup) {
+        case (true, true):
+            return "We'll guide you through your first account, rule, and playbook setup before you choose where to start."
+        case (true, false):
+            return "We'll guide you through your first account before you choose where to start."
+        case (false, true):
+            return "We'll guide you through your first rule and playbook setup before you choose where to start."
+        case (false, false):
+            return "Skip setup and choose where you want to start."
         }
-
-        if includeFrameworkSetup {
-            steps.append("capture one rule or setup")
-        }
-
-        return "After this, start with \(steps.joined(separator: ", "))."
     }
 }
 
@@ -58,36 +55,9 @@ private struct OnboardingWelcomeHeader: View {
                 .fontWeight(.semibold)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text("Choose the workflow you care about first. You can adjust accounts, rules, setups, and imports later from the app.")
+            Text("Choose how much context to add now. You can adjust accounts, rules, setups, and imports later from the app.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-private struct OnboardingGoalSection: View {
-    @Binding var selectedGoal: OnboardingGoal
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            OnboardingSectionHeader(
-                title: "Start With",
-                subtitle: "This keeps the first session focused."
-            )
-
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 240), spacing: 12, alignment: .top)],
-                alignment: .leading,
-                spacing: 12
-            ) {
-                ForEach(OnboardingGoal.allCases) { goal in
-                    OnboardingGoalButton(
-                        goal: goal,
-                        isSelected: goal == selectedGoal,
-                        action: { selectedGoal = goal }
-                    )
-                }
-            }
         }
     }
 }
@@ -171,46 +141,6 @@ private struct OnboardingSectionHeader: View {
     }
 }
 
-private struct OnboardingGoalButton: View {
-    let goal: OnboardingGoal
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(alignment: .top, spacing: 10) {
-                Image(systemName: goal.systemImage)
-                    .font(.title3)
-                    .foregroundStyle(isSelected ? .white : .primary)
-                    .frame(width: 28)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(goal.title)
-                        .font(.headline)
-                        .foregroundStyle(isSelected ? .white : .primary)
-
-                    Text(goal.detail)
-                        .font(.subheadline)
-                        .foregroundStyle(isSelected ? .white.opacity(0.82) : .secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-            }
-            .padding(14)
-            .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-            .background(isSelected ? Color.accentColor : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? Color.accentColor : Color.secondary.opacity(0.18), lineWidth: 1)
-            }
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(goal.title)
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
-    }
-}
 
 private struct OnboardingToggleRow: View {
     let title: String

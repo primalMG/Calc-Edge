@@ -46,6 +46,8 @@ final class Calc_EdgeUITests: XCTestCase {
         }
 
         XCTAssertTrue(app.otherElements["onboarding.step.allSet"].waitForExistence(timeout: 3))
+        app.buttons["onboarding.allSet.continue"].click()
+        XCTAssertTrue(app.otherElements["onboarding.step.destination"].waitForExistence(timeout: 3))
         app.buttons["onboarding.finish"].click()
         XCTAssertTrue(app.staticTexts["Journal"].waitForExistence(timeout: 5))
     }

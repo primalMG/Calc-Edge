@@ -4,11 +4,10 @@ struct OnboardingAllSetView: View {
     let accountResult: OnboardingSetupResult
     let ruleResult: OnboardingSetupResult
     let playbookResult: OnboardingSetupResult
-    let destinationTitle: String
     let onEditAccount: () -> Void
     let onEditRule: () -> Void
     let onEditPlaybook: () -> Void
-    let onComplete: () -> Void
+    let onContinue: () -> Void
 
     var body: some View {
         ScrollView {
@@ -22,14 +21,13 @@ struct OnboardingAllSetView: View {
                     onEditRule: onEditRule,
                     onEditPlaybook: onEditPlaybook
                 )
-
-                Button(action: onComplete) {
-                    Label("Open \(destinationTitle)", systemImage: "arrow.forward.circle.fill")
+                Button(action: onContinue) {
+                    Label("Continue", systemImage: "arrow.forward.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .accessibilityIdentifier("onboarding.finish")
+                .accessibilityIdentifier("onboarding.allSet.continue")
             }
             .frame(maxWidth: 680, alignment: .leading)
             .padding(.horizontal, 24)

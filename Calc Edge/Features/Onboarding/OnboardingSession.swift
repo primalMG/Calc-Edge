@@ -35,14 +35,24 @@ struct OnboardingSession {
             "Playbook Setup"
         case .allSet:
             "All Set"
+        case .destination:
+            "Get Started"
         }
     }
 
     mutating func start() {
-        accountResult = includeAccountSetup ? .skipped : .notSelected
-        ruleResult = includeFrameworkSetup ? .skipped : .notSelected
-        playbookResult = includeFrameworkSetup ? .skipped : .notSelected
+        initializeSetupResults()
         currentStep = flow.next(after: .welcome) ?? .allSet
+    }
+
+    mutating func skipSetup() {
+        initializeSetupResults()
+        currentStep = .allSet
+    }
+
+    mutating func showDestination() {
+        guard currentStep == .allSet else { return }
+        currentStep = .destination
     }
 
     func progress(for step: OnboardingStep) -> OnboardingStepProgress {
@@ -84,7 +94,7 @@ struct OnboardingSession {
         case .playbook:
             playbookID = id
             playbookResult = .created(name: name)
-        case .welcome, .allSet:
+        case .welcome, .allSet, .destination:
             return
         }
 
@@ -102,7 +112,7 @@ struct OnboardingSession {
         case .playbook:
             guard case .created = playbookResult, let playbookID else { return nil }
             return .playbook(id: playbookID, draft: setupDraft)
-        case .welcome, .allSet:
+        case .welcome, .allSet, .destination:
             return nil
         }
     }
@@ -132,7 +142,7 @@ struct OnboardingSession {
             ruleDraft.isDirty
         case .playbook:
             setupDraft.isDirty
-        case .welcome, .allSet:
+        case .welcome, .allSet, .destination:
             false
         }
     }
@@ -145,7 +155,7 @@ struct OnboardingSession {
             ruleDraft = OnboardingRuleDraft()
         case .playbook:
             setupDraft = OnboardingSetupDraft()
-        case .welcome, .allSet:
+        case .welcome, .allSet, .destination:
             break
         }
     }
@@ -158,12 +168,18 @@ struct OnboardingSession {
             ruleResult = .skipped
         case .playbook:
             playbookResult = .skipped
-        case .welcome, .allSet:
+        case .welcome, .allSet, .destination:
             break
         }
     }
 
     private mutating func advance() {
         currentStep = flow.next(after: currentStep) ?? .allSet
+    }
+
+    private mutating func initializeSetupResults() {
+        accountResult = includeAccountSetup ? .skipped : .notSelected
+        ruleResult = includeFrameworkSetup ? .skipped : .notSelected
+        playbookResult = includeFrameworkSetup ? .skipped : .notSelected
     }
 }

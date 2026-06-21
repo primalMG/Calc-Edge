@@ -47,19 +47,6 @@ enum OnboardingGoal: String, CaseIterable, Identifiable {
         }
     }
 
-    var nextStep: String {
-        switch self {
-        case .journal:
-            "create or import a journal entry"
-        case .risk:
-            "open the stock risk calculator"
-        case .forex:
-            "create a forex calculation"
-        case .review:
-            "open the review calendar"
-        }
-    }
-
     var rootTab: RootTab {
         switch self {
         case .journal:

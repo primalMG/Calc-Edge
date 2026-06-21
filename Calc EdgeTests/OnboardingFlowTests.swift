@@ -4,11 +4,18 @@ import Testing
 @testable import Calc_Edge
 
 struct OnboardingFlowTests {
+    @Test func defaultsFinalDestinationToJournal() {
+        let session = OnboardingSession()
+
+        #expect(session.selectedGoal == .journal)
+        #expect(session.selectedGoal.rootTab == .journal)
+    }
+
     @Test func buildsStepsFromSelectedOptions() {
-        #expect(OnboardingFlow(includeAccount: false, includeFramework: false).steps == [.welcome, .allSet])
-        #expect(OnboardingFlow(includeAccount: true, includeFramework: false).steps == [.welcome, .account, .allSet])
-        #expect(OnboardingFlow(includeAccount: false, includeFramework: true).steps == [.welcome, .rulebook, .playbook, .allSet])
-        #expect(OnboardingFlow(includeAccount: true, includeFramework: true).steps == [.welcome, .account, .rulebook, .playbook, .allSet])
+        #expect(OnboardingFlow(includeAccount: false, includeFramework: false).steps == [.welcome, .allSet, .destination])
+        #expect(OnboardingFlow(includeAccount: true, includeFramework: false).steps == [.welcome, .account, .allSet, .destination])
+        #expect(OnboardingFlow(includeAccount: false, includeFramework: true).steps == [.welcome, .rulebook, .playbook, .allSet, .destination])
+        #expect(OnboardingFlow(includeAccount: true, includeFramework: true).steps == [.welcome, .account, .rulebook, .playbook, .allSet, .destination])
     }
 
     @Test func returnsTheNextEnabledStep() {
@@ -17,7 +24,8 @@ struct OnboardingFlowTests {
         #expect(flow.next(after: .welcome) == .rulebook)
         #expect(flow.next(after: .rulebook) == .playbook)
         #expect(flow.next(after: .playbook) == .allSet)
-        #expect(flow.next(after: .allSet) == nil)
+        #expect(flow.next(after: .allSet) == .destination)
+        #expect(flow.next(after: .destination) == nil)
     }
 
     @Test func normalizesDraftFields() throws {
@@ -93,6 +101,46 @@ struct OnboardingFlowTests {
         #expect(session.accountDraft == OnboardingAccountDraft())
     }
 
+    @Test func skippingSetupMovesDirectlyToAllSetWithExpectedStatuses() {
+        var defaultSession = OnboardingSession()
+        defaultSession.skipSetup()
+
+        #expect(defaultSession.currentStep == .allSet)
+        #expect(defaultSession.accountResult == .skipped)
+        #expect(defaultSession.ruleResult == .skipped)
+        #expect(defaultSession.playbookResult == .skipped)
+        #expect(defaultSession.accountID == nil)
+        #expect(defaultSession.ruleID == nil)
+        #expect(defaultSession.playbookID == nil)
+
+        defaultSession.showDestination()
+        #expect(defaultSession.currentStep == .destination)
+
+        var disabledSession = OnboardingSession()
+        disabledSession.includeAccountSetup = false
+        disabledSession.includeFrameworkSetup = false
+        disabledSession.skipSetup()
+
+        #expect(disabledSession.currentStep == .allSet)
+        #expect(disabledSession.accountResult == .notSelected)
+        #expect(disabledSession.ruleResult == .notSelected)
+        #expect(disabledSession.playbookResult == .notSelected)
+    }
+
+    @Test func finalDestinationMapsToSelectedRootTab() {
+        var session = OnboardingSession()
+
+        session.selectedGoal = .review
+        #expect(session.selectedGoal.rootTab == .reviewCalendar)
+
+        #if os(macOS)
+        session.selectedGoal = .risk
+        #expect(session.selectedGoal.rootTab == .stockCalc)
+        session.selectedGoal = .forex
+        #expect(session.selectedGoal.rootTab == .forexCalc)
+        #endif
+    }
+
     @Test func sessionRecordsCreatedItemsAndAdvances() {
         var session = OnboardingSession()
         let accountID = UUID()
@@ -107,6 +155,7 @@ struct OnboardingFlowTests {
     @Test func sessionOnlyOffersEditingForCreatedItems() {
         var session = OnboardingSession()
         let accountID = UUID()
+        session.selectedGoal = .review
         session.start()
 
         #expect(session.editTarget(for: .account) == nil)
@@ -123,11 +172,13 @@ struct OnboardingFlowTests {
         editDraft.name = "Changed but not applied"
         #expect(targetID == accountID)
         #expect(session.accountDraft.name == "Live")
+        #expect(session.selectedGoal == .review)
     }
 
     @Test func sessionAppliesSuccessfulEditResults() {
         var session = OnboardingSession()
         let accountID = UUID()
+        session.selectedGoal = .review
         session.start()
         session.accountDraft.name = "Live"
         session.markCreated(.account, id: accountID, name: "Live")
@@ -137,6 +188,7 @@ struct OnboardingFlowTests {
 
         #expect(session.accountDraft == editedDraft)
         #expect(session.accountResult == .created(name: "Primary"))
+        #expect(session.selectedGoal == .review)
     }
 
     @MainActor
