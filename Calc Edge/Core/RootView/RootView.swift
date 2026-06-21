@@ -8,7 +8,12 @@
 import SwiftUI
 
 struct RootView: View {
+    @State private var selectedTab: RootTab
     @State private var selectedStock = Stock.emptyDraft
+
+    init(initialTab: RootTab = .journal) {
+        _selectedTab = State(initialValue: initialTab)
+    }
     
     var body: some View {
         rootTabs
@@ -27,59 +32,59 @@ struct RootView: View {
 
     #if os(macOS)
     private var macOSTabs: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             TabSection("Journals") {
-                Tab(RootTab.journal.title, systemImage: RootTab.journal.systemImage) {
+                Tab(RootTab.journal.title, systemImage: RootTab.journal.systemImage, value: RootTab.journal) {
                     rootTab(.journal)
                 }
 
-                Tab(RootTab.insights.title, systemImage: RootTab.insights.systemImage) {
+                Tab(RootTab.insights.title, systemImage: RootTab.insights.systemImage, value: RootTab.insights) {
                     rootTab(.insights)
                 }
 
-                Tab(RootTab.reviewCalendar.title, systemImage: RootTab.reviewCalendar.systemImage) {
+                Tab(RootTab.reviewCalendar.title, systemImage: RootTab.reviewCalendar.systemImage, value: RootTab.reviewCalendar) {
                     rootTab(.reviewCalendar)
                 }
 
-                Tab(RootTab.notes.title, systemImage: RootTab.notes.systemImage) {
+                Tab(RootTab.notes.title, systemImage: RootTab.notes.systemImage, value: RootTab.notes) {
                     rootTab(.notes)
                 }
 
-                Tab(RootTab.rulebook.title, systemImage: RootTab.rulebook.systemImage) {
+                Tab(RootTab.rulebook.title, systemImage: RootTab.rulebook.systemImage, value: RootTab.rulebook) {
                     rootTab(.rulebook)
                 }
 
-                Tab(RootTab.playbook.title, systemImage: RootTab.playbook.systemImage) {
+                Tab(RootTab.playbook.title, systemImage: RootTab.playbook.systemImage, value: RootTab.playbook) {
                     rootTab(.playbook)
                 }
             }
 
             TabSection("Calculators") {
-                Tab(RootTab.stockCalc.title, systemImage: RootTab.stockCalc.systemImage) {
+                Tab(RootTab.stockCalc.title, systemImage: RootTab.stockCalc.systemImage, value: RootTab.stockCalc) {
                     rootTab(.stockCalc)
                 }
 
-                Tab(RootTab.forexCalc.title, systemImage: RootTab.forexCalc.systemImage) {
+                Tab(RootTab.forexCalc.title, systemImage: RootTab.forexCalc.systemImage, value: RootTab.forexCalc) {
                     rootTab(.forexCalc)
                 }
             }
 
             TabSection("Manage") {
-                Tab(RootTab.accounts.title, systemImage: RootTab.accounts.systemImage) {
+                Tab(RootTab.accounts.title, systemImage: RootTab.accounts.systemImage, value: RootTab.accounts) {
                     rootTab(.accounts)
                 }
 
-                Tab(RootTab.suggestions.title, systemImage: RootTab.suggestions.systemImage) {
+                Tab(RootTab.suggestions.title, systemImage: RootTab.suggestions.systemImage, value: RootTab.suggestions) {
                     rootTab(.suggestions)
                 }
             }
 
             TabSection("App") {
-                Tab(RootTab.privacy.title, systemImage: RootTab.privacy.systemImage) {
+                Tab(RootTab.privacy.title, systemImage: RootTab.privacy.systemImage, value: RootTab.privacy) {
                     rootTab(.privacy)
                 }
 
-                Tab(RootTab.clearData.title, systemImage: RootTab.clearData.systemImage) {
+                Tab(RootTab.clearData.title, systemImage: RootTab.clearData.systemImage, value: RootTab.clearData) {
                     rootTab(.clearData)
                 }
             }
@@ -88,12 +93,13 @@ struct RootView: View {
     #endif
 
     private var iOSTabs: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             ForEach(RootTab.availableTabs) { tab in
                 rootTab(tab)
                     .tabItem {
                         Label(tab.title, systemImage: tab.systemImage)
                     }
+                    .tag(tab)
             }
         }
         .tint(.primary)

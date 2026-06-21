@@ -47,12 +47,21 @@ struct Calc_EdgeApp: App {
         }
     }()
     
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var initialRootTab = RootTab.journal
     @State private var draftTrade = Trade(ticker: "")
     @State private var draftForexCalculation = ForexCalculation(pair: "")
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            if hasCompletedOnboarding {
+                RootView(initialTab: initialRootTab)
+            } else {
+                OnboardingView { initialTab in
+                    initialRootTab = initialTab
+                    hasCompletedOnboarding = true
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
         
