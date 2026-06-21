@@ -16,18 +16,7 @@ struct OnboardingAccountSetupView: View {
             onSave: onSave,
             onSkip: onSkip
         ) {
-            OnboardingFormSection("Account") {
-                TextField("Account Name", text: $draft.name)
-                    .accessibilityIdentifier("onboarding.account.name")
-                TextField("Broker", text: $draft.broker)
-                TextField("Account Balance", value: $draft.balance, format: .number)
-            }
-
-            OnboardingFormSection("Currency") {
-                TextField("Three-letter currency code", text: $draft.currency)
-                    .textCase(.uppercase)
-                    .accessibilityIdentifier("onboarding.account.currency")
-            }
+            OnboardingAccountForm(draft: $draft)
         }
         .accessibilityIdentifier("onboarding.step.account")
     }

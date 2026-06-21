@@ -1,3 +1,4 @@
+import Foundation
 import SwiftData
 import Testing
 @testable import Calc_Edge
@@ -94,29 +95,103 @@ struct OnboardingFlowTests {
 
     @Test func sessionRecordsCreatedItemsAndAdvances() {
         var session = OnboardingSession()
+        let accountID = UUID()
         session.start()
-        session.markCreated(.account, name: "Live")
+        session.markCreated(.account, id: accountID, name: "Live")
 
         #expect(session.accountResult == .created(name: "Live"))
+        #expect(session.accountID == accountID)
         #expect(session.currentStep == .rulebook)
     }
 
+    @Test func sessionOnlyOffersEditingForCreatedItems() {
+        var session = OnboardingSession()
+        let accountID = UUID()
+        session.start()
+
+        #expect(session.editTarget(for: .account) == nil)
+        #expect(session.editTarget(for: .rulebook) == nil)
+
+        session.accountDraft.name = "Live"
+        session.markCreated(.account, id: accountID, name: "Live")
+
+        guard case .account(let targetID, var editDraft) = session.editTarget(for: .account) else {
+            Issue.record("Expected an account edit target")
+            return
+        }
+
+        editDraft.name = "Changed but not applied"
+        #expect(targetID == accountID)
+        #expect(session.accountDraft.name == "Live")
+    }
+
+    @Test func sessionAppliesSuccessfulEditResults() {
+        var session = OnboardingSession()
+        let accountID = UUID()
+        session.start()
+        session.accountDraft.name = "Live"
+        session.markCreated(.account, id: accountID, name: "Live")
+
+        let editedDraft = OnboardingAccountDraft(name: "Primary", currency: "GBP")
+        session.apply(.account(id: accountID, draft: editedDraft))
+
+        #expect(session.accountDraft == editedDraft)
+        #expect(session.accountResult == .created(name: "Primary"))
+    }
+
     @MainActor
-    @Test func savesExactlyOneModelForEachValidDraft() throws {
+    @Test func editingUpdatesExistingModelsWithoutCreatingDuplicates() throws {
         let container = try makeContainer()
         let context = container.mainContext
-        let (_, account) = try OnboardingAccountDraft(name: "Live").makeModel()
-        let (_, rule) = try OnboardingRuleDraft(title: "Define Risk").makeModel()
-        let (_, setup) = try OnboardingSetupDraft(name: "Breakout").makeModel()
+        let saver = OnboardingSetupSaver()
+        let account = try saver.saveAccount(OnboardingAccountDraft(name: "Live"), in: context)
+        let rule = try saver.saveRule(OnboardingRuleDraft(title: "Define Risk"), in: context)
+        let setup = try saver.saveSetup(OnboardingSetupDraft(name: "Breakout"), in: context)
 
-        context.insert(account)
-        context.insert(rule)
-        context.insert(setup)
-        try context.save()
+        let editedAccount = try saver.updateAccount(
+            id: account.id,
+            with: OnboardingAccountDraft(name: "Primary", broker: "Broker", currency: "GBP"),
+            in: context
+        )
+        let editedRule = try saver.updateRule(
+            id: rule.id,
+            with: OnboardingRuleDraft(title: "Always Define Risk", category: "Risk"),
+            in: context
+        )
+        let editedSetup = try saver.updateSetup(
+            id: setup.id,
+            with: OnboardingSetupDraft(name: "A+ Breakout", timeframe: "5m"),
+            in: context
+        )
 
         #expect(try context.fetchCount(FetchDescriptor<Account>()) == 1)
         #expect(try context.fetchCount(FetchDescriptor<TradingRule>()) == 1)
         #expect(try context.fetchCount(FetchDescriptor<TradingSetup>()) == 1)
+        #expect(editedAccount.name == "Primary")
+        #expect(editedRule.title == "Always Define Risk")
+        #expect(editedSetup.name == "A+ Breakout")
+
+        #expect(try context.fetch(FetchDescriptor<Account>()).first?.accountName == "Primary")
+        #expect(try context.fetch(FetchDescriptor<TradingRule>()).first?.title == "Always Define Risk")
+        #expect(try context.fetch(FetchDescriptor<TradingSetup>()).first?.name == "A+ Breakout")
+    }
+
+    @MainActor
+    @Test func invalidEditDoesNotChangeSavedModel() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let saver = OnboardingSetupSaver()
+        let account = try saver.saveAccount(OnboardingAccountDraft(name: "Live"), in: context)
+
+        #expect(throws: OnboardingDraftError.accountNameRequired) {
+            try saver.updateAccount(
+                id: account.id,
+                with: OnboardingAccountDraft(name: "   "),
+                in: context
+            )
+        }
+
+        #expect(try context.fetch(FetchDescriptor<Account>()).first?.accountName == "Live")
     }
 
     @MainActor

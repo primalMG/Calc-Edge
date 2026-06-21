@@ -16,29 +16,7 @@ struct OnboardingPlaybookSetupView: View {
             onSave: onSave,
             onSkip: onSkip
         ) {
-            OnboardingFormSection("Definition") {
-                TextField("Setup Name", text: $draft.name)
-                    .accessibilityIdentifier("onboarding.playbook.name")
-                TextField("Strategy", text: $draft.strategy)
-                TextField("Timeframe", text: $draft.timeframe)
-                TextField("Catalyst", text: $draft.catalyst)
-                Toggle("Active", isOn: $draft.isActive)
-            }
-
-            OnboardingFormSection("A+ Criteria") {
-                TextField("What must be true before taking this setup?", text: $draft.criteria, axis: .vertical)
-                    .lineLimit(3...8)
-            }
-
-            OnboardingFormSection("Invalidation") {
-                TextField("What makes this setup invalid?", text: $draft.invalidation, axis: .vertical)
-                    .lineLimit(2...6)
-            }
-
-            OnboardingFormSection("Notes") {
-                TextField("Examples or reminders", text: $draft.notes, axis: .vertical)
-                    .lineLimit(2...8)
-            }
+            OnboardingPlaybookForm(draft: $draft)
         }
         .accessibilityIdentifier("onboarding.step.playbook")
     }

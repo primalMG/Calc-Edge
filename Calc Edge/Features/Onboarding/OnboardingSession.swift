@@ -11,6 +11,9 @@ struct OnboardingSession {
     var accountResult = OnboardingSetupResult.notSelected
     var ruleResult = OnboardingSetupResult.notSelected
     var playbookResult = OnboardingSetupResult.notSelected
+    var accountID: UUID?
+    var ruleID: UUID?
+    var playbookID: UUID?
     var pendingDiscardStep: OnboardingStep?
 
     var flow: OnboardingFlow {
@@ -70,19 +73,55 @@ struct OnboardingSession {
         advance()
     }
 
-    mutating func markCreated(_ step: OnboardingStep, name: String) {
+    mutating func markCreated(_ step: OnboardingStep, id: UUID, name: String) {
         switch step {
         case .account:
+            accountID = id
             accountResult = .created(name: name)
         case .rulebook:
+            ruleID = id
             ruleResult = .created(name: name)
         case .playbook:
+            playbookID = id
             playbookResult = .created(name: name)
         case .welcome, .allSet:
             return
         }
 
         advance()
+    }
+
+    func editTarget(for step: OnboardingStep) -> OnboardingEditTarget? {
+        switch step {
+        case .account:
+            guard case .created = accountResult, let accountID else { return nil }
+            return .account(id: accountID, draft: accountDraft)
+        case .rulebook:
+            guard case .created = ruleResult, let ruleID else { return nil }
+            return .rule(id: ruleID, draft: ruleDraft)
+        case .playbook:
+            guard case .created = playbookResult, let playbookID else { return nil }
+            return .playbook(id: playbookID, draft: setupDraft)
+        case .welcome, .allSet:
+            return nil
+        }
+    }
+
+    mutating func apply(_ result: OnboardingEditResult) {
+        switch result {
+        case .account(let id, let draft):
+            guard accountID == id else { return }
+            accountDraft = draft
+            accountResult = .created(name: draft.name)
+        case .rule(let id, let draft):
+            guard ruleID == id else { return }
+            ruleDraft = draft
+            ruleResult = .created(name: draft.title)
+        case .playbook(let id, let draft):
+            guard playbookID == id else { return }
+            setupDraft = draft
+            playbookResult = .created(name: draft.name)
+        }
     }
 
     private var currentDraftIsDirty: Bool {

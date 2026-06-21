@@ -16,22 +16,7 @@ struct OnboardingRuleSetupView: View {
             onSave: onSave,
             onSkip: onSkip
         ) {
-            OnboardingFormSection("Rule") {
-                TextField("Rule Title", text: $draft.title)
-                    .accessibilityIdentifier("onboarding.rule.title")
-                TextField("Category", text: $draft.category)
-                Toggle("Active", isOn: $draft.isActive)
-            }
-
-            OnboardingFormSection("Checklist") {
-                TextField("Prompt shown during trade review", text: $draft.checklistPrompt, axis: .vertical)
-                    .lineLimit(2...4)
-            }
-
-            OnboardingFormSection("Description") {
-                TextField("Why this rule matters", text: $draft.description, axis: .vertical)
-                    .lineLimit(3...8)
-            }
+            OnboardingRuleForm(draft: $draft)
         }
         .accessibilityIdentifier("onboarding.step.rulebook")
     }

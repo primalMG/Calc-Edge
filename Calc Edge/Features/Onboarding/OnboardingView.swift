@@ -8,6 +8,7 @@ struct OnboardingView: View {
     private let setupSaver = OnboardingSetupSaver()
 
     @State private var session = OnboardingSession()
+    @State private var editTarget: OnboardingEditTarget?
     @State private var errorMessage: String?
 
     private var discardConfirmationBinding: Binding<Bool> {
@@ -51,6 +52,9 @@ struct OnboardingView: View {
                         }
                     }
                 }
+        }
+        .sheet(item: $editTarget) { target in
+            OnboardingEditSheet(target: target, onSaved: applyEdit)
         }
         .confirmationDialog(
             "Discard this draft?",
@@ -107,6 +111,9 @@ struct OnboardingView: View {
                 ruleResult: session.ruleResult,
                 playbookResult: session.playbookResult,
                 destinationTitle: session.selectedGoal.rootTab.title,
+                onEditAccount: editAccount,
+                onEditRule: editRule,
+                onEditPlaybook: editPlaybook,
                 onComplete: finishWithSelectedGoal
             )
         }
@@ -138,9 +145,9 @@ struct OnboardingView: View {
 
     private func saveAccount() {
         do {
-            let draft = try setupSaver.saveAccount(session.accountDraft, in: modelContext)
-            session.accountDraft = draft
-            session.markCreated(.account, name: draft.name)
+            let savedItem = try setupSaver.saveAccount(session.accountDraft, in: modelContext)
+            session.accountDraft = savedItem.draft
+            session.markCreated(.account, id: savedItem.id, name: savedItem.draft.name)
         } catch {
             show(error)
         }
@@ -148,9 +155,9 @@ struct OnboardingView: View {
 
     private func saveRule() {
         do {
-            let draft = try setupSaver.saveRule(session.ruleDraft, in: modelContext)
-            session.ruleDraft = draft
-            session.markCreated(.rulebook, name: draft.title)
+            let savedItem = try setupSaver.saveRule(session.ruleDraft, in: modelContext)
+            session.ruleDraft = savedItem.draft
+            session.markCreated(.rulebook, id: savedItem.id, name: savedItem.draft.title)
         } catch {
             show(error)
         }
@@ -158,12 +165,28 @@ struct OnboardingView: View {
 
     private func saveSetup() {
         do {
-            let draft = try setupSaver.saveSetup(session.setupDraft, in: modelContext)
-            session.setupDraft = draft
-            session.markCreated(.playbook, name: draft.name)
+            let savedItem = try setupSaver.saveSetup(session.setupDraft, in: modelContext)
+            session.setupDraft = savedItem.draft
+            session.markCreated(.playbook, id: savedItem.id, name: savedItem.draft.name)
         } catch {
             show(error)
         }
+    }
+
+    private func editAccount() {
+        editTarget = session.editTarget(for: .account)
+    }
+
+    private func editRule() {
+        editTarget = session.editTarget(for: .rulebook)
+    }
+
+    private func editPlaybook() {
+        editTarget = session.editTarget(for: .playbook)
+    }
+
+    private func applyEdit(_ result: OnboardingEditResult) {
+        session.apply(result)
     }
 
     private func show(_ error: Error) {

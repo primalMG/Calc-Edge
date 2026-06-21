@@ -5,6 +5,9 @@ struct OnboardingAllSetView: View {
     let ruleResult: OnboardingSetupResult
     let playbookResult: OnboardingSetupResult
     let destinationTitle: String
+    let onEditAccount: () -> Void
+    let onEditRule: () -> Void
+    let onEditPlaybook: () -> Void
     let onComplete: () -> Void
 
     var body: some View {
@@ -14,7 +17,10 @@ struct OnboardingAllSetView: View {
                 OnboardingResultsSummary(
                     accountResult: accountResult,
                     ruleResult: ruleResult,
-                    playbookResult: playbookResult
+                    playbookResult: playbookResult,
+                    onEditAccount: onEditAccount,
+                    onEditRule: onEditRule,
+                    onEditPlaybook: onEditPlaybook
                 )
 
                 Button(action: onComplete) {
@@ -55,14 +61,44 @@ private struct OnboardingResultsSummary: View {
     let accountResult: OnboardingSetupResult
     let ruleResult: OnboardingSetupResult
     let playbookResult: OnboardingSetupResult
+    let onEditAccount: () -> Void
+    let onEditRule: () -> Void
+    let onEditPlaybook: () -> Void
+
+    private var accountEditAction: (() -> Void)? {
+        editAction(for: accountResult, action: onEditAccount)
+    }
+
+    private var ruleEditAction: (() -> Void)? {
+        editAction(for: ruleResult, action: onEditRule)
+    }
+
+    private var playbookEditAction: (() -> Void)? {
+        editAction(for: playbookResult, action: onEditPlaybook)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            OnboardingResultRow(title: "Account", systemImage: "person.crop.circle", result: accountResult)
+            OnboardingResultRow(
+                title: "Account",
+                systemImage: "person.crop.circle",
+                result: accountResult,
+                onEdit: accountEditAction
+            )
             Divider()
-            OnboardingResultRow(title: "Rulebook", systemImage: "checklist.checked", result: ruleResult)
+            OnboardingResultRow(
+                title: "Rulebook",
+                systemImage: "checklist.checked",
+                result: ruleResult,
+                onEdit: ruleEditAction
+            )
             Divider()
-            OnboardingResultRow(title: "Playbook", systemImage: "rectangle.stack", result: playbookResult)
+            OnboardingResultRow(
+                title: "Playbook",
+                systemImage: "rectangle.stack",
+                result: playbookResult,
+                onEdit: playbookEditAction
+            )
         }
         .background(.background)
         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -71,12 +107,21 @@ private struct OnboardingResultsSummary: View {
                 .stroke(.quaternary, lineWidth: 1)
         }
     }
+
+    private func editAction(
+        for result: OnboardingSetupResult,
+        action: @escaping () -> Void
+    ) -> (() -> Void)? {
+        guard case .created = result else { return nil }
+        return action
+    }
 }
 
 private struct OnboardingResultRow: View {
     let title: String
     let systemImage: String
     let result: OnboardingSetupResult
+    let onEdit: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -98,9 +143,18 @@ private struct OnboardingResultRow: View {
             Image(systemName: statusImage)
                 .foregroundStyle(statusColor)
                 .accessibilityHidden(true)
+
+            if let onEdit {
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Edit \(title)")
+                .accessibilityIdentifier("onboarding.edit.\(title.lowercased())")
+                .help("Edit \(title)")
+            }
         }
         .padding(14)
-        .accessibilityElement(children: .combine)
     }
 
     private var detail: String {
