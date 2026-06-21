@@ -47,7 +47,8 @@ struct Calc_EdgeApp: App {
         }
     }()
     
-    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    // Keep onboarding completion session-local while the flow is under test.
+    @State private var hasCompletedOnboarding = false
     @State private var initialRootTab = RootTab.journal
     @State private var draftTrade = Trade(ticker: "")
     @State private var draftForexCalculation = ForexCalculation(pair: "")

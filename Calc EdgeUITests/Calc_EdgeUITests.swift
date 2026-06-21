@@ -32,6 +32,44 @@ final class Calc_EdgeUITests: XCTestCase {
     }
 
     @MainActor
+    func testGuidedOnboardingCanSkipToAllSet() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let continueButton = app.buttons["onboarding.continue"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 5))
+        continueButton.click()
+
+        for step in ["account", "rulebook", "playbook"] {
+            XCTAssertTrue(app.otherElements["onboarding.step.\(step)"].waitForExistence(timeout: 3))
+            app.buttons["onboarding.skip"].click()
+        }
+
+        XCTAssertTrue(app.otherElements["onboarding.step.allSet"].waitForExistence(timeout: 3))
+        app.buttons["onboarding.finish"].click()
+        XCTAssertTrue(app.staticTexts["Journal"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testEditedOnboardingDraftRequiresDiscardConfirmation() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.buttons["onboarding.continue"].waitForExistence(timeout: 5))
+        app.buttons["onboarding.continue"].click()
+
+        let nameField = app.textFields["onboarding.account.name"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
+        nameField.click()
+        nameField.typeText("Test Account")
+        app.buttons["onboarding.skip"].click()
+
+        XCTAssertTrue(app.buttons["Discard & Continue"].waitForExistence(timeout: 3))
+        app.buttons["Keep Editing"].click()
+        XCTAssertTrue(app.otherElements["onboarding.step.account"].exists)
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
