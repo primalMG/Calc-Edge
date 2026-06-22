@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct OnboardingAllSetView: View {
+struct OnboardingReviewView: View {
     let accountResult: OnboardingSetupResult
     let ruleResult: OnboardingSetupResult
     let playbookResult: OnboardingSetupResult
@@ -12,7 +12,7 @@ struct OnboardingAllSetView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                OnboardingCompletionHeader()
+                OnboardingReviewHeader()
                 OnboardingResultsSummary(
                     accountResult: accountResult,
                     ruleResult: ruleResult,
@@ -27,29 +27,30 @@ struct OnboardingAllSetView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
-                .accessibilityIdentifier("onboarding.allSet.continue")
+                .keyboardShortcut(.defaultAction)
+                .accessibilityIdentifier("onboarding.review.continue")
             }
             .frame(maxWidth: 680, alignment: .leading)
             .padding(.horizontal, 24)
             .padding(.vertical, 40)
             .frame(maxWidth: .infinity, alignment: .center)
         }
-        .accessibilityIdentifier("onboarding.step.allSet")
+        .accessibilityIdentifier("onboarding.step.review")
     }
 }
 
-private struct OnboardingCompletionHeader: View {
+private struct OnboardingReviewHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 44))
-                .foregroundStyle(.green)
+            Image(systemName: "checklist")
+                .font(.system(size: 40))
+                .foregroundStyle(.secondary)
 
-            Text("You're All Set")
+            Text("Review Your Setup")
                 .font(.largeTitle)
                 .fontWeight(.semibold)
 
-            Text("Your starting workspace is ready. You can add or edit these items at any time.")
+            Text("Check what you created before choosing where Calc Edge should open.")
                 .foregroundStyle(.secondary)
         }
     }

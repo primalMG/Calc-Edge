@@ -9,13 +9,14 @@ struct OnboardingFlowTests {
 
         #expect(session.selectedGoal == .journal)
         #expect(session.selectedGoal.rootTab == .journal)
+        #expect(session.selectedGoal.startDestination == .journal)
     }
 
     @Test func buildsStepsFromSelectedOptions() {
-        #expect(OnboardingFlow(includeAccount: false, includeFramework: false).steps == [.welcome, .allSet, .destination])
-        #expect(OnboardingFlow(includeAccount: true, includeFramework: false).steps == [.welcome, .account, .allSet, .destination])
-        #expect(OnboardingFlow(includeAccount: false, includeFramework: true).steps == [.welcome, .rulebook, .playbook, .allSet, .destination])
-        #expect(OnboardingFlow(includeAccount: true, includeFramework: true).steps == [.welcome, .account, .rulebook, .playbook, .allSet, .destination])
+        #expect(OnboardingFlow(includeAccount: false, includeFramework: false).steps == [.welcome, .review, .destination])
+        #expect(OnboardingFlow(includeAccount: true, includeFramework: false).steps == [.welcome, .account, .review, .destination])
+        #expect(OnboardingFlow(includeAccount: false, includeFramework: true).steps == [.welcome, .rulebook, .playbook, .review, .destination])
+        #expect(OnboardingFlow(includeAccount: true, includeFramework: true).steps == [.welcome, .account, .rulebook, .playbook, .review, .destination])
     }
 
     @Test func returnsTheNextEnabledStep() {
@@ -23,8 +24,8 @@ struct OnboardingFlowTests {
 
         #expect(flow.next(after: .welcome) == .rulebook)
         #expect(flow.next(after: .rulebook) == .playbook)
-        #expect(flow.next(after: .playbook) == .allSet)
-        #expect(flow.next(after: .allSet) == .destination)
+        #expect(flow.next(after: .playbook) == .review)
+        #expect(flow.next(after: .review) == .destination)
         #expect(flow.next(after: .destination) == nil)
     }
 
@@ -65,6 +66,12 @@ struct OnboardingFlowTests {
         #expect(throws: OnboardingDraftError.currencyRequired) {
             try OnboardingAccountDraft(name: "Live", currency: "US").normalized()
         }
+        #expect(throws: OnboardingDraftError.currencyRequired) {
+            try OnboardingAccountDraft(name: "Live", currency: "U1D").normalized()
+        }
+        #expect(throws: OnboardingDraftError.currencyRequired) {
+            try OnboardingAccountDraft(name: "Live", currency: "£££").normalized()
+        }
         #expect(throws: OnboardingDraftError.ruleTitleRequired) {
             try OnboardingRuleDraft().normalized()
         }
@@ -101,11 +108,12 @@ struct OnboardingFlowTests {
         #expect(session.accountDraft == OnboardingAccountDraft())
     }
 
-    @Test func skippingSetupMovesDirectlyToAllSetWithExpectedStatuses() {
+    @Test func skippingSetupMovesDirectlyToDestinationAndBackToWelcome() {
         var defaultSession = OnboardingSession()
         defaultSession.skipSetup()
 
-        #expect(defaultSession.currentStep == .allSet)
+        #expect(defaultSession.currentStep == .destination)
+        #expect(defaultSession.destinationOrigin == .welcome)
         #expect(defaultSession.accountResult == .skipped)
         #expect(defaultSession.ruleResult == .skipped)
         #expect(defaultSession.playbookResult == .skipped)
@@ -113,18 +121,53 @@ struct OnboardingFlowTests {
         #expect(defaultSession.ruleID == nil)
         #expect(defaultSession.playbookID == nil)
 
-        defaultSession.showDestination()
-        #expect(defaultSession.currentStep == .destination)
+        defaultSession.returnFromDestination()
+        #expect(defaultSession.currentStep == .welcome)
 
         var disabledSession = OnboardingSession()
         disabledSession.includeAccountSetup = false
         disabledSession.includeFrameworkSetup = false
         disabledSession.skipSetup()
 
-        #expect(disabledSession.currentStep == .allSet)
+        #expect(disabledSession.currentStep == .destination)
         #expect(disabledSession.accountResult == .notSelected)
         #expect(disabledSession.ruleResult == .notSelected)
         #expect(disabledSession.playbookResult == .notSelected)
+    }
+
+    @Test func startingWithNoSetupSelectedBypassesReview() {
+        var session = OnboardingSession()
+        session.includeAccountSetup = false
+        session.includeFrameworkSetup = false
+
+        session.start()
+
+        #expect(session.currentStep == .destination)
+        #expect(session.destinationOrigin == .welcome)
+        #expect(session.accountResult == .notSelected)
+        #expect(session.ruleResult == .notSelected)
+        #expect(session.playbookResult == .notSelected)
+    }
+
+    @Test func guidedFlowReturnsFromDestinationToReviewAndPreservesGoal() {
+        var session = OnboardingSession()
+        session.start()
+        session.requestSkip()
+        session.requestSkip()
+        session.requestSkip()
+
+        #expect(session.currentStep == .review)
+
+        session.selectedGoal = .review
+        session.showDestination()
+
+        #expect(session.currentStep == .destination)
+        #expect(session.destinationOrigin == .review)
+
+        session.returnFromDestination()
+
+        #expect(session.currentStep == .review)
+        #expect(session.selectedGoal == .review)
     }
 
     @Test func finalDestinationMapsToSelectedRootTab() {
@@ -136,8 +179,21 @@ struct OnboardingFlowTests {
         #if os(macOS)
         session.selectedGoal = .risk
         #expect(session.selectedGoal.rootTab == .stockCalc)
+        #expect(session.selectedGoal.startDestination.calculatorRoute == nil)
+        #expect(session.selectedGoal.startDestination.title == "Stock Calc")
         session.selectedGoal = .forex
         #expect(session.selectedGoal.rootTab == .forexCalc)
+        #expect(session.selectedGoal.startDestination.calculatorRoute == nil)
+        #expect(session.selectedGoal.startDestination.title == "Forex Calc")
+        #else
+        session.selectedGoal = .risk
+        #expect(session.selectedGoal.rootTab == .calculators)
+        #expect(session.selectedGoal.startDestination.calculatorRoute == .stock)
+        #expect(session.selectedGoal.startDestination.title == "Stock Calc")
+        session.selectedGoal = .forex
+        #expect(session.selectedGoal.rootTab == .calculators)
+        #expect(session.selectedGoal.startDestination.calculatorRoute == .forex)
+        #expect(session.selectedGoal.startDestination.title == "Forex Calc")
         #endif
     }
 

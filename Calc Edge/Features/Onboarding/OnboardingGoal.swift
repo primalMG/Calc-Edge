@@ -48,23 +48,27 @@ enum OnboardingGoal: String, CaseIterable, Identifiable {
     }
 
     var rootTab: RootTab {
+        startDestination.rootTab
+    }
+
+    var startDestination: AppStartDestination {
         switch self {
         case .journal:
             .journal
         case .risk:
             #if os(macOS)
-            .stockCalc
+            AppStartDestination(rootTab: .stockCalc)
             #else
-            .calculators
+            AppStartDestination(rootTab: .calculators, calculatorRoute: .stock)
             #endif
         case .forex:
             #if os(macOS)
-            .forexCalc
+            AppStartDestination(rootTab: .forexCalc)
             #else
-            .calculators
+            AppStartDestination(rootTab: .calculators, calculatorRoute: .forex)
             #endif
         case .review:
-            .reviewCalendar
+            AppStartDestination(rootTab: .reviewCalendar)
         }
     }
 }

@@ -10,6 +10,7 @@ struct OnboardingSetupStepView<Content: View>: View {
     let title: String
     let subtitle: String
     let systemImage: String
+    let stepIdentifier: String
     let onSave: () -> Void
     let onSkip: () -> Void
     @ViewBuilder let content: Content
@@ -19,6 +20,7 @@ struct OnboardingSetupStepView<Content: View>: View {
         title: String,
         subtitle: String,
         systemImage: String,
+        stepIdentifier: String,
         onSave: @escaping () -> Void,
         onSkip: @escaping () -> Void,
         @ViewBuilder content: () -> Content
@@ -27,27 +29,39 @@ struct OnboardingSetupStepView<Content: View>: View {
         self.title = title
         self.subtitle = subtitle
         self.systemImage = systemImage
+        self.stepIdentifier = stepIdentifier
         self.onSave = onSave
         self.onSkip = onSkip
         self.content = content()
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                OnboardingProgressHeader(progress: progress)
-                OnboardingStepHeader(
-                    title: title,
-                    subtitle: subtitle,
-                    systemImage: systemImage
-                )
-                content
-                OnboardingStepActions(onSave: onSave, onSkip: onSkip)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    OnboardingProgressHeader(progress: progress)
+                    OnboardingStepHeader(
+                        title: title,
+                        subtitle: subtitle,
+                        systemImage: systemImage
+                    )
+                    content
+                }
+                .frame(maxWidth: 720, alignment: .leading)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 32)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .frame(maxWidth: 720, alignment: .leading)
+            .accessibilityIdentifier(stepIdentifier)
+
+            Divider()
+
+            OnboardingStepActions(onSave: onSave, onSkip: onSkip)
+                .frame(maxWidth: 720)
             .padding(.horizontal, 24)
-            .padding(.vertical, 32)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .center)
+            .background(.regularMaterial)
         }
     }
 }
@@ -117,6 +131,8 @@ private struct OnboardingStepActions: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .keyboardShortcut(.defaultAction)
             .accessibilityIdentifier("onboarding.save")
         }
     }

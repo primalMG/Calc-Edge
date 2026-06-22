@@ -21,14 +21,15 @@ struct OnboardingDestinationView: View {
                 OnboardingDestinationPicker(selectedGoal: $selectedGoal)
 
                 Button(action: onComplete) {
-                    Label("Open \(selectedGoal.rootTab.title)", systemImage: "arrow.forward.circle.fill")
+                    Label("Open \(selectedGoal.startDestination.title)", systemImage: "arrow.forward.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
                 .accessibilityIdentifier("onboarding.finish")
             }
-            .frame(maxWidth: 920, alignment: .leading)
+            .frame(maxWidth: 720, alignment: .leading)
             .padding(.horizontal, 24)
             .padding(.vertical, 40)
             .frame(maxWidth: .infinity, alignment: .center)

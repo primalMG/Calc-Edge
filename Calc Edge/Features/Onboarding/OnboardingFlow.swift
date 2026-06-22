@@ -5,8 +5,22 @@ enum OnboardingStep: String, Equatable {
     case account
     case rulebook
     case playbook
-    case allSet
+    case review
     case destination
+}
+
+enum OnboardingDestinationOrigin: Equatable {
+    case welcome
+    case review
+
+    var step: OnboardingStep {
+        switch self {
+        case .welcome:
+            .welcome
+        case .review:
+            .review
+        }
+    }
 }
 
 struct OnboardingFlow: Equatable {
@@ -24,12 +38,12 @@ struct OnboardingFlow: Equatable {
             result.append(contentsOf: [.rulebook, .playbook])
         }
 
-        result.append(contentsOf: [.allSet, .destination])
+        result.append(contentsOf: [.review, .destination])
         return result
     }
 
     var setupSteps: [OnboardingStep] {
-        steps.filter { $0 != .welcome && $0 != .allSet && $0 != .destination }
+        steps.filter { $0 != .welcome && $0 != .review && $0 != .destination }
     }
 
     func next(after step: OnboardingStep) -> OnboardingStep? {

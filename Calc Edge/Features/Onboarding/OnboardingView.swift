@@ -4,12 +4,13 @@ import SwiftUI
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
 
-    let completeOnboarding: (RootTab) -> Void
+    let completeOnboarding: (AppStartDestination) -> Void
     private let setupSaver = OnboardingSetupSaver()
 
     @State private var session = OnboardingSession()
     @State private var editTarget: OnboardingEditTarget?
     @State private var errorMessage: String?
+    @State private var validationError: OnboardingDraftError?
 
     private var discardConfirmationBinding: Binding<Bool> {
         Binding(
@@ -33,7 +34,7 @@ struct OnboardingView: View {
         )
     }
 
-    init(onComplete: @escaping (RootTab) -> Void) {
+    init(onComplete: @escaping (AppStartDestination) -> Void) {
         completeOnboarding = onComplete
     }
 
@@ -49,6 +50,14 @@ struct OnboardingView: View {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Skip", action: skipSetup)
                                 .accessibilityLabel("Skip onboarding")
+                        }
+                    } else if session.currentStep == .destination {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(action: returnFromDestination) {
+                                Label("Back", systemImage: "chevron.left")
+                            }
+                            .accessibilityLabel(destinationBackLabel)
+                            .accessibilityIdentifier("onboarding.destination.back")
                         }
                     }
                 }
@@ -86,6 +95,7 @@ struct OnboardingView: View {
         case .account:
             OnboardingAccountSetupView(
                 draft: $session.accountDraft,
+                validationError: $validationError,
                 progress: session.progress(for: .account),
                 onSave: saveAccount,
                 onSkip: requestSkip
@@ -93,6 +103,7 @@ struct OnboardingView: View {
         case .rulebook:
             OnboardingRuleSetupView(
                 draft: $session.ruleDraft,
+                validationError: $validationError,
                 progress: session.progress(for: .rulebook),
                 onSave: saveRule,
                 onSkip: requestSkip
@@ -100,12 +111,13 @@ struct OnboardingView: View {
         case .playbook:
             OnboardingPlaybookSetupView(
                 draft: $session.setupDraft,
+                validationError: $validationError,
                 progress: session.progress(for: .playbook),
                 onSave: saveSetup,
                 onSkip: requestSkip
             )
-        case .allSet:
-            OnboardingAllSetView(
+        case .review:
+            OnboardingReviewView(
                 accountResult: session.accountResult,
                 ruleResult: session.ruleResult,
                 playbookResult: session.playbookResult,
@@ -127,10 +139,12 @@ struct OnboardingView: View {
     }
 
     private func requestSkip() {
+        validationError = nil
         session.requestSkip()
     }
 
     private func discardAndAdvance() {
+        validationError = nil
         session.discardAndAdvance()
     }
 
@@ -143,40 +157,56 @@ struct OnboardingView: View {
     }
 
     private func finishWithSelectedGoal() {
-        completeOnboarding(session.selectedGoal.rootTab)
+        completeOnboarding(session.selectedGoal.startDestination)
     }
 
     private func showDestination() {
         session.showDestination()
     }
 
+    private func returnFromDestination() {
+        session.returnFromDestination()
+    }
+
+    private var destinationBackLabel: String {
+        switch session.destinationOrigin {
+        case .welcome:
+            "Back to Welcome"
+        case .review:
+            "Back to Review"
+        }
+    }
+
     private func saveAccount() {
+        validationError = nil
         do {
             let savedItem = try setupSaver.saveAccount(session.accountDraft, in: modelContext)
             session.accountDraft = savedItem.draft
             session.markCreated(.account, id: savedItem.id, name: savedItem.draft.name)
         } catch {
-            show(error)
+            handleSaveError(error)
         }
     }
 
     private func saveRule() {
+        validationError = nil
         do {
             let savedItem = try setupSaver.saveRule(session.ruleDraft, in: modelContext)
             session.ruleDraft = savedItem.draft
             session.markCreated(.rulebook, id: savedItem.id, name: savedItem.draft.title)
         } catch {
-            show(error)
+            handleSaveError(error)
         }
     }
 
     private func saveSetup() {
+        validationError = nil
         do {
             let savedItem = try setupSaver.saveSetup(session.setupDraft, in: modelContext)
             session.setupDraft = savedItem.draft
             session.markCreated(.playbook, id: savedItem.id, name: savedItem.draft.name)
         } catch {
-            show(error)
+            handleSaveError(error)
         }
     }
 
@@ -198,6 +228,14 @@ struct OnboardingView: View {
 
     private func show(_ error: Error) {
         errorMessage = error.localizedDescription
+    }
+
+    private func handleSaveError(_ error: Error) {
+        if let draftError = error as? OnboardingDraftError {
+            validationError = draftError
+        } else {
+            show(error)
+        }
     }
 
     private func dismissError() {

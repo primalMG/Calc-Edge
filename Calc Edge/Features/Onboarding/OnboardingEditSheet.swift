@@ -13,6 +13,7 @@ struct OnboardingEditSheet: View {
     @State private var ruleDraft: OnboardingRuleDraft
     @State private var setupDraft: OnboardingSetupDraft
     @State private var errorMessage: String?
+    @State private var validationError: OnboardingDraftError?
 
     private var errorAlertBinding: Binding<Bool> {
         Binding(
@@ -69,6 +70,7 @@ struct OnboardingEditSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save Changes", action: save)
+                        .keyboardShortcut(.defaultAction)
                         .accessibilityIdentifier("onboarding.edit.save")
                 }
             }
@@ -87,15 +89,28 @@ struct OnboardingEditSheet: View {
     private var editorForm: some View {
         switch target {
         case .account:
-            OnboardingAccountForm(draft: $accountDraft)
+            OnboardingAccountForm(
+                draft: $accountDraft,
+                validationError: $validationError,
+                onSubmit: save
+            )
         case .rule:
-            OnboardingRuleForm(draft: $ruleDraft)
+            OnboardingRuleForm(
+                draft: $ruleDraft,
+                validationError: $validationError,
+                onSubmit: save
+            )
         case .playbook:
-            OnboardingPlaybookForm(draft: $setupDraft)
+            OnboardingPlaybookForm(
+                draft: $setupDraft,
+                validationError: $validationError,
+                onSubmit: save
+            )
         }
     }
 
     private func save() {
+        validationError = nil
         do {
             let result: OnboardingEditResult
 
@@ -113,6 +128,8 @@ struct OnboardingEditSheet: View {
 
             onSaved(result)
             dismiss()
+        } catch let draftError as OnboardingDraftError {
+            validationError = draftError
         } catch {
             errorMessage = error.localizedDescription
         }

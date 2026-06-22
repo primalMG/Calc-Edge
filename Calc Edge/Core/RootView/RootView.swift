@@ -10,9 +10,11 @@ import SwiftUI
 struct RootView: View {
     @State private var selectedTab: RootTab
     @State private var selectedStock = Stock.emptyDraft
+    private let initialCalculatorRoute: CalculatorRoute?
 
-    init(initialTab: RootTab = .journal) {
-        _selectedTab = State(initialValue: initialTab)
+    init(initialDestination: AppStartDestination = .journal) {
+        _selectedTab = State(initialValue: initialDestination.rootTab)
+        initialCalculatorRoute = initialDestination.calculatorRoute
     }
     
     var body: some View {
@@ -108,7 +110,8 @@ struct RootView: View {
     private func rootTab(_ tab: RootTab) -> some View {
         RootTabScene(
             tab: tab,
-            selectedStock: $selectedStock
+            selectedStock: $selectedStock,
+            initialCalculatorRoute: tab == .calculators ? initialCalculatorRoute : nil
         )
     }
 }

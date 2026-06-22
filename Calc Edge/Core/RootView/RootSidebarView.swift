@@ -1,20 +1,14 @@
 import SwiftUI
 
 struct RootSidebarView: View {
-    @State private var selectedStock = Stock.emptyDraft
-
     var body: some View {
         List {
             Section("Calculators") {
-                NavigationLink {
-                    RiskCalcListView(selectedStock: $selectedStock)
-                } label: {
+                NavigationLink(value: CalculatorRoute.stock) {
                     Label("Stock Calc", systemImage: "chart.line.uptrend.xyaxis")
                 }
 
-                NavigationLink {
-                    ForexCalcView()
-                } label: {
+                NavigationLink(value: CalculatorRoute.forex) {
                     Label("Forex Calc", systemImage: "dollarsign.circle")
                 }
             }
@@ -24,5 +18,7 @@ struct RootSidebarView: View {
 }
 
 #Preview {
-    RootSidebarView()
+    NavigationStack {
+        RootSidebarView()
+    }
 }

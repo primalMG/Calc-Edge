@@ -18,7 +18,8 @@ struct OnboardingAccountDraft: Equatable {
             throw OnboardingDraftError.accountNameRequired
         }
 
-        guard draft.currency.count == 3 else {
+        guard draft.currency.utf8.count == 3,
+              draft.currency.utf8.allSatisfy({ (65...90).contains(Int($0)) }) else {
             throw OnboardingDraftError.currencyRequired
         }
 

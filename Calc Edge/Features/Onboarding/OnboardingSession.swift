@@ -15,6 +15,7 @@ struct OnboardingSession {
     var ruleID: UUID?
     var playbookID: UUID?
     var pendingDiscardStep: OnboardingStep?
+    var destinationOrigin = OnboardingDestinationOrigin.review
 
     var flow: OnboardingFlow {
         OnboardingFlow(
@@ -33,8 +34,8 @@ struct OnboardingSession {
             "Rulebook Setup"
         case .playbook:
             "Playbook Setup"
-        case .allSet:
-            "All Set"
+        case .review:
+            "Review Your Setup"
         case .destination:
             "Get Started"
         }
@@ -42,17 +43,31 @@ struct OnboardingSession {
 
     mutating func start() {
         initializeSetupResults()
-        currentStep = flow.next(after: .welcome) ?? .allSet
+
+        guard let firstSetupStep = flow.setupSteps.first else {
+            destinationOrigin = .welcome
+            currentStep = .destination
+            return
+        }
+
+        currentStep = firstSetupStep
     }
 
     mutating func skipSetup() {
         initializeSetupResults()
-        currentStep = .allSet
+        destinationOrigin = .welcome
+        currentStep = .destination
     }
 
     mutating func showDestination() {
-        guard currentStep == .allSet else { return }
+        guard currentStep == .review else { return }
+        destinationOrigin = .review
         currentStep = .destination
+    }
+
+    mutating func returnFromDestination() {
+        guard currentStep == .destination else { return }
+        currentStep = destinationOrigin.step
     }
 
     func progress(for step: OnboardingStep) -> OnboardingStepProgress {
@@ -94,7 +109,7 @@ struct OnboardingSession {
         case .playbook:
             playbookID = id
             playbookResult = .created(name: name)
-        case .welcome, .allSet, .destination:
+        case .welcome, .review, .destination:
             return
         }
 
@@ -112,7 +127,7 @@ struct OnboardingSession {
         case .playbook:
             guard case .created = playbookResult, let playbookID else { return nil }
             return .playbook(id: playbookID, draft: setupDraft)
-        case .welcome, .allSet, .destination:
+        case .welcome, .review, .destination:
             return nil
         }
     }
@@ -142,7 +157,7 @@ struct OnboardingSession {
             ruleDraft.isDirty
         case .playbook:
             setupDraft.isDirty
-        case .welcome, .allSet, .destination:
+        case .welcome, .review, .destination:
             false
         }
     }
@@ -155,7 +170,7 @@ struct OnboardingSession {
             ruleDraft = OnboardingRuleDraft()
         case .playbook:
             setupDraft = OnboardingSetupDraft()
-        case .welcome, .allSet, .destination:
+        case .welcome, .review, .destination:
             break
         }
     }
@@ -168,13 +183,13 @@ struct OnboardingSession {
             ruleResult = .skipped
         case .playbook:
             playbookResult = .skipped
-        case .welcome, .allSet, .destination:
+        case .welcome, .review, .destination:
             break
         }
     }
 
     private mutating func advance() {
-        currentStep = flow.next(after: currentStep) ?? .allSet
+        currentStep = flow.next(after: currentStep) ?? .review
     }
 
     private mutating func initializeSetupResults() {

@@ -3,10 +3,26 @@ import SwiftUI
 struct RootTabScene: View {
     let tab: RootTab
     @Binding var selectedStock: Stock
+    @State private var calculatorPath: [CalculatorRoute]
+
+    init(
+        tab: RootTab,
+        selectedStock: Binding<Stock>,
+        initialCalculatorRoute: CalculatorRoute? = nil
+    ) {
+        self.tab = tab
+        _selectedStock = selectedStock
+        _calculatorPath = State(
+            initialValue: tab == .calculators ? initialCalculatorRoute.map { [$0] } ?? [] : []
+        )
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $calculatorPath) {
             content
+                .navigationDestination(for: CalculatorRoute.self) { route in
+                    calculatorDestination(route)
+                }
         }
     }
 
@@ -41,6 +57,16 @@ struct RootTabScene: View {
             ClearAllDataView()
         case .more:
             MoreView()
+        }
+    }
+
+    @ViewBuilder
+    private func calculatorDestination(_ route: CalculatorRoute) -> some View {
+        switch route {
+        case .stock:
+            RiskCalcListView(selectedStock: $selectedStock)
+        case .forex:
+            ForexCalcView()
         }
     }
 }

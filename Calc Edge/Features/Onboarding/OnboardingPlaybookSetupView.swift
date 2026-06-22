@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OnboardingPlaybookSetupView: View {
     @Binding var draft: OnboardingSetupDraft
+    @Binding var validationError: OnboardingDraftError?
 
     let progress: OnboardingStepProgress
     let onSave: () -> Void
@@ -13,11 +14,15 @@ struct OnboardingPlaybookSetupView: View {
             title: "Create Your First Setup",
             subtitle: "Describe a repeatable trade setup and the conditions that make it valid.",
             systemImage: "rectangle.stack.badge.plus",
+            stepIdentifier: "onboarding.step.playbook",
             onSave: onSave,
             onSkip: onSkip
         ) {
-            OnboardingPlaybookForm(draft: $draft)
+            OnboardingPlaybookForm(
+                draft: $draft,
+                validationError: $validationError,
+                onSubmit: onSave
+            )
         }
-        .accessibilityIdentifier("onboarding.step.playbook")
     }
 }

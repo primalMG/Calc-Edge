@@ -32,24 +32,78 @@ final class Calc_EdgeUITests: XCTestCase {
     }
 
     @MainActor
-    func testGuidedOnboardingCanSkipToAllSet() throws {
+    func testGuidedOnboardingCanSkipToReview() throws {
         let app = XCUIApplication()
         app.launch()
 
         let continueButton = app.buttons["onboarding.continue"]
         XCTAssertTrue(continueButton.waitForExistence(timeout: 5))
-        continueButton.click()
+        continueButton.activateForTest()
 
         for step in ["account", "rulebook", "playbook"] {
-            XCTAssertTrue(app.otherElements["onboarding.step.\(step)"].waitForExistence(timeout: 3))
-            app.buttons["onboarding.skip"].click()
+            XCTAssertTrue(app.element("onboarding.step.\(step)").waitForExistence(timeout: 5))
+            app.buttons["onboarding.skip"].activateForTest()
         }
 
-        XCTAssertTrue(app.otherElements["onboarding.step.allSet"].waitForExistence(timeout: 3))
-        app.buttons["onboarding.allSet.continue"].click()
-        XCTAssertTrue(app.otherElements["onboarding.step.destination"].waitForExistence(timeout: 3))
-        app.buttons["onboarding.finish"].click()
+        XCTAssertTrue(app.element("onboarding.step.review").waitForExistence(timeout: 5))
+        app.buttons["onboarding.review.continue"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.destination").waitForExistence(timeout: 5))
+        app.buttons["onboarding.destination.back"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.review").waitForExistence(timeout: 5))
+        app.buttons["onboarding.review.continue"].activateForTest()
+        app.buttons["onboarding.finish"].activateForTest()
         XCTAssertTrue(app.staticTexts["Journal"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testSkippingSetupGoesDirectlyToDestinationAndBackToWelcome() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let skipButton = app.buttons["Skip onboarding"]
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 5))
+        skipButton.activateForTest()
+
+        XCTAssertTrue(app.element("onboarding.step.destination").waitForExistence(timeout: 5))
+        XCTAssertFalse(app.element("onboarding.step.review").exists)
+
+        app.buttons["onboarding.destination.back"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.welcome").waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testStockDestinationUsesLeafRouteAndTitle() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Skip onboarding"].waitForExistence(timeout: 5))
+        app.buttons["Skip onboarding"].activateForTest()
+
+        let riskDestination = app.buttons["onboarding.destination.risk"]
+        XCTAssertTrue(riskDestination.waitForExistence(timeout: 3))
+        riskDestination.activateForTest()
+
+        let finishButton = app.buttons["onboarding.finish"]
+        XCTAssertEqual(finishButton.label, "Open Stock Calc")
+        finishButton.activateForTest()
+
+        XCTAssertTrue(app.staticTexts["Stock Calc"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testRequiredFieldValidationAppearsInline() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        XCTAssertTrue(app.buttons["onboarding.continue"].waitForExistence(timeout: 5))
+        app.buttons["onboarding.continue"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.account").waitForExistence(timeout: 5))
+        app.buttons["onboarding.save"].activateForTest()
+
+        XCTAssertTrue(
+            app.staticTexts["Enter an account name before continuing."]
+                .waitForExistence(timeout: 3)
+        )
     }
 
     @MainActor
@@ -58,17 +112,17 @@ final class Calc_EdgeUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.buttons["onboarding.continue"].waitForExistence(timeout: 5))
-        app.buttons["onboarding.continue"].click()
+        app.buttons["onboarding.continue"].activateForTest()
 
         let nameField = app.textFields["onboarding.account.name"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
-        nameField.click()
+        XCTAssertTrue(nameField.waitForExistence(timeout: 5))
+        nameField.activateForTest()
         nameField.typeText("Test Account")
-        app.buttons["onboarding.skip"].click()
+        app.buttons["onboarding.skip"].activateForTest()
 
-        XCTAssertTrue(app.buttons["Discard & Continue"].waitForExistence(timeout: 3))
-        app.buttons["Keep Editing"].click()
-        XCTAssertTrue(app.otherElements["onboarding.step.account"].exists)
+        XCTAssertTrue(app.sheets.buttons["Discard & Continue"].waitForExistence(timeout: 3))
+        app.sheets.buttons["Keep Editing"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.account").exists)
     }
 
     @MainActor
@@ -77,5 +131,21 @@ final class Calc_EdgeUITests: XCTestCase {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }
+    }
+}
+
+private extension XCUIElement {
+    func activateForTest() {
+        #if os(macOS)
+        click()
+        #else
+        tap()
+        #endif
+    }
+}
+
+private extension XCUIApplication {
+    func element(_ identifier: String) -> XCUIElement {
+        descendants(matching: .any)[identifier]
     }
 }

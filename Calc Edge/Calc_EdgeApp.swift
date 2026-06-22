@@ -49,17 +49,17 @@ struct Calc_EdgeApp: App {
     
     // Keep onboarding completion session-local while the flow is under test.
     @State private var hasCompletedOnboarding = false
-    @State private var initialRootTab = RootTab.journal
+    @State private var initialDestination = AppStartDestination.journal
     @State private var draftTrade = Trade(ticker: "")
     @State private var draftForexCalculation = ForexCalculation(pair: "")
 
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding {
-                RootView(initialTab: initialRootTab)
+                RootView(initialDestination: initialDestination)
             } else {
-                OnboardingView { initialTab in
-                    initialRootTab = initialTab
+                OnboardingView { destination in
+                    initialDestination = destination
                     hasCompletedOnboarding = true
                 }
             }

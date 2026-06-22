@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OnboardingAccountSetupView: View {
     @Binding var draft: OnboardingAccountDraft
+    @Binding var validationError: OnboardingDraftError?
 
     let progress: OnboardingStepProgress
     let onSave: () -> Void
@@ -13,11 +14,15 @@ struct OnboardingAccountSetupView: View {
             title: "Create Your First Account",
             subtitle: "Add the account you will use most often. You can add more accounts later.",
             systemImage: "person.crop.circle",
+            stepIdentifier: "onboarding.step.account",
             onSave: onSave,
             onSkip: onSkip
         ) {
-            OnboardingAccountForm(draft: $draft)
+            OnboardingAccountForm(
+                draft: $draft,
+                validationError: $validationError,
+                onSubmit: onSave
+            )
         }
-        .accessibilityIdentifier("onboarding.step.account")
     }
 }
