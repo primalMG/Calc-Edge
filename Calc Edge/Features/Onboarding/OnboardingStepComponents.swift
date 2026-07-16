@@ -54,15 +54,30 @@ struct OnboardingSetupStepView<Content: View>: View {
             }
             .accessibilityIdentifier(stepIdentifier)
 
+            #if os(macOS)
             Divider()
-
             OnboardingStepActions(onSave: onSave, onSkip: onSkip)
                 .frame(maxWidth: 720)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .background(.regularMaterial)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .background(.regularMaterial)
+            #endif
         }
+        #if os(iOS)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                OnboardingStepActions(onSave: onSave, onSkip: onSkip)
+                    .frame(maxWidth: 720)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .background(.gray.gradient.secondary)
+            .clipShape(RoundedRectangle(cornerRadius: 50))
+            .padding()
+        }
+        #endif
     }
 }
 
@@ -124,6 +139,7 @@ private struct OnboardingStepActions: View {
         HStack(spacing: 12) {
             Button("Skip", action: onSkip)
                 .buttonStyle(.bordered)
+                .controlSize(.large)
                 .accessibilityIdentifier("onboarding.skip")
 
             Button(action: onSave) {

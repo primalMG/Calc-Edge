@@ -55,7 +55,7 @@ struct OnboardingAccountForm: View {
                 ) {
                     TextField("USD", text: $draft.currency)
                         .textCase(.uppercase)
-//                        .focused($focusedField, equals: .currency)
+                        .focused($focusedField, equals: .currency)
                         .submitLabel(.done)
                         .onSubmit(onSubmit)
                         #if os(iOS)
@@ -82,6 +82,9 @@ struct OnboardingAccountForm: View {
         .onChange(of: draft.currency) { _, _ in
             clearValidation(.currencyRequired)
         }
+        #if os(macOS)
+        .autocorrectionDisabled()
+        #endif
     }
 
     private func validationMessage(for error: OnboardingDraftError) -> String? {
@@ -156,6 +159,9 @@ struct OnboardingRuleForm: View {
                 validationError = nil
             }
         }
+        #if os(macOS)
+        .autocorrectionDisabled()
+        #endif
     }
 
     private var validationMessage: String? {
@@ -247,6 +253,9 @@ struct OnboardingPlaybookForm: View {
                 validationError = nil
             }
         }
+        #if os(macOS)
+        .autocorrectionDisabled()
+        #endif
     }
 
     private var validationMessage: String? {
