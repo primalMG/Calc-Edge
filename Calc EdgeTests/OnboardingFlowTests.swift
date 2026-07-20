@@ -20,6 +20,17 @@ struct OnboardingFlowTests {
         #expect(OnboardingFlow(includeAccount: true, includeFramework: true).steps == [.welcome, .account, .rulebook, .playbook, .review, .destination])
     }
 
+    @Test func detectsWhetherAnyWelcomeSetupOptionIsSelected() {
+        var session = OnboardingSession()
+        #expect(session.hasSelectedSetup)
+
+        session.includeAccountSetup = false
+        #expect(session.hasSelectedSetup)
+
+        session.includeFrameworkSetup = false
+        #expect(!session.hasSelectedSetup)
+    }
+
     @Test func returnsTheNextEnabledStep() {
         let flow = OnboardingFlow(includeAccount: false, includeFramework: true)
 

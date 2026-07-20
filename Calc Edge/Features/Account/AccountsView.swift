@@ -123,16 +123,38 @@ private struct AccountsList: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack {
-                ForEach(accounts) { account in
-                    @Bindable var account = account
-                    AccountRow(
-                        account: account,
-                        onEdit: onEdit,
-                        onDelete: onDelete
+            #if os(macOS)
+            LazyVGrid(
+                columns: [
+                    GridItem(
+                        .adaptive(minimum: 280, maximum: 420),
+                        spacing: 12,
+                        alignment: .top
                     )
-                }
+                ],
+                alignment: .leading,
+                spacing: 12
+            ) {
+                accountRows
             }
+            #else
+            LazyVStack {
+                accountRows
+            }
+            #endif
+        }
+        .contentMargins(16, for: .scrollContent)
+    }
+
+    @ViewBuilder
+    private var accountRows: some View {
+        ForEach(accounts) { account in
+            @Bindable var account = account
+            AccountRow(
+                account: account,
+                onEdit: onEdit,
+                onDelete: onDelete
+            )
         }
     }
 }

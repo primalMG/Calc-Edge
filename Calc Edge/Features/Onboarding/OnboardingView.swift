@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @State private var editTarget: OnboardingEditTarget?
     @State private var errorMessage: String?
     @State private var validationError: OnboardingDraftError?
+    @State private var isSkipSetupConfirmationPresented = false
 
     private var discardConfirmationBinding: Binding<Bool> {
         Binding(
@@ -46,12 +47,7 @@ struct OnboardingView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 #endif
                 .toolbar {
-                    if session.currentStep == .welcome {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Skip", action: skipSetup)
-                                .accessibilityLabel("Skip onboarding")
-                        }
-                    } else if session.currentStep == .destination {
+                    if session.currentStep == .destination {
                         ToolbarItem(placement: .cancellationAction) {
                             Button(action: returnFromDestination) {
                                 Label("Back", systemImage: "chevron.left")
@@ -75,6 +71,14 @@ struct OnboardingView: View {
         } message: {
             Text("Your changes on this step have not been saved.")
         }
+        .alert("Continue without setup?", isPresented: $isSkipSetupConfirmationPresented) {
+            Button("Continue Without Setup", action: confirmSkippingSetup)
+                .accessibilityIdentifier("onboarding.confirmWithoutSetup")
+            Button("Keep Setting Up", role: .cancel) {}
+                .accessibilityIdentifier("onboarding.keepSettingUp")
+        } message: {
+            Text("You can add accounts, rules, and trading setups later from the app.")
+        }
         .alert("Couldn't Save", isPresented: errorAlertBinding) {
             Button("OK", role: .cancel, action: dismissError)
         } message: {
@@ -90,7 +94,7 @@ struct OnboardingView: View {
                 includeAccountSetup: $session.includeAccountSetup,
                 includeFrameworkSetup: $session.includeFrameworkSetup,
                 onContinue: startSetup,
-                onNotNow: skipSetup
+                onNotNow: requestSkippingSetup
             )
         case .account:
             OnboardingAccountSetupView(
@@ -135,6 +139,11 @@ struct OnboardingView: View {
     }
 
     private func startSetup() {
+        guard session.hasSelectedSetup else {
+            requestSkippingSetup()
+            return
+        }
+
         session.start()
     }
 
@@ -152,7 +161,12 @@ struct OnboardingView: View {
         session.pendingDiscardStep = nil
     }
 
-    private func skipSetup() {
+    private func requestSkippingSetup() {
+        isSkipSetupConfirmationPresented = true
+    }
+
+    private func confirmSkippingSetup() {
+        isSkipSetupConfirmationPresented = false
         session.skipSetup()
     }
 

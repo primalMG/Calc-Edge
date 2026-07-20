@@ -24,6 +24,10 @@ struct OnboardingSession {
         )
     }
 
+    var hasSelectedSetup: Bool {
+        includeAccountSetup || includeFrameworkSetup
+    }
+
     var navigationTitle: String {
         switch currentStep {
         case .welcome:

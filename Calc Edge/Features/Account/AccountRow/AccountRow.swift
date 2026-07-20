@@ -19,20 +19,21 @@ struct AccountRow: View {
     let onDelete: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading) {
-            AccountRowHeader(account: account)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 12) {
+                AccountRowHeader(account: account)
+                Spacer(minLength: 8)
+                AccountRowActions(
+                    onEdit: { onEdit(account) },
+                    onDelete: { deleteAction = true }
+                )
+            }
             AccountRowDetails(account: account)
-            AccountRowActions(
-                onEdit: { onEdit(account) },
-                onDelete: { deleteAction = true }
-            )
-            .padding(.top, 5)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.gray.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-        .padding(.horizontal)
         .alert("Delete Account", isPresented: $deleteAction) {
             Button(role: .cancel) { }
 
@@ -92,22 +93,25 @@ struct AccountRow: View {
         let onDelete: () -> Void
 
         var body: some View {
-            HStack(spacing: 15) {
+            Menu {
                 Button(action: onEdit) {
-                    Image(systemName: "pencil")
+                    Label("Edit Account", systemImage: "pencil")
                 }
-                .accessibilityLabel("Edit Account")
-                .help("Edit")
-                .tint(.primary)
 
-                Button(action: onDelete) {
-                    Image(systemName: "trash.fill")
+                Divider()
+
+                Button(role: .destructive, action: onDelete) {
+                    Label("Delete Account", systemImage: "trash")
                 }
-                .tint(.red)
-                .accessibilityLabel("Delete Account")
-                .help("Delete")
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
             }
-            .font(.footnote)
+            .menuIndicator(.hidden)
+            .accessibilityLabel("Account Actions")
+            .help("Account Actions")
         }
     }
 

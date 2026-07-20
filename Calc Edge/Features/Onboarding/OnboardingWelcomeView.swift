@@ -38,7 +38,7 @@ struct OnboardingWelcomeView: View {
         case (false, true):
             return "We'll guide you through your first rule and playbook setup before you choose where to start."
         case (false, false):
-            return "Skip setup and choose where you want to start."
+            return "Continue without initial setup. You can add accounts, rules, and trading setups later."
         }
     }
 }
@@ -78,6 +78,7 @@ private struct OnboardingOptionsSection: View {
                     title: "Create an account profile",
                     detail: "Track account size, broker, and default currency.",
                     systemImage: "person.crop.circle",
+                    identifier: "onboarding.includeAccount",
                     isOn: $includeAccountSetup
                 )
 
@@ -87,6 +88,7 @@ private struct OnboardingOptionsSection: View {
                     title: "Define rules and setups",
                     detail: "Capture entry rules, exits, and A+ setup criteria before reviewing trades.",
                     systemImage: "checklist.checked",
+                    identifier: "onboarding.includeFramework",
                     isOn: $includeFrameworkSetup
                 )
             }
@@ -146,6 +148,7 @@ private struct OnboardingToggleRow: View {
     let title: String
     let detail: String
     let systemImage: String
+    let identifier: String
     @Binding var isOn: Bool
 
     var body: some View {
@@ -168,6 +171,7 @@ private struct OnboardingToggleRow: View {
             }
         }
         .toggleStyle(.switch)
+        .accessibilityIdentifier(identifier)
         .padding(14)
     }
 }

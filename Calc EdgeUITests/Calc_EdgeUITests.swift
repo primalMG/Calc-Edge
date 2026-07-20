@@ -56,13 +56,18 @@ final class Calc_EdgeUITests: XCTestCase {
     }
 
     @MainActor
-    func testSkippingSetupGoesDirectlyToDestinationAndBackToWelcome() throws {
+    func testNotNowConfirmsBeforeGoingDirectlyToDestination() throws {
         let app = XCUIApplication()
         app.launch()
 
-        let skipButton = app.buttons["Skip onboarding"]
-        XCTAssertTrue(skipButton.waitForExistence(timeout: 5))
-        skipButton.activateForTest()
+        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Skip onboarding"].exists)
+        app.buttons["Not now"].activateForTest()
+
+        let confirmButton = app.buttons["onboarding.confirmWithoutSetup"]
+        XCTAssertTrue(confirmButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["You can add accounts, rules, and trading setups later from the app."].exists)
+        confirmButton.activateForTest()
 
         XCTAssertTrue(app.element("onboarding.step.destination").waitForExistence(timeout: 5))
         XCTAssertFalse(app.element("onboarding.step.review").exists)
@@ -76,8 +81,10 @@ final class Calc_EdgeUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        XCTAssertTrue(app.buttons["Skip onboarding"].waitForExistence(timeout: 5))
-        app.buttons["Skip onboarding"].activateForTest()
+        XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 5))
+        app.buttons["Not now"].activateForTest()
+        XCTAssertTrue(app.buttons["onboarding.confirmWithoutSetup"].waitForExistence(timeout: 3))
+        app.buttons["onboarding.confirmWithoutSetup"].activateForTest()
 
         let riskDestination = app.buttons["onboarding.destination.risk"]
         XCTAssertTrue(riskDestination.waitForExistence(timeout: 3))
@@ -88,6 +95,26 @@ final class Calc_EdgeUITests: XCTestCase {
         finishButton.activateForTest()
 
         XCTAssertTrue(app.staticTexts["Stock Calc"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testContinueWithNoOptionsConfirmsBeforeSkippingSetup() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let accountToggle = app.switches["onboarding.includeAccount"]
+        let frameworkToggle = app.switches["onboarding.includeFramework"]
+        XCTAssertTrue(accountToggle.waitForExistence(timeout: 5))
+        XCTAssertTrue(frameworkToggle.waitForExistence(timeout: 5))
+
+        accountToggle.activateForTest()
+        frameworkToggle.activateForTest()
+        app.buttons["onboarding.continue"].activateForTest()
+
+        XCTAssertTrue(app.buttons["onboarding.confirmWithoutSetup"].waitForExistence(timeout: 3))
+        app.buttons["onboarding.confirmWithoutSetup"].activateForTest()
+        XCTAssertTrue(app.element("onboarding.step.destination").waitForExistence(timeout: 5))
+        XCTAssertFalse(app.element("onboarding.step.review").exists)
     }
 
     @MainActor
