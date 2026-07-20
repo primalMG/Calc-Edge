@@ -139,6 +139,7 @@ private struct OnboardingStepActions: View {
         HStack(spacing: 12) {
             Button("Skip", action: onSkip)
                 .buttonStyle(.bordered)
+                .tint(.white)
                 .controlSize(.large)
                 .accessibilityIdentifier("onboarding.skip")
 

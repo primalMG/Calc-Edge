@@ -33,8 +33,7 @@ final class Calc_EdgeUITests: XCTestCase {
 
     @MainActor
     func testGuidedOnboardingCanSkipToReview() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         let continueButton = app.buttons["onboarding.continue"]
         XCTAssertTrue(continueButton.waitForExistence(timeout: 5))
@@ -53,12 +52,17 @@ final class Calc_EdgeUITests: XCTestCase {
         app.buttons["onboarding.review.continue"].activateForTest()
         app.buttons["onboarding.finish"].activateForTest()
         XCTAssertTrue(app.staticTexts["Journal"].waitForExistence(timeout: 5))
+
+        app.terminate()
+        app.launchEnvironment.removeValue(forKey: "CALC_EDGE_UI_TEST_RESET_ONBOARDING")
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Journal"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.element("onboarding.step.welcome").exists)
     }
 
     @MainActor
     func testNotNowConfirmsBeforeGoingDirectlyToDestination() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.buttons["Skip onboarding"].exists)
@@ -78,8 +82,7 @@ final class Calc_EdgeUITests: XCTestCase {
 
     @MainActor
     func testStockDestinationUsesLeafRouteAndTitle() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         XCTAssertTrue(app.buttons["Not now"].waitForExistence(timeout: 5))
         app.buttons["Not now"].activateForTest()
@@ -99,8 +102,7 @@ final class Calc_EdgeUITests: XCTestCase {
 
     @MainActor
     func testContinueWithNoOptionsConfirmsBeforeSkippingSetup() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         let accountToggle = app.switches["onboarding.includeAccount"]
         let frameworkToggle = app.switches["onboarding.includeFramework"]
@@ -119,8 +121,7 @@ final class Calc_EdgeUITests: XCTestCase {
 
     @MainActor
     func testRequiredFieldValidationAppearsInline() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         XCTAssertTrue(app.buttons["onboarding.continue"].waitForExistence(timeout: 5))
         app.buttons["onboarding.continue"].activateForTest()
@@ -135,8 +136,7 @@ final class Calc_EdgeUITests: XCTestCase {
 
     @MainActor
     func testEditedOnboardingDraftRequiresDiscardConfirmation() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchOnboardingApp()
 
         XCTAssertTrue(app.buttons["onboarding.continue"].waitForExistence(timeout: 5))
         app.buttons["onboarding.continue"].activateForTest()
@@ -158,6 +158,14 @@ final class Calc_EdgeUITests: XCTestCase {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }
+    }
+
+    @MainActor
+    private func launchOnboardingApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchEnvironment["CALC_EDGE_UI_TEST_RESET_ONBOARDING"] = "1"
+        app.launch()
+        return app
     }
 }
 

@@ -10,6 +10,15 @@ import SwiftData
 
 @main
 struct Calc_EdgeApp: App {
+    private static let onboardingCompletionDefault: Bool = {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["CALC_EDGE_UI_TEST_RESET_ONBOARDING"] == "1" {
+            UserDefaults.standard.removeObject(forKey: "onboarding.hasCompleted")
+        }
+        #endif
+        return false
+    }()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Account.self,
@@ -47,8 +56,7 @@ struct Calc_EdgeApp: App {
         }
     }()
     
-    // Keep onboarding completion session-local while the flow is under test.
-    @State private var hasCompletedOnboarding = false
+    @AppStorage("onboarding.hasCompleted") private var hasCompletedOnboarding = Self.onboardingCompletionDefault
     @State private var initialDestination = AppStartDestination.journal
     @State private var draftTrade = Trade(ticker: "")
     @State private var draftForexCalculation = ForexCalculation(pair: "")
