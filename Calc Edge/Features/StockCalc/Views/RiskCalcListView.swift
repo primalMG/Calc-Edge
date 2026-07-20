@@ -31,6 +31,7 @@ private struct RiskCalcPagedListView: View {
     @State private var selectedStockID: UUID?
     #endif
     @State private var presentSheet: Bool = false
+    @State private var toast: ToastConfiguration?
 
     let fetchLimit: Int
     let loadMore: () -> Void
@@ -67,8 +68,13 @@ private struct RiskCalcPagedListView: View {
                 .sheet(isPresented: $presentSheet) {
                     NewEditRiskCalc(stock: selectedStock, isNew: true)
                 }
+
+                #if DEBUG
+                DebugMockDataMenu(seed: seedMockData, clear: clearMockData)
+                #endif
             }
         }
+        .toast($toast)
         #if os(macOS)
         .inspector(isPresented: inspectorIsPresented) {
             if let inspectorStock {
@@ -159,6 +165,33 @@ private struct RiskCalcPagedListView: View {
             try? modelContext.saveIfNeeded()
         }
     }
+
+    #if DEBUG
+    private func seedMockData() {
+        performMockDataAction(successTitle: "Mock Data Ready") {
+            let count = try DebugMockData.seedStocks(in: modelContext)
+            return "Added \(count) stock calculations."
+        }
+    }
+
+    private func clearMockData() {
+        performMockDataAction(successTitle: "Mock Data Cleared") {
+            let count = try DebugMockData.clearStocks(in: modelContext)
+            return "Removed \(count) demo calculations."
+        }
+    }
+
+    private func performMockDataAction(
+        successTitle: String,
+        action: () throws -> String
+    ) {
+        do {
+            toast = ToastConfiguration(title: successTitle, message: try action(), state: .success)
+        } catch {
+            toast = ToastConfiguration(title: "Mock Data Failed", message: error.localizedDescription, state: .error, duration: 4)
+        }
+    }
+    #endif
 
     #if os(macOS)
     private func syncInitialSelection() {

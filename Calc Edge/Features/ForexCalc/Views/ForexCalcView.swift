@@ -24,6 +24,7 @@ private struct ForexCalcPagedView: View {
 
     @State private var draftCalculation = ForexCalculation.emptyDraft
     @State private var presentSheet = false
+    @State private var toast: ToastConfiguration?
     #if os(macOS)
     @State private var selectedCalculationID: UUID?
     #endif
@@ -58,8 +59,13 @@ private struct ForexCalcPagedView: View {
                     .sheet(isPresented: $presentSheet) {
                         AddEditForexCalcView(calculation: draftCalculation, isNew: true)
                     }
+
+                    #if DEBUG
+                    DebugMockDataMenu(seed: seedMockData, clear: clearMockData)
+                    #endif
                 }
             }
+            .toast($toast)
             #if os(macOS)
             .inspector(isPresented: inspectorIsPresented) {
                 if let inspectorCalculation {
@@ -158,6 +164,33 @@ private struct ForexCalcPagedView: View {
             try? modelContext.saveIfNeeded()
         }
     }
+
+    #if DEBUG
+    private func seedMockData() {
+        performMockDataAction(successTitle: "Mock Data Ready") {
+            let count = try DebugMockData.seedForex(in: modelContext)
+            return "Added \(count) forex calculations."
+        }
+    }
+
+    private func clearMockData() {
+        performMockDataAction(successTitle: "Mock Data Cleared") {
+            let count = try DebugMockData.clearForex(in: modelContext)
+            return "Removed \(count) demo calculations."
+        }
+    }
+
+    private func performMockDataAction(
+        successTitle: String,
+        action: () throws -> String
+    ) {
+        do {
+            toast = ToastConfiguration(title: successTitle, message: try action(), state: .success)
+        } catch {
+            toast = ToastConfiguration(title: "Mock Data Failed", message: error.localizedDescription, state: .error, duration: 4)
+        }
+    }
+    #endif
 
     #if os(macOS)
     private func syncInitialSelection() {

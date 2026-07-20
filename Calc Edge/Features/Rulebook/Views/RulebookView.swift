@@ -44,6 +44,12 @@ struct RulebookContent: View {
                     .accessibilityLabel("New Rule")
                     .help("New Rule")
                 }
+
+                #if DEBUG
+                ToolbarItem(placement: .primaryAction) {
+                    DebugMockDataMenu(seed: seedMockData, clear: clearMockData)
+                }
+                #endif
             }
             .toast($toast)
             #if os(iOS)
@@ -184,6 +190,33 @@ struct RulebookContent: View {
         keepSelectionInSync()
         try? modelContext.saveIfNeeded()
     }
+
+    #if DEBUG
+    private func seedMockData() {
+        performMockDataAction(successTitle: "Mock Data Ready") {
+            let count = try DebugMockData.seedRules(in: modelContext)
+            return "Added \(count) rules with performance history."
+        }
+    }
+
+    private func clearMockData() {
+        performMockDataAction(successTitle: "Mock Data Cleared") {
+            let count = try DebugMockData.clearRules(in: modelContext)
+            return "Removed \(count) demo rules."
+        }
+    }
+
+    private func performMockDataAction(
+        successTitle: String,
+        action: () throws -> String
+    ) {
+        do {
+            toast = ToastConfiguration(title: successTitle, message: try action(), state: .success)
+        } catch {
+            toast = ToastConfiguration(title: "Mock Data Failed", message: error.localizedDescription, state: .error, duration: 4)
+        }
+    }
+    #endif
 }
 
 private struct RuleRow: View {

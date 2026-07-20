@@ -44,6 +44,12 @@ struct SetupPlaybookContent: View {
                     .accessibilityLabel("New Setup")
                     .help("New Setup")
                 }
+
+                #if DEBUG
+                ToolbarItem(placement: .primaryAction) {
+                    DebugMockDataMenu(seed: seedMockData, clear: clearMockData)
+                }
+                #endif
             }
             .toast($toast)
             #if os(iOS)
@@ -184,6 +190,33 @@ struct SetupPlaybookContent: View {
         keepSelectionInSync()
         try? modelContext.saveIfNeeded()
     }
+
+    #if DEBUG
+    private func seedMockData() {
+        performMockDataAction(successTitle: "Mock Data Ready") {
+            let count = try DebugMockData.seedSetups(in: modelContext)
+            return "Added \(count) setups with matching trades."
+        }
+    }
+
+    private func clearMockData() {
+        performMockDataAction(successTitle: "Mock Data Cleared") {
+            let count = try DebugMockData.clearSetups(in: modelContext)
+            return "Removed \(count) demo setups."
+        }
+    }
+
+    private func performMockDataAction(
+        successTitle: String,
+        action: () throws -> String
+    ) {
+        do {
+            toast = ToastConfiguration(title: successTitle, message: try action(), state: .success)
+        } catch {
+            toast = ToastConfiguration(title: "Mock Data Failed", message: error.localizedDescription, state: .error, duration: 4)
+        }
+    }
+    #endif
 }
 
 private struct SetupRow: View {

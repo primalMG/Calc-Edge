@@ -3,10 +3,14 @@ import SwiftUI
 
 struct ClearAllDataView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(AppDataResetCoordinator.self) private var dataResetCoordinator
 
     @State private var isShowingConfirmation = false
-    @State private var isClearingData = false
     @State private var toast: ToastConfiguration?
+
+    private var isClearingData: Bool {
+        dataResetCoordinator.isResetting
+    }
 
     var body: some View {
         #if os(iOS)
@@ -49,6 +53,7 @@ struct ClearAllDataView: View {
         }
         .navigationTitle("Clear All Data")
         .toast($toast)
+        .onChange(of: dataResetCoordinator.outcome, initial: true, presentResetOutcome)
         #else
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -108,6 +113,7 @@ struct ClearAllDataView: View {
             Text("This permanently deletes everything you have created in Calc Edge.")
         }
         .toast($toast)
+        .onChange(of: dataResetCoordinator.outcome, initial: true, presentResetOutcome)
         #endif
     }
 
@@ -129,35 +135,38 @@ struct ClearAllDataView: View {
     }
 
     private func clearAllData() {
-        isClearingData = true
+        dataResetCoordinator.clearAllData(in: modelContext)
+    }
 
-        do {
-            let deletedCount = try AppDataResetService.clearAllData(in: modelContext)
-            isClearingData = false
+    private func presentResetOutcome(
+        oldValue: AppDataResetOutcome?,
+        newValue: AppDataResetOutcome?
+    ) {
+        guard let newValue else { return }
 
-            if deletedCount == 0 {
-                toast = ToastConfiguration(
-                    title: "No Data to Clear",
-                    message: "There was no app-created data to delete.",
-                    state: .info
-                )
-            } else {
-                toast = ToastConfiguration(
-                    title: "Data Cleared",
-                    message: "Deleted \(deletedCount) records.",
-                    state: .success
-                )
-            }
-        } catch {
-            isClearingData = false
-            modelContext.rollback()
+        switch newValue.result {
+        case .success(let deletedCount) where deletedCount == 0:
+            toast = ToastConfiguration(
+                title: "No Data to Clear",
+                message: "There was no app-created data to delete.",
+                state: .info
+            )
+        case .success(let deletedCount):
+            toast = ToastConfiguration(
+                title: "Data Cleared",
+                message: "Deleted \(deletedCount) records.",
+                state: .success
+            )
+        case .failure(let message):
             toast = ToastConfiguration(
                 title: "Clear Failed",
-                message: error.localizedDescription,
+                message: message,
                 state: .error,
                 duration: 4
             )
         }
+
+        dataResetCoordinator.consumeOutcome(newValue.id)
     }
 }
 
@@ -182,6 +191,7 @@ private struct ClearDataDetailRow: View {
     NavigationStack {
         ClearAllDataView()
     }
+    .environment(AppDataResetCoordinator())
     .modelContainer(
         for: [
             Account.self,

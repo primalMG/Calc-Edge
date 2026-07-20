@@ -58,8 +58,7 @@ struct Calc_EdgeApp: App {
     
     @AppStorage("onboarding.hasCompleted") private var hasCompletedOnboarding = Self.onboardingCompletionDefault
     @State private var initialDestination = AppStartDestination.journal
-    @State private var draftTrade = Trade(ticker: "")
-    @State private var draftForexCalculation = ForexCalculation(pair: "")
+    @State private var dataResetCoordinator = AppDataResetCoordinator()
 
     var body: some Scene {
         WindowGroup {
@@ -72,17 +71,30 @@ struct Calc_EdgeApp: App {
                 }
             }
         }
+        .environment(dataResetCoordinator)
         .modelContainer(sharedModelContainer)
         
         #if os(macOS)
         Window("New Journal Entry", id: "new-journal") {
-            NewJournalView(trade: draftTrade)
+            if dataResetCoordinator.isResetting {
+                DataResetSceneContent(phase: dataResetCoordinator.phase)
+            } else {
+                NewJournalSceneContent()
+                    .id(dataResetCoordinator.resetGeneration)
+            }
         }
+        .environment(dataResetCoordinator)
         .modelContainer(sharedModelContainer)
 
         Window("New Forex Calculation", id: "new-forex-calc") {
-            AddEditForexCalcView(calculation: draftForexCalculation, isNew: true)
+            if dataResetCoordinator.isResetting {
+                DataResetSceneContent(phase: dataResetCoordinator.phase)
+            } else {
+                NewForexCalculationSceneContent()
+                    .id(dataResetCoordinator.resetGeneration)
+            }
         }
+        .environment(dataResetCoordinator)
         .modelContainer(sharedModelContainer)
         #endif
     }

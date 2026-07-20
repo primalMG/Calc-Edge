@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(AppDataResetCoordinator.self) private var dataResetCoordinator
+
     @State private var selectedTab: RootTab
     @State private var selectedStock = Stock.emptyDraft
     private let initialCalculatorRoute: CalculatorRoute?
@@ -18,7 +20,15 @@ struct RootView: View {
     }
     
     var body: some View {
-        rootTabs
+        Group {
+            if dataResetCoordinator.isResetting {
+                DataResetSceneContent(phase: dataResetCoordinator.phase)
+            } else {
+                rootTabs
+                    .id(dataResetCoordinator.resetGeneration)
+                    .onDisappear(perform: dataResetCoordinator.dataBackedViewsDidDisappear)
+            }
+        }
     }
 
     @ViewBuilder
@@ -118,4 +128,5 @@ struct RootView: View {
 
 #Preview {
     RootView()
+        .environment(AppDataResetCoordinator())
 }

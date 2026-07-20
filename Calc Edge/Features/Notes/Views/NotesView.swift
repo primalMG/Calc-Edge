@@ -16,6 +16,7 @@ private struct NotesPagedView: View {
     @Query private var notes: [Note]
 
     @State private var selectedNoteID: UUID?
+    @State private var toast: ToastConfiguration?
 
     let fetchLimit: Int
     let loadMore: () -> Void
@@ -42,7 +43,14 @@ private struct NotesPagedView: View {
                     .accessibilityLabel("New Note")
                     .help("New Note")
                 }
+
+                #if DEBUG
+                ToolbarItem(placement: .primaryAction) {
+                    DebugMockDataMenu(seed: seedMockData, clear: clearMockData)
+                }
+                #endif
             }
+            .toast($toast)
             .onAppear(perform: keepSelectionInSync)
             .onChange(of: notes.map(\.noteId)) { _, _ in
                 keepSelectionInSync()
@@ -145,6 +153,33 @@ private struct NotesPagedView: View {
         selectedNoteID = notes.first?.noteId
         #endif
     }
+
+    #if DEBUG
+    private func seedMockData() {
+        performMockDataAction(successTitle: "Mock Data Ready") {
+            let count = try DebugMockData.seedNotes(in: modelContext)
+            return "Added \(count) notes."
+        }
+    }
+
+    private func clearMockData() {
+        performMockDataAction(successTitle: "Mock Data Cleared") {
+            let count = try DebugMockData.clearNotes(in: modelContext)
+            return "Removed \(count) demo notes."
+        }
+    }
+
+    private func performMockDataAction(
+        successTitle: String,
+        action: () throws -> String
+    ) {
+        do {
+            toast = ToastConfiguration(title: successTitle, message: try action(), state: .success)
+        } catch {
+            toast = ToastConfiguration(title: "Mock Data Failed", message: error.localizedDescription, state: .error, duration: 4)
+        }
+    }
+    #endif
 }
 
 #Preview {
