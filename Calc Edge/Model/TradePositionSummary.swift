@@ -16,21 +16,26 @@ struct TradePositionSummary {
     init(
         transactions: [TradeTransaction],
         initialQuantity: Decimal = 0,
-        initialAveragePrice: Decimal? = nil
+        initialAveragePrice: Decimal? = nil,
+        direction: TradeDirection = .long
     ) {
-        var quantity = initialQuantity
-        var costBasis = initialQuantity * (initialAveragePrice ?? 0)
+        let safeInitialQuantity = max(0, initialQuantity)
+        let safeInitialPrice = max(0, initialAveragePrice ?? 0)
+        var quantity = safeInitialQuantity
+        var costBasis = safeInitialQuantity * safeInitialPrice
         var totalFees: Decimal = 0
 
         for transaction in transactions.sorted(by: { $0.date < $1.date }) {
-            let fees = transaction.fees ?? 0
+            let fees = max(0, transaction.fees ?? 0)
             totalFees += fees
 
-            switch transaction.action {
-            case .buy, .add:
+            switch (direction, transaction.action) {
+            case (.long, .buy), (.long, .add), (.short, .sell), (.short, .add):
+                guard transaction.quantity > 0, transaction.price >= 0 else { continue }
                 quantity += transaction.quantity
                 costBasis += (transaction.quantity * transaction.price) + fees
-            case .sell, .trim:
+            case (.long, .sell), (.long, .trim), (.short, .buy), (.short, .trim):
+                guard transaction.quantity > 0 else { continue }
                 let closingQuantity = min(transaction.quantity, quantity)
                 if quantity > 0 {
                     let averageCost = costBasis / quantity
@@ -43,9 +48,9 @@ struct TradePositionSummary {
                     quantity = 0
                     costBasis = 0
                 }
-            case .dividend:
+            case (_, .dividend):
                 break
-            case .fee:
+            case (_, .fee):
                 if quantity > 0 {
                     costBasis += fees
                 }
@@ -73,14 +78,15 @@ struct TradePositionSummary {
 
 extension Trade {
     var positionSummary: TradePositionSummary {
-        TradePositionSummary(transactions: transactions ?? [])
+        TradePositionSummary(transactions: transactions ?? [], direction: direction)
     }
 
     var currentPositionSummary: TradePositionSummary {
         TradePositionSummary(
             transactions: transactions ?? [],
             initialQuantity: transactionsRepresentStoredShareCount ? 0 : shareCount,
-            initialAveragePrice: entryPrice
+            initialAveragePrice: entryPrice,
+            direction: direction
         )
     }
 
@@ -155,20 +161,29 @@ extension Trade {
     private var transactionsRepresentStoredShareCount: Bool {
         guard shareCount > 0,
               hasPositionTransactions,
-              let entryPrice,
-              let averagePrice = positionSummary.averagePrice else {
+              let entryPrice else {
             return false
         }
 
-        return positionSummary.currentShareCount == shareCount && averagePrice == entryPrice
+        if let averagePrice = positionSummary.averagePrice,
+           positionSummary.currentShareCount == shareCount,
+           averagePrice == entryPrice {
+            return true
+        }
+
+        let openingAction: TradeTransactionAction = direction == .long ? .buy : .sell
+        return transactions?
+            .sorted(by: { $0.date < $1.date })
+            .first(where: { $0.action == openingAction })
+            .map { $0.quantity == shareCount && $0.price == entryPrice } == true
     }
 
     private var openingTransactionQuantity: Decimal {
         (transactions ?? []).reduce(0) { total, transaction in
-            switch transaction.action {
-            case .buy, .add, .sell:
+            switch (direction, transaction.action) {
+            case (.long, .buy), (.long, .add), (.short, .sell), (.short, .add):
                 return total + transaction.quantity
-            case .trim, .dividend, .fee:
+            case (.long, .sell), (.short, .buy), (_, .trim), (_, .dividend), (_, .fee):
                 return total
             }
         }

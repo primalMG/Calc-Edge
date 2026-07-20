@@ -23,6 +23,10 @@ struct OnboardingAccountDraft: Equatable {
             throw OnboardingDraftError.currencyRequired
         }
 
+        guard draft.balance.isFinite, draft.balance >= 0 else {
+            throw OnboardingDraftError.accountBalanceInvalid
+        }
+
         return draft
     }
 

@@ -1,9 +1,11 @@
 import Foundation
 import SwiftCSV
 
-enum JournalCSVImportError: LocalizedError {
+enum JournalCSVImportError: LocalizedError, Equatable {
     case noRows
     case noImportableRows
+    case fileTooLarge(maximumBytes: Int)
+    case tooManyRows(maximum: Int)
 
     var errorDescription: String? {
         switch self {
@@ -11,6 +13,10 @@ enum JournalCSVImportError: LocalizedError {
             "The selected CSV did not contain any rows."
         case .noImportableRows:
             "No importable trades were found in the selected CSV."
+        case .fileTooLarge(let maximumBytes):
+            "The selected CSV exceeds the \(maximumBytes) byte import limit."
+        case .tooManyRows(let maximum):
+            "The selected CSV contains more than \(maximum) rows."
         }
     }
 }
@@ -22,12 +28,23 @@ struct JournalCSVImporter {
     }
 
     var broker: Broker = .automatic
+    var maximumFileSizeBytes = 25 * 1_024 * 1_024
+    var maximumRowCount = 100_000
 
     func importTrades(from url: URL) throws -> [Trade] {
+        let resourceValues = try url.resourceValues(forKeys: [.fileSizeKey])
+        if let fileSize = resourceValues.fileSize, fileSize > maximumFileSizeBytes {
+            throw JournalCSVImportError.fileTooLarge(maximumBytes: maximumFileSizeBytes)
+        }
+
         let csv = try CSV<Named>(url: url, loadColumns: false)
 
         guard !csv.rows.isEmpty else {
             throw JournalCSVImportError.noRows
+        }
+
+        guard csv.rows.count <= maximumRowCount else {
+            throw JournalCSVImportError.tooManyRows(maximum: maximumRowCount)
         }
 
         let trades = csv.rows.compactMap { row in
@@ -58,13 +75,23 @@ struct JournalCSVImporter {
 
     private func trade(from row: CSVRow) -> Trade? {
         let action = row.value(for: Column.action)
-        let ticker = row.value(for: Column.ticker)?.uppercased()
+        let ticker = row.value(for: Column.ticker)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
 
         guard let ticker, !ticker.isEmpty else {
             return nil
         }
 
-        let openedAt = row.value(for: Column.openedAt).flatMap(DateParser.date(from:)) ?? .now
+        let openedAt: Date
+        if let dateValue = row.value(for: Column.openedAt) {
+            guard let parsedDate = DateParser.date(from: dateValue) else {
+                return nil
+            }
+            openedAt = parsedDate
+        } else {
+            openedAt = .now
+        }
         let description = row.value(for: Column.description)
         let direction = TradeDirection(action: action)
         let instrument = row.value(for: Column.instrument)
@@ -84,6 +111,15 @@ struct JournalCSVImporter {
         let importedExitPrice = transactionAction.affectsPosition && direction == .short ? transactionPrice : nil
         let dividendAmount = transactionAction == .dividend ? total ?? (transactionQuantity * transactionPrice) : nil
         let importedFees = transactionAction == .fee && dividendInfo?.isTaxWithholding == true ? total.map(Self.absolute) : fee
+
+        switch transactionAction {
+        case .buy, .add, .sell, .trim:
+            guard transactionQuantity > 0, transactionPrice > 0 else { return nil }
+        case .dividend:
+            guard let dividendAmount, dividendAmount != 0 else { return nil }
+        case .fee:
+            guard let importedFees, importedFees > 0 else { return nil }
+        }
 
         let trade = Trade(
             openedAt: openedAt,
@@ -129,7 +165,14 @@ struct JournalCSVImporter {
     }
 
     private static func groupedTrade(from trades: [Trade]) -> Trade {
-        let sortedTrades = trades.sorted { $0.openedAt < $1.openedAt }
+        let sortedTrades = trades.enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.openedAt != rhs.element.openedAt {
+                    return lhs.element.openedAt < rhs.element.openedAt
+                }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
         let firstTrade = sortedTrades[0]
         let transactions = sortedTrades
             .flatMap { $0.transactions ?? [] }
@@ -146,7 +189,7 @@ struct JournalCSVImporter {
                     note: transaction.note
                 )
             }
-        let summary = TradePositionSummary(transactions: transactions)
+        let summary = TradePositionSummary(transactions: transactions, direction: firstTrade.direction)
         let exchangeRates = Set(sortedTrades.compactMap { $0.exchangeRate })
 
         let trade = Trade(
@@ -362,11 +405,13 @@ private struct CSVRow {
     let values: [String: String]
 
     init(_ values: [String: String]) {
-        self.values = Dictionary(
-            uniqueKeysWithValues: values.map { key, value in
-                (Self.normalized(key), value.trimmingCharacters(in: .whitespacesAndNewlines))
+        self.values = values.reduce(into: [:]) { result, entry in
+            let key = Self.normalized(entry.key)
+            let value = entry.value.trimmingCharacters(in: .whitespacesAndNewlines)
+            if result[key]?.isEmpty != false {
+                result[key] = value
             }
-        )
+        }
     }
 
     func value(for aliases: [String]) -> String? {

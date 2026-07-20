@@ -170,7 +170,8 @@ extension TradeInsightsCalculator {
     func averageHoldDuration(in trades: [Trade]) -> TimeInterval? {
         let durations = trades.compactMap { trade -> TimeInterval? in
             guard let closedAt = trade.closedAt else { return nil }
-            return closedAt.timeIntervalSince(trade.openedAt)
+            let duration = closedAt.timeIntervalSince(trade.openedAt)
+            return duration >= 0 && duration.isFinite ? duration : nil
         }
 
         return average(durations)
@@ -197,7 +198,8 @@ extension TradeInsightsCalculator {
 
     func decimalToDouble(_ value: Decimal?) -> Double? {
         guard let value else { return nil }
-        return NSDecimalNumber(decimal: value).doubleValue
+        let result = NSDecimalNumber(decimal: value).doubleValue
+        return result.isFinite ? result : nil
     }
 
     private func highConfidenceLosers(in trades: [Trade]) -> Int {

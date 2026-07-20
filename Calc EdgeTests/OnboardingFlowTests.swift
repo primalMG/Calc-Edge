@@ -3,6 +3,7 @@ import SwiftData
 import Testing
 @testable import Calc_Edge
 
+@MainActor
 struct OnboardingFlowTests {
     @Test func defaultsFinalDestinationToJournal() {
         let session = OnboardingSession()
@@ -71,6 +72,12 @@ struct OnboardingFlowTests {
         }
         #expect(throws: OnboardingDraftError.currencyRequired) {
             try OnboardingAccountDraft(name: "Live", currency: "£££").normalized()
+        }
+        #expect(throws: OnboardingDraftError.accountBalanceInvalid) {
+            try OnboardingAccountDraft(name: "Live", balance: -0.01).normalized()
+        }
+        #expect(throws: OnboardingDraftError.accountBalanceInvalid) {
+            try OnboardingAccountDraft(name: "Live", balance: .infinity).normalized()
         }
         #expect(throws: OnboardingDraftError.ruleTitleRequired) {
             try OnboardingRuleDraft().normalized()
@@ -208,6 +215,30 @@ struct OnboardingFlowTests {
         #expect(session.currentStep == .rulebook)
     }
 
+    @Test func staleOrOutOfOrderEventsCannotCorruptSessionState() {
+        var session = OnboardingSession()
+        let staleID = UUID()
+
+        session.requestSkip()
+        #expect(session.currentStep == .welcome)
+
+        session.start()
+        session.start()
+        session.skipSetup()
+        #expect(session.currentStep == .account)
+
+        session.markCreated(.rulebook, id: staleID, name: "Out of order")
+        #expect(session.currentStep == .account)
+        #expect(session.ruleID == nil)
+        #expect(session.ruleResult == .skipped)
+
+        session.markCreated(.account, id: UUID(), name: "Live")
+        session.apply(.account(id: staleID, draft: OnboardingAccountDraft(name: "Stale")))
+        #expect(session.currentStep == .rulebook)
+        #expect(session.accountDraft.name != "Stale")
+        #expect(session.accountResult == .created(name: "Live"))
+    }
+
     @Test func sessionOnlyOffersEditingForCreatedItems() {
         var session = OnboardingSession()
         let accountID = UUID()
@@ -300,6 +331,24 @@ struct OnboardingFlowTests {
         }
 
         #expect(try context.fetch(FetchDescriptor<Account>()).first?.accountName == "Live")
+    }
+
+    @Test func editingMissingItemFailsWithoutCreatingReplacement() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        do {
+            _ = try OnboardingSetupSaver().updateAccount(
+                id: UUID(),
+                with: OnboardingAccountDraft(name: "Replacement"),
+                in: context
+            )
+            Issue.record("Expected a missing-item error")
+        } catch OnboardingSetupSaverError.itemNotFound(let itemName) {
+            #expect(itemName == "account")
+        }
+
+        #expect(try context.fetchCount(FetchDescriptor<Account>()) == 0)
     }
 
     @MainActor

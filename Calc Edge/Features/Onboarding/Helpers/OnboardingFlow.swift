@@ -63,6 +63,7 @@ enum OnboardingSetupResult: Equatable {
 enum OnboardingDraftError: LocalizedError, Equatable {
     case accountNameRequired
     case currencyRequired
+    case accountBalanceInvalid
     case ruleTitleRequired
     case setupNameRequired
 
@@ -72,6 +73,8 @@ enum OnboardingDraftError: LocalizedError, Equatable {
             "Enter an account name before continuing."
         case .currencyRequired:
             "Use a three-letter currency code, such as USD."
+        case .accountBalanceInvalid:
+            "Enter an account balance of zero or more."
         case .ruleTitleRequired:
             "Enter a rule title before continuing."
         case .setupNameRequired:

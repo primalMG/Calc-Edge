@@ -157,7 +157,15 @@ extension TradeInsightsCalculator {
             return (lhs.winRate ?? 0) > (rhs.winRate ?? 0)
         }
 
-        return lhs.trades > rhs.trades
+        if lhs.trades != rhs.trades {
+            return lhs.trades > rhs.trades
+        }
+
+        if lhs.category != rhs.category {
+            return lhs.category < rhs.category
+        }
+
+        return lhs.label.localizedStandardCompare(rhs.label) == .orderedAscending
     }
 
     private func sortWeaknesses(
@@ -174,6 +182,14 @@ extension TradeInsightsCalculator {
             return (lhs.winRate ?? 0) < (rhs.winRate ?? 0)
         }
 
-        return lhs.trades > rhs.trades
+        if lhs.trades != rhs.trades {
+            return lhs.trades > rhs.trades
+        }
+
+        if lhs.category != rhs.category {
+            return lhs.category < rhs.category
+        }
+
+        return lhs.label.localizedStandardCompare(rhs.label) == .orderedAscending
     }
 }

@@ -68,7 +68,7 @@ final class ForexCalculation {
         self.updatedAt = updatedAt
         self.calculator = calculator
         self.pair = ForexCalculation.normalizePair(pair)
-        self.accountCurrency = accountCurrency.uppercased()
+        self.accountCurrency = ForexCalculation.normalizeCurrency(accountCurrency)
         self.accountBalance = accountBalance
         self.riskPercent = riskPercent
         self.riskAmount = riskAmount
@@ -90,18 +90,18 @@ final class ForexCalculation {
     }
 
     var baseCurrency: String? {
-        guard normalizedPair.count >= 6 else { return nil }
+        guard normalizedPair.count == 6 else { return nil }
         return String(normalizedPair.prefix(3))
     }
 
     var quoteCurrency: String? {
-        guard normalizedPair.count >= 6 else { return nil }
+        guard normalizedPair.count == 6 else { return nil }
         return String(normalizedPair.suffix(3))
     }
 
     var pipSize: Decimal {
         if let pipSizeOverride {
-            return pipSizeOverride
+            return pipSizeOverride > 0 ? pipSizeOverride : 0
         }
         if quoteCurrency == "JPY" {
             return Decimal(0.01)
@@ -111,72 +111,63 @@ final class ForexCalculation {
 
     var derivedUnits: Decimal? {
         if calculator == .margin {
-            if let lotSize {
+            if let lotSize, lotSize >= 0 {
                 return lotSize * Decimal(100000)
             }
-            return units
+            return units.flatMap { $0 >= 0 ? $0 : nil }
         }
 
-        if let units {
+        if let units, units >= 0 {
             return units
         }
-        guard let lotSize else { return nil }
+        guard let lotSize, lotSize >= 0 else { return nil }
         return lotSize * Decimal(100000)
     }
 
     var derivedRiskAmount: Decimal? {
-        if let accountBalance, let riskPercent {
+        if let accountBalance, accountBalance >= 0,
+           let riskPercent, riskPercent >= 0 {
             let hundred = Decimal(100)
             return accountBalance * (riskPercent / hundred)
         }
 
-        return riskAmount
+        return riskAmount.flatMap { $0 >= 0 ? $0 : nil }
     }
 
     var derivedStopLossPips: Decimal? {
         if let stopLossPips {
-            return stopLossPips
+            return stopLossPips > 0 ? stopLossPips : nil
         }
-        guard let entryPrice, let stopLossPrice, pipSize != 0 else { return nil }
+        guard let entryPrice, let stopLossPrice, pipSize > 0 else { return nil }
         let distance = abs(entryPrice - stopLossPrice)
         return distance / pipSize
     }
 
     var derivedTakeProfitPips: Decimal? {
         if let takeProfitPips {
-            return takeProfitPips
+            return takeProfitPips >= 0 ? takeProfitPips : nil
         }
-        guard let entryPrice, let takeProfitPrice, pipSize != 0 else { return nil }
+        guard let entryPrice, let takeProfitPrice, pipSize > 0 else { return nil }
         let distance = abs(takeProfitPrice - entryPrice)
         return distance / pipSize
     }
 
     var pipValuePerUnit: Decimal? {
         guard let conversionRate = effectiveQuoteToAccountRate else { return nil }
-        if calculator == .pipValue {
-            // Pip Value calculator treats pip size as "points", where 10 points = 1 pip.
-            return (pipSize * conversionRate) / Decimal(10)
-        }
         return pipSize * conversionRate
     }
 
     var totalPipValue: Decimal? {
-        guard let pipValuePerUnit else { return nil }
-
-        if calculator == .pipValue {
-            guard let lotSize else { return nil }
-            return lotSize * pipValuePerUnit
-        }
-
-        guard let derivedUnits else { return nil }
+        guard let pipValuePerUnit, let derivedUnits else { return nil }
         return derivedUnits * pipValuePerUnit
     }
 
     var derivedPositionSizeUnits: Decimal? {
         guard let riskAmount = derivedRiskAmount,
               let stopLossPips = derivedStopLossPips,
-              stopLossPips != 0,
-              let pipValuePerUnit else {
+              stopLossPips > 0,
+              let pipValuePerUnit,
+              pipValuePerUnit > 0 else {
             return nil
         }
 
@@ -184,9 +175,10 @@ final class ForexCalculation {
     }
 
     var derivedMarginRequired: Decimal? {
-        guard let leverage, leverage != 0,
+        guard let leverage, leverage > 0,
               let derivedUnits,
               let marketRate = effectiveMarketRate,
+              marketRate > 0,
               let quoteToAccountRate = marginQuoteToAccountRate else {
             return nil
         }
@@ -203,7 +195,7 @@ final class ForexCalculation {
     var derivedRiskRewardRatio: Decimal? {
         guard let stopLossPips = derivedStopLossPips,
               let takeProfitPips = derivedTakeProfitPips,
-              stopLossPips != 0 else {
+              stopLossPips > 0 else {
             return nil
         }
 
@@ -215,7 +207,7 @@ final class ForexCalculation {
             return Decimal(1)
         }
 
-        if let quoteToAccountRate {
+        if let quoteToAccountRate, quoteToAccountRate > 0 {
             return quoteToAccountRate
         }
 
@@ -223,11 +215,11 @@ final class ForexCalculation {
     }
 
     var effectiveMarketRate: Decimal? {
-        if let marketPairRate {
+        if let marketPairRate, marketPairRate > 0 {
             return marketPairRate
         }
 
-        if let entryPrice {
+        if let entryPrice, entryPrice > 0 {
             return entryPrice
         }
 
@@ -255,7 +247,12 @@ final class ForexCalculation {
     private static func normalizePair(_ pair: String) -> String {
         pair
             .uppercased()
-            .replacingOccurrences(of: " ", with: "")
-            .replacingOccurrences(of: "/", with: "")
+            .filter { $0.isASCII && $0.isLetter }
+    }
+
+    private static func normalizeCurrency(_ currency: String) -> String {
+        currency
+            .uppercased()
+            .filter { $0.isASCII && $0.isLetter }
     }
 }

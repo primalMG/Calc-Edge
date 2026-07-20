@@ -42,6 +42,7 @@ struct OnboardingSession {
     }
 
     mutating func start() {
+        guard currentStep == .welcome else { return }
         initializeSetupResults()
 
         guard let firstSetupStep = flow.setupSteps.first else {
@@ -54,6 +55,7 @@ struct OnboardingSession {
     }
 
     mutating func skipSetup() {
+        guard currentStep == .welcome else { return }
         initializeSetupResults()
         destinationOrigin = .welcome
         currentStep = .destination
@@ -77,6 +79,8 @@ struct OnboardingSession {
     }
 
     mutating func requestSkip() {
+        guard flow.setupSteps.contains(currentStep) else { return }
+
         guard currentDraftIsDirty else {
             markCurrentStepSkipped()
             advance()
@@ -99,6 +103,8 @@ struct OnboardingSession {
     }
 
     mutating func markCreated(_ step: OnboardingStep, id: UUID, name: String) {
+        guard step == currentStep else { return }
+
         switch step {
         case .account:
             accountID = id

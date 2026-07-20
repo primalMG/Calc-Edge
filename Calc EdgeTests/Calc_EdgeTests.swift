@@ -9,6 +9,7 @@ import Foundation
 import Testing
 @testable import Calc_Edge
 
+@MainActor
 struct Calc_EdgeTests {
 
     @Test func journalAnalyticsCalculatesCoreMetrics() async throws {
@@ -34,7 +35,7 @@ struct Calc_EdgeTests {
         #expect(insights.bestSetup?.label == "Breakout")
         #expect(insights.worstSetup?.label == "Reversal")
 
-        #expect(insights.performanceByInstrument.map(\.label) == ["Future", "Stock", "Forex"])
+        #expect(insights.performanceByInstrument.map(\.label) == ["Stock", "Forex"])
         #expect(insights.performanceByDirection.map(\.label) == ["Short", "Long"])
         #expect(insights.performanceByAccount.map(\.label) == ["Live", "Sim"])
         #expect(isClose(insights.performanceByAccount.first?.expectancy, 2.0 / 3.0))
