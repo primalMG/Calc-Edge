@@ -8,13 +8,13 @@
 import Foundation
 
 struct TradeJournalFilters {
-    var tickerQuery = ""
+    var searchQuery = ""
     var date: TradeDateFilter = .all
     var direction: DirectionFilter = .all
     var instrument: InstrumentFilter = .all
 
-    var normalizedTickerQuery: String {
-        tickerQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    var normalizedSearchQuery: String {
+        searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var hasActiveFilters: Bool {
@@ -22,8 +22,7 @@ struct TradeJournalFilters {
     }
 
     func matches(_ trade: Trade) -> Bool {
-        if !normalizedTickerQuery.isEmpty &&
-            !trade.ticker.localizedCaseInsensitiveContains(normalizedTickerQuery) {
+        if !normalizedSearchQuery.isEmpty && !matchesSearchQuery(trade) {
             return false
         }
 
@@ -36,6 +35,12 @@ struct TradeJournalFilters {
         }
 
         return instrument.matches(trade.instrument)
+    }
+
+    private func matchesSearchQuery(_ trade: Trade) -> Bool {
+        trade.ticker.localizedCaseInsensitiveContains(normalizedSearchQuery) ||
+            trade.instrument.rawValue.localizedCaseInsensitiveContains(normalizedSearchQuery) ||
+            trade.direction.rawValue.localizedCaseInsensitiveContains(normalizedSearchQuery)
     }
 
     mutating func resetSelections() {

@@ -71,7 +71,11 @@ private struct TradeJournalPagedView: View {
     var body: some View {
         journalContent
             .navigationTitle("Trade Journal")
-            .searchable(text: $filters.tickerQuery, placement: .toolbarPrincipal)
+            .searchable(
+                text: $filters.searchQuery,
+                placement: .toolbarPrincipal,
+                prompt: "Search ticker, instrument, or direction"
+            )
             .toolbar {
                 toolbarItems
             }
@@ -214,11 +218,11 @@ private struct TradeJournalPagedView: View {
                 description: Text("Add a trade to review execution, exits, and process notes.")
             )
         } else if visibleTrades.isEmpty {
-            if !filters.normalizedTickerQuery.isEmpty {
+            if !filters.normalizedSearchQuery.isEmpty {
                 ContentUnavailableView(
-                    "Ticker \(filters.normalizedTickerQuery.uppercased()) was not found",
+                    "No results for \(filters.normalizedSearchQuery)",
                     systemImage: "magnifyingglass",
-                    description: Text("Try another ticker or adjust the current filters.")
+                    description: Text("Try another ticker, instrument, or direction, or adjust the current filters.")
                 )
             } else {
                 ContentUnavailableView(
